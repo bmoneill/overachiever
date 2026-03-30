@@ -118,45 +118,81 @@
                 margin-top: 3rem;
                 grid-column: 1 / -1;
             }
+            .nav-bar {
+                max-width: 900px;
+                margin: 0 auto 2rem auto;
+                display: flex;
+                justify-content: flex-end;
+                gap: 1.5rem;
+            }
+            .nav-link {
+                color: #107c10;
+                text-decoration: none;
+                font-size: 0.95rem;
+            }
+            .nav-link:hover {
+                text-decoration: underline;
+            }
+            .nav-link.logout {
+                color: #888;
+            }
         </style>
     </head>
     <body>
+        <div class="nav-bar">
+            <a class="nav-link" href="{{ url_for('my_games') }}">My Games</a>
+            <a class="nav-link logout" href="{{ url_for('logout') }}"
+                >Log Out</a
+            >
+        </div>
         <h1>🏆 Overachiever</h1>
-        <p class="subtitle">XUID: {{ xuid }}</p>
-        <a class="back-link" href="{{ url_for('index') }}">&larr; Look up another player</a>
+        <p class="subtitle">{{ username }}'s Games</p>
 
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% for category, message in messages %}
-                <div class="error">{{ message }}</div>
+        {% with messages = get_flashed_messages(with_categories=true) %} {% for
+        category, message in messages %}
+        <div class="error">{{ message }}</div>
+        {% endfor %} {% endwith %} {% if titles %}
+        <div class="games-grid">
+            {% for title in titles %} {% set current =
+            title.achievement.currentAchievements | default(0) if
+            title.achievement else 0 %} {% set total =
+            title.achievement.totalAchievements | default(0) if
+            title.achievement else 0 %} {% set pct =
+            title.achievement.progressPercentage | default(0) if
+            title.achievement else 0 %}
+            <a
+                class="game-card"
+                href="{{ url_for('game_achievements', username=username, title_id=title.titleId) }}"
+            >
+                {% if title.displayImage %}
+                <img src="{{ title.displayImage }}" alt="{{ title.name }}" />
+                {% else %}
+                <img
+                    src="https://via.placeholder.com/64?text=?"
+                    alt="No image"
+                />
+                {% endif %}
+                <div class="game-info">
+                    <div class="game-name" title="{{ title.name }}">
+                        {{ title.name or "Unknown Title" }}
+                    </div>
+                    <div class="game-progress">
+                        {{ current }} / {{ total }} achievements
+                    </div>
+                    <div class="progress-bar">
+                        <div
+                            class="progress-bar-fill"
+                            style="width: {{ pct }}%"
+                        ></div>
+                    </div>
+                </div>
+            </a>
             {% endfor %}
-        {% endwith %}
-
-        {% if titles %}
-            <div class="games-grid">
-                {% for title in titles %}
-                    {% set current = title.achievement.currentAchievements | default(0) if title.achievement else 0 %}
-                    {% set total = title.achievement.totalAchievements | default(0) if title.achievement else 0 %}
-                    {% set pct = title.achievement.progressPercentage | default(0) if title.achievement else 0 %}
-                    <a class="game-card" href="{{ url_for('game_achievements', xuid=xuid, title_id=title.titleId) }}">
-                        {% if title.displayImage %}
-                            <img src="{{ title.displayImage }}" alt="{{ title.name }}" />
-                        {% else %}
-                            <img src="https://via.placeholder.com/64?text=?" alt="No image" />
-                        {% endif %}
-                        <div class="game-info">
-                            <div class="game-name" title="{{ title.name }}">{{ title.name or "Unknown Title" }}</div>
-                            <div class="game-progress">{{ current }} / {{ total }} achievements</div>
-                            <div class="progress-bar">
-                                <div class="progress-bar-fill" style="width: {{ pct }}%"></div>
-                            </div>
-                        </div>
-                    </a>
-                {% endfor %}
-            </div>
+        </div>
         {% else %}
-            <div class="games-grid">
-                <p class="no-results">No games found for this XUID.</p>
-            </div>
+        <div class="games-grid">
+            <p class="no-results">No games found for this XUID.</p>
+        </div>
         {% endif %}
     </body>
 </html>
