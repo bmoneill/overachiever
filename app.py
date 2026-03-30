@@ -298,6 +298,7 @@ def _normalize_x360_achievement(a):
     gamerscore = a.get("gamerscore")
 
     normalized = {
+        "id": a.get("id", ""),
         "name": a.get("name", ""),
         "description": a.get("description", ""),
         "lockedDescription": a.get("lockedDescription", ""),
@@ -329,11 +330,17 @@ def game_achievements(username, title_id):
     is_x360 = media_type in X360_MEDIA_TYPES
 
     if is_x360:
+        # player achievements
         content = xbl_get(f"/v2/achievements/x360/{target_user.xuid}/title/{title_id}")
+        # title achievements
+        title_achievements = xbl_get(
+            f"/v2/achievements/player/{target_user.xuid}/title/{title_id}"
+        )
     else:
         content = xbl_get(f"/v2/achievements/player/{target_user.xuid}/{title_id}")
+        title_achievements = {}
 
-    if content is None:
+    if content is None or title_achievements is None:
         return redirect(url_for("games", username=username))
 
     # The response may be a dict with an "achievements" key, or a list directly.
@@ -346,7 +353,15 @@ def game_achievements(username, title_id):
 
     # Normalize Xbox 360 achievements into the modern shape.
     if is_x360:
-        achievements = [_normalize_x360_achievement(a) for a in achievements]
+        print(content)
+        achievements = [_normalize_x360_achievement(a) for a in content]
+        title_achievements = [
+            _normalize_x360_achievement(a)
+            for a in title_achievements.get("achievements", [])
+        ]
+        for pa in content:
+            if pa["id"] not in [a["id"] for a in achievements]:
+                achievements.append(pa)
 
     unlocked = []
     locked = []
