@@ -24,7 +24,7 @@ This is a Flask achievement manager for Xbox users, utilizing the
 
 - [x] Fast, simple UI
 - [x] Easy deployment
-- [x] Achievement guide support
+- [x] User-contributed achievement guides
 
 ## Deploying
 
