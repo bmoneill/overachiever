@@ -345,23 +345,23 @@ def game_achievements(username, title_id):
 
     # The response may be a dict with an "achievements" key, or a list directly.
     if isinstance(content, dict):
+        print("Is a dict")
         achievements = content.get("achievements", [])
-    elif isinstance(content, list):
-        achievements = content
     else:
         achievements = []
 
-    # Normalize Xbox 360 achievements into the modern shape.
+    # Normalize Xbox 360 achievements into the modern shape and
+    # combine player achievements with title achievements.
     if is_x360:
-        print(content)
-        achievements = [_normalize_x360_achievement(a) for a in content]
+        player_achievements = [_normalize_x360_achievement(a) for a in achievements]
         title_achievements = [
             _normalize_x360_achievement(a)
             for a in title_achievements.get("achievements", [])
         ]
-        for pa in content:
-            if pa["id"] not in [a["id"] for a in achievements]:
-                achievements.append(pa)
+        achievements = player_achievements
+        for ta in title_achievements:
+            if ta["id"] not in [a["id"] for a in achievements]:
+                achievements.append(ta)
 
     unlocked = []
     locked = []
