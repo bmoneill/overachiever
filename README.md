@@ -11,6 +11,7 @@
 - [Deploying](#deploying)
   - [Docker](#docker)
   - [Disabling User Registration](#disabling-user-registration)
+- [XBox 360 Achievement Icons](#xbox-360-achievement-icons)
 - [Bugs](#bugs)
 - [License](#license)
 
@@ -43,6 +44,23 @@ TODO
 User registration is disabled by default to protect API rate limits.
 To enable registration, change `ALLOW_REGISTRATION` to `true` in your
 `.env` file.
+
+## XBox 360 Achievement Icons
+
+Unfortunately, I have found no easy way to grab XBox 360 achievement icons
+through any third-party API. As a result, icons must be manually added using the
+following steps:
+
+1. Download the icon to `static/`
+2. Run `./helpers/add_360_icon.py <db_path> <title_id> <achievement_id> <url>`
+
+Title IDs and Achievement IDs can be figured out by running the following
+query:
+
+```shell
+curl 'https://api.xbl.io/v2/achievements/x360/{target_user.xuid}/title/{title_id}' \
+    --header 'X-Authorization: YOUR_API_KEY'
+```
 
 ## Bugs
 
