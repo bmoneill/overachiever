@@ -287,6 +287,35 @@ def games(username):
     )
 
 
+X360_MEDIA_TYPES = {"Xbox360Game", "XboxArcadeGame"}
+
+
+def _normalize_x360_achievement(a):
+    """Convert an Xbox 360 achievement dict into the modern schema so the
+    template can render both formats identically.
+    """
+    image_url = a.get("imageResolved") or ""
+    gamerscore = a.get("gamerscore")
+
+    normalized = {
+        "name": a.get("name", ""),
+        "description": a.get("description", ""),
+        "lockedDescription": a.get("lockedDescription", ""),
+        "progressState": "Achieved" if a.get("unlocked") else "NotStarted",
+        "mediaAssets": [{"url": image_url}] if image_url else [],
+        "rewards": ([{"value": str(gamerscore)}] if gamerscore is not None else []),
+        "progression": {},
+        "unlocked": a.get("unlocked", False),
+        "titleAssociations": a.get("titleAssociations", []),
+    }
+
+    time_unlocked = a.get("timeUnlocked")
+    if time_unlocked:
+        normalized["progression"]["timeUnlocked"] = time_unlocked
+
+    return normalized
+
+
 @app.route("/games/<username>/<title_id>")
 @login_required
 def game_achievements(username, title_id):
@@ -296,7 +325,14 @@ def game_achievements(username, title_id):
         flash("User not found.", "error")
         return redirect(url_for("my_games"))
 
-    content = xbl_get(f"/v2/achievements/player/{target_user.xuid}/{title_id}")
+    media_type = request.args.get("media_type", "")
+    is_x360 = media_type in X360_MEDIA_TYPES
+
+    if is_x360:
+        content = xbl_get(f"/v2/achievements/x360/{target_user.xuid}/title/{title_id}")
+    else:
+        content = xbl_get(f"/v2/achievements/player/{target_user.xuid}/{title_id}")
+
     if content is None:
         return redirect(url_for("games", username=username))
 
@@ -307,6 +343,10 @@ def game_achievements(username, title_id):
         achievements = content
     else:
         achievements = []
+
+    # Normalize Xbox 360 achievements into the modern shape.
+    if is_x360:
+        achievements = [_normalize_x360_achievement(a) for a in achievements]
 
     unlocked = []
     locked = []

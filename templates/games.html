@@ -162,7 +162,7 @@
             title.achievement else 0 %}
             <a
                 class="game-card"
-                href="{{ url_for('game_achievements', username=username, title_id=title.titleId) }}"
+                href="{{ url_for('game_achievements', username=username, title_id=title.titleId, media_type=title.mediaItemType) }}"
             >
                 {% if title.displayImage %}
                 <img src="{{ title.displayImage }}" alt="{{ title.name }}" />
