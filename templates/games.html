@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Games — Overachiever</title>
+        <style>
+            * {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }
+            body {
+                font-family:
+                    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                    Helvetica, Arial, sans-serif;
+                background: #0e0e0e;
+                color: #e0e0e0;
+                min-height: 100vh;
+                padding: 2rem 1rem;
+            }
+            h1 {
+                text-align: center;
+                margin-bottom: 0.25rem;
+                color: #107c10;
+                font-size: 2rem;
+            }
+            .subtitle {
+                text-align: center;
+                color: #888;
+                margin-bottom: 2rem;
+            }
+            .back-link {
+                display: block;
+                text-align: center;
+                margin-bottom: 2rem;
+                color: #107c10;
+                text-decoration: none;
+            }
+            .back-link:hover {
+                text-decoration: underline;
+            }
+            .error {
+                max-width: 700px;
+                margin: 1rem auto;
+                padding: 0.75rem 1rem;
+                background: #3b1010;
+                border: 1px solid #6b2020;
+                color: #f5a0a0;
+                border-radius: 8px;
+                text-align: center;
+            }
+            .games-grid {
+                max-width: 900px;
+                margin: 0 auto;
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+                gap: 1rem;
+            }
+            .game-card {
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+                background: #1a1a1a;
+                border: 1px solid #2a2a2a;
+                border-radius: 10px;
+                padding: 1rem;
+                text-decoration: none;
+                color: #e0e0e0;
+                transition:
+                    background 0.2s,
+                    border-color 0.2s;
+            }
+            .game-card:hover {
+                background: #222;
+                border-color: #107c10;
+            }
+            .game-card img {
+                width: 64px;
+                height: 64px;
+                border-radius: 8px;
+                flex-shrink: 0;
+                object-fit: cover;
+                background: #333;
+            }
+            .game-info {
+                flex: 1;
+                min-width: 0;
+            }
+            .game-name {
+                font-weight: 600;
+                font-size: 1rem;
+                margin-bottom: 0.35rem;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            .game-progress {
+                font-size: 0.85rem;
+                color: #aaa;
+                margin-bottom: 0.4rem;
+            }
+            .progress-bar {
+                height: 6px;
+                background: #333;
+                border-radius: 3px;
+                overflow: hidden;
+            }
+            .progress-bar-fill {
+                height: 100%;
+                background: #107c10;
+                border-radius: 3px;
+                transition: width 0.3s;
+            }
+            .no-results {
+                text-align: center;
+                color: #888;
+                margin-top: 3rem;
+                grid-column: 1 / -1;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>🏆 Overachiever</h1>
+        <p class="subtitle">XUID: {{ xuid }}</p>
+        <a class="back-link" href="{{ url_for('index') }}">&larr; Look up another player</a>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                <div class="error">{{ message }}</div>
+            {% endfor %}
+        {% endwith %}
+
+        {% if titles %}
+            <div class="games-grid">
+                {% for title in titles %}
+                    {% set current = title.achievement.currentAchievements | default(0) if title.achievement else 0 %}
+                    {% set total = title.achievement.totalAchievements | default(0) if title.achievement else 0 %}
+                    {% set pct = title.achievement.progressPercentage | default(0) if title.achievement else 0 %}
+                    <a class="game-card" href="{{ url_for('game_achievements', xuid=xuid, title_id=title.titleId) }}">
+                        {% if title.displayImage %}
+                            <img src="{{ title.displayImage }}" alt="{{ title.name }}" />
+                        {% else %}
+                            <img src="https://via.placeholder.com/64?text=?" alt="No image" />
+                        {% endif %}
+                        <div class="game-info">
+                            <div class="game-name" title="{{ title.name }}">{{ title.name or "Unknown Title" }}</div>
+                            <div class="game-progress">{{ current }} / {{ total }} achievements</div>
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill" style="width: {{ pct }}%"></div>
+                            </div>
+                        </div>
+                    </a>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="games-grid">
+                <p class="no-results">No games found for this XUID.</p>
+            </div>
+        {% endif %}
+    </body>
+</html>
