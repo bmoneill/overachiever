@@ -3,9 +3,9 @@
     <h4>
         An Xbox Achievement Manager
     </h4>
-    <img width="400px" src="https://oneill.sh/img/overachiever-home.png" alt="Home Page">
-    <img width="400px" src="https://oneill.sh/img/overachiever-game.png" alt="Game page">
-    <img width="400px" src="https://oneill.sh/img/overachiever-guides.png" alt="Guides page">
+    <img width="300px" src="https://oneill.sh/img/overachiever-home.png" alt="Home Page">
+    <img width="300px" src="https://oneill.sh/img/overachiever-game.png" alt="Game page">
+    <img width="300px" src="https://oneill.sh/img/overachiever-guides.png" alt="Guides page">
 </div>
 
 ## Table of contents
