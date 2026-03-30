@@ -1,8 +1,5 @@
 <div align="center">
-    <h1><b>Overachiever</b></h1>
-    <h4>
-        An Xbox Achievement Manager
-    </h4>
+    <h1><b>Overachiever: A Xbox achievement manager</b></h1>
     <img width="40%" src="https://oneill.sh/img/overachiever-home.png" alt="Home Page">
     <img width="40%" src="https://oneill.sh/img/overachiever-game.png" alt="Game page">
     <img width="40%" src="https://oneill.sh/img/overachiever-guides.png" alt="Guides page">
@@ -11,6 +8,7 @@
 ## Table of contents
 
 - [Overview](#overview)
+- [Features](#features)
 - [Deploying](#deploying)
   - [Docker](#docker)
   - [Disabling User Registration](#disabling-user-registration)
@@ -20,12 +18,15 @@
 
 ## Overview
 
-This is a Flask achievement manager for Xbox users, utilizing the
-[OpenXBL API](https://xbl.io/).
+This is an achievement manager for Xbox users, utilizing
+[Flask](https://flask.palletsprojects.com/en/stable/) and the
+[OpenXBL API](https://xbl.io/). It is substantially faster than
+the Xbox Android app.
 
 ## Features
 
 - [x] Fast, simple UI
+- [x] Search bar, filtering
 - [x] Easy deployment
 - [x] User-contributed achievement guides
 
