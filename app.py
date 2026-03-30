@@ -325,6 +325,7 @@ def _normalize_x360_achievement(a):
         "progression": {},
         "unlocked": a.get("unlocked", False),
         "titleAssociations": a.get("titleAssociations", []),
+        "rarity": a.get("rarity"),
     }
 
     time_unlocked = a.get("timeUnlocked")
