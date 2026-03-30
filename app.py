@@ -474,6 +474,7 @@ def game_achievements(username, title_id):
         xuid=target_user.xuid,
         username=target_user.username,
         title_id=title_id,
+        media_type=media_type,
     )
 
 
@@ -487,6 +488,7 @@ def game_guides(username, title_id):
         return redirect(url_for("my_games"))
 
     game_name = request.args.get("game_name", f"Title ID: {title_id}")
+    media_type = request.args.get("media_type", "")
 
     if request.method == "POST":
         url = request.form.get("url", "").strip()
@@ -504,7 +506,11 @@ def game_guides(username, title_id):
             flash("Guide submitted!", "success")
         return redirect(
             url_for(
-                "game_guides", username=username, title_id=title_id, game_name=game_name
+                "game_guides",
+                username=username,
+                title_id=title_id,
+                game_name=game_name,
+                media_type=media_type,
             )
         )
 
@@ -525,6 +531,7 @@ def game_guides(username, title_id):
         game_name=game_name,
         username=username,
         title_id=title_id,
+        media_type=media_type,
     )
 
 
@@ -541,6 +548,7 @@ def achievement_guides(username, title_id, achievement_id):
         return redirect(url_for("my_games"))
 
     game_name = request.args.get("game_name", f"Title ID: {title_id}")
+    media_type = request.args.get("media_type", "")
     achievement_name = request.args.get(
         "achievement_name", f"Achievement ID: {achievement_id}"
     )
@@ -567,6 +575,7 @@ def achievement_guides(username, title_id, achievement_id):
                 achievement_id=achievement_id,
                 game_name=game_name,
                 achievement_name=achievement_name,
+                media_type=media_type,
             )
         )
 
@@ -589,6 +598,7 @@ def achievement_guides(username, title_id, achievement_id):
         username=username,
         title_id=title_id,
         achievement_id=achievement_id,
+        media_type=media_type,
     )
 
 
