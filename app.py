@@ -380,7 +380,7 @@ def game_achievements(username, title_id):
             locked.append(a)
 
     if game_name is None:
-        game_name = f"Title {title_id}"
+        game_name = request.args.get("game_name", f"Title ID: {title_id}")
 
     return render_template(
         "game_achievements.html",
