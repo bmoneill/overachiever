@@ -20,7 +20,10 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)
 app._static_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
 
-DATABASE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "overachiever.db")
+DATABASE = os.environ.get(
+    "DATABASE",
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), "overachiever.db"),
+)
 
 OPENXBL_API_KEY = os.environ.get("OPENXBL_API_KEY")
 OPENXBL_BASE_URL = "https://api.xbl.io"
