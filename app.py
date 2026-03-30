@@ -50,9 +50,9 @@ def close_db(exception):
 
 
 def init_db():
-    """Create the users table if it doesn't exist."""
+    """Create the tables if they don't exist."""
     db = get_db()
-    db.execute(
+    db.executescript(
         """
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -60,7 +60,15 @@ def init_db():
             email TEXT UNIQUE NOT NULL,
             password_hash TEXT NOT NULL,
             xuid TEXT NOT NULL
-        )
+        );
+        CREATE TABLE IF NOT EXISTS guides (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            url TEXT NOT NULL,
+            title_id INTEGER NOT NULL,
+            achievement_id INTEGER DEFAULT NULL,
+            user_id INTEGER,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        );
         """
     )
     db.commit()
@@ -102,6 +110,15 @@ def load_user(user_id):
         password_hash=row["password_hash"],
         xuid=row["xuid"],
     )
+
+
+class Guide:
+    def __init__(self, id, url, title_id, achievement_id, user_id):
+        self.id = id
+        self.url = url
+        self.title_id = title_id
+        self.achievement_id = achievement_id
+        self.user_id = user_id
 
 
 def get_user_by_username(username):
@@ -390,6 +407,115 @@ def game_achievements(username, title_id):
         xuid=target_user.xuid,
         username=target_user.username,
         title_id=title_id,
+    )
+
+
+@app.route("/games/<username>/<title_id>/guides", methods=["GET", "POST"])
+@login_required
+def game_guides(username, title_id):
+    """Show and submit guides for a game (not tied to a specific achievement)."""
+    target_user = get_user_by_username(username)
+    if target_user is None:
+        flash("User not found.", "error")
+        return redirect(url_for("my_games"))
+
+    game_name = request.args.get("game_name", f"Title ID: {title_id}")
+
+    if request.method == "POST":
+        url = request.form.get("url", "").strip()
+        if not url:
+            flash("Please provide a URL.", "error")
+        else:
+            db = get_db()
+            db.execute(
+                "INSERT INTO guides (url, title_id, achievement_id, user_id) VALUES (?, ?, NULL, ?)",
+                (url, title_id, current_user.id),
+            )
+            db.commit()
+            flash("Guide submitted!", "success")
+        return redirect(
+            url_for(
+                "game_guides", username=username, title_id=title_id, game_name=game_name
+            )
+        )
+
+    db = get_db()
+    rows = db.execute(
+        "SELECT g.id, g.url, g.title_id, g.achievement_id, g.user_id, u.username AS author "
+        "FROM guides g JOIN users u ON g.user_id = u.id "
+        "WHERE g.title_id = ? AND g.achievement_id IS NULL",
+        (title_id,),
+    ).fetchall()
+
+    guides = rows
+
+    return render_template(
+        "game_guides.html",
+        guides=guides,
+        game_name=game_name,
+        username=username,
+        title_id=title_id,
+    )
+
+
+@app.route(
+    "/games/<username>/<title_id>/achievement/<achievement_id>/guides",
+    methods=["GET", "POST"],
+)
+@login_required
+def achievement_guides(username, title_id, achievement_id):
+    """Show and submit guides for a specific achievement."""
+    target_user = get_user_by_username(username)
+    if target_user is None:
+        flash("User not found.", "error")
+        return redirect(url_for("my_games"))
+
+    game_name = request.args.get("game_name", f"Title ID: {title_id}")
+    achievement_name = request.args.get(
+        "achievement_name", f"Achievement ID: {achievement_id}"
+    )
+
+    if request.method == "POST":
+        url = request.form.get("url", "").strip()
+        if not url:
+            flash("Please provide a URL.", "error")
+        else:
+            db = get_db()
+            db.execute(
+                "INSERT INTO guides (url, title_id, achievement_id, user_id) VALUES (?, ?, ?, ?)",
+                (url, title_id, achievement_id, current_user.id),
+            )
+            db.commit()
+            flash("Guide submitted!", "success")
+        return redirect(
+            url_for(
+                "achievement_guides",
+                username=username,
+                title_id=title_id,
+                achievement_id=achievement_id,
+                game_name=game_name,
+                achievement_name=achievement_name,
+            )
+        )
+
+    db = get_db()
+    rows = db.execute(
+        "SELECT g.id, g.url, g.title_id, g.achievement_id, g.user_id, u.username AS author "
+        "FROM guides g JOIN users u ON g.user_id = u.id "
+        "WHERE g.title_id = ? AND g.achievement_id = ?",
+        (title_id, achievement_id),
+    ).fetchall()
+
+    guides = rows
+
+    return render_template(
+        "achievement_guides.html",
+        guides=guides,
+        game_name=game_name,
+        achievement_name=achievement_name,
+        username=username,
+        title_id=title_id,
+        achievement_id=achievement_id,
     )
 
 
