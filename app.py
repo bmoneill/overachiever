@@ -18,6 +18,7 @@ load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)
+app._static_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
 
 DATABASE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "overachiever.db")
 
@@ -69,6 +70,12 @@ def init_db():
             user_id INTEGER,
             FOREIGN KEY (user_id) REFERENCES users(id)
         );
+        CREATE TABLE IF NOT EXISTS icon360 (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            url TEXT NOT NULL,
+            title_id INTEGER NOT NULL,
+            achievement_id INTEGER NOT NULL
+        );
         """
     )
     db.commit()
@@ -89,7 +96,9 @@ login_manager.login_message_category = "error"
 
 
 class User(UserMixin):
-    def __init__(self, id, username, email, password_hash, xuid):
+    def __init__(
+        self, id: int, username: str, email: str, password_hash: str, xuid: str
+    ):
         self.id = id
         self.username = username
         self.email = email
@@ -98,9 +107,11 @@ class User(UserMixin):
 
 
 @login_manager.user_loader
-def load_user(user_id):
-    db = get_db()
-    row = db.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
+def load_user(user_id: int):
+    db: sqlite3.Connection = get_db()
+    row: sqlite3.Row | None = db.execute(
+        "SELECT * FROM users WHERE id = ?", (user_id,)
+    ).fetchone()
     if row is None:
         return None
     return User(
@@ -112,16 +123,7 @@ def load_user(user_id):
     )
 
 
-class Guide:
-    def __init__(self, id, url, title_id, achievement_id, user_id):
-        self.id = id
-        self.url = url
-        self.title_id = title_id
-        self.achievement_id = achievement_id
-        self.user_id = user_id
-
-
-def get_user_by_username(username):
+def get_user_by_username(username: str) -> User | None:
     """Look up a user by username. Returns a User or None."""
     db = get_db()
     row = db.execute("SELECT * FROM users WHERE username = ?", (username,)).fetchone()
@@ -141,7 +143,7 @@ def get_user_by_username(username):
 # ---------------------------------------------------------------------------
 
 
-def xbl_get(path):
+def xbl_get(path: str) -> dict | None:
     """Make an authenticated GET request to the OpenXBL API.
 
     Returns the unwrapped 'content' payload on success, or None on failure.
@@ -307,7 +309,7 @@ def games(username):
 X360_MEDIA_TYPES = {"Xbox360Game", "XboxArcadeGame"}
 
 
-def _normalize_x360_achievement(a):
+def _normalize_x360_achievement(a: dict) -> dict:
     """Convert an Xbox 360 achievement dict into the modern schema so the
     template can render both formats identically.
     """
@@ -333,6 +335,18 @@ def _normalize_x360_achievement(a):
         normalized["progression"]["timeUnlocked"] = time_unlocked
 
     return normalized
+
+
+def _get_icon_url(achievement_id: int, title_id: int) -> str | None:
+    db = get_db()
+    cursor = db.execute(
+        "SELECT url FROM icon360 WHERE achievement_id = ? AND title_id = ?",
+        (achievement_id, title_id),
+    )
+    result = cursor.fetchone()
+    if result:
+        print(f"Found icon: {result}")
+    return url_for("static", filename=result[0]) if result else None
 
 
 @app.route("/games/<username>/<title_id>")
@@ -363,7 +377,6 @@ def game_achievements(username, title_id):
 
     # The response may be a dict with an "achievements" key, or a list directly.
     if isinstance(content, dict):
-        print("Is a dict")
         achievements = content.get("achievements", [])
     else:
         achievements = []
@@ -396,6 +409,15 @@ def game_achievements(username, title_id):
             unlocked.append(a)
         else:
             locked.append(a)
+
+        # Attempt to populate icon with local 360 icon
+        if is_x360:
+            if a["id"] == 91:
+                print(f"Looking up icon for achievement {a['id']} in title {title_id}")
+            icon = _get_icon_url(a["id"], title_id)
+            if icon:
+                print("Got here: " + icon)
+                a["mediaAssets"] = [{"url": icon}]
 
     if game_name is None:
         game_name = request.args.get("game_name", f"Title ID: {title_id}")
