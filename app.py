@@ -2,6 +2,7 @@ import os
 import sqlite3
 
 import requests
+from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 from flask import Flask, flash, g, redirect, render_template, request, url_for
 from flask_login import (
@@ -68,6 +69,8 @@ def init_db():
         CREATE TABLE IF NOT EXISTS guides (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             url TEXT NOT NULL,
+            title TEXT,
+            description TEXT,
             title_id INTEGER NOT NULL,
             achievement_id INTEGER DEFAULT NULL,
             user_id INTEGER,
@@ -83,9 +86,47 @@ def init_db():
     )
     db.commit()
 
+    # Migrate existing databases: add title and description to guides
+    existing = {row[1] for row in db.execute("PRAGMA table_info(guides)").fetchall()}
+    if "title" not in existing:
+        db.execute("ALTER TABLE guides ADD COLUMN title TEXT")
+    if "description" not in existing:
+        db.execute("ALTER TABLE guides ADD COLUMN description TEXT")
+    db.commit()
+
 
 with app.app_context():
     init_db()
+
+
+def fetch_url_metadata(url):
+    """Fetch the title and description from a URL's HTML meta tags."""
+    title = None
+    description = None
+    try:
+        resp = requests.get(url, timeout=10, headers={"User-Agent": "Overachiever/1.0"})
+        resp.raise_for_status()
+        soup = BeautifulSoup(resp.text, "html.parser")
+
+        # Title: prefer Open Graph, fall back to <title>
+        og_title = soup.find("meta", property="og:title")
+        if og_title and og_title.get("content"):
+            title = og_title["content"].strip()
+        elif soup.title and soup.title.string:
+            title = soup.title.string.strip()
+
+        # Description: prefer Open Graph, fall back to <meta name="description">
+        og_desc = soup.find("meta", property="og:description")
+        if og_desc and og_desc.get("content"):
+            description = og_desc["content"].strip()
+        else:
+            meta_desc = soup.find("meta", attrs={"name": "description"})
+            if meta_desc and meta_desc.get("content"):
+                description = meta_desc["content"].strip()
+    except Exception:
+        pass
+    return title, description
+
 
 # ---------------------------------------------------------------------------
 # Flask-Login setup
@@ -452,10 +493,12 @@ def game_guides(username, title_id):
         if not url:
             flash("Please provide a URL.", "error")
         else:
+            title, description = fetch_url_metadata(url)
             db = get_db()
             db.execute(
-                "INSERT INTO guides (url, title_id, achievement_id, user_id) VALUES (?, ?, NULL, ?)",
-                (url, title_id, current_user.id),
+                "INSERT INTO guides (url, title, description, title_id, achievement_id, user_id) "
+                "VALUES (?, ?, ?, ?, NULL, ?)",
+                (url, title, description, title_id, current_user.id),
             )
             db.commit()
             flash("Guide submitted!", "success")
@@ -467,7 +510,8 @@ def game_guides(username, title_id):
 
     db = get_db()
     rows = db.execute(
-        "SELECT g.id, g.url, g.title_id, g.achievement_id, g.user_id, u.username AS author "
+        "SELECT g.id, g.url, g.title, g.description, g.title_id, g.achievement_id, "
+        "g.user_id, u.username AS author "
         "FROM guides g JOIN users u ON g.user_id = u.id "
         "WHERE g.title_id = ? AND g.achievement_id IS NULL",
         (title_id,),
@@ -506,10 +550,12 @@ def achievement_guides(username, title_id, achievement_id):
         if not url:
             flash("Please provide a URL.", "error")
         else:
+            title, description = fetch_url_metadata(url)
             db = get_db()
             db.execute(
-                "INSERT INTO guides (url, title_id, achievement_id, user_id) VALUES (?, ?, ?, ?)",
-                (url, title_id, achievement_id, current_user.id),
+                "INSERT INTO guides (url, title, description, title_id, achievement_id, user_id) "
+                "VALUES (?, ?, ?, ?, ?, ?)",
+                (url, title, description, title_id, achievement_id, current_user.id),
             )
             db.commit()
             flash("Guide submitted!", "success")
@@ -526,7 +572,8 @@ def achievement_guides(username, title_id, achievement_id):
 
     db = get_db()
     rows = db.execute(
-        "SELECT g.id, g.url, g.title_id, g.achievement_id, g.user_id, u.username AS author "
+        "SELECT g.id, g.url, g.title, g.description, g.title_id, g.achievement_id, "
+        "g.user_id, u.username AS author "
         "FROM guides g JOIN users u ON g.user_id = u.id "
         "WHERE g.title_id = ? AND g.achievement_id = ?",
         (title_id, achievement_id),

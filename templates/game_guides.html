@@ -104,16 +104,33 @@
                 flex: 1;
                 min-width: 0;
             }
-            .guide-url {
+            .guide-title {
                 color: #4ea24e;
                 text-decoration: none;
                 font-weight: 600;
                 font-size: 1rem;
+            }
+            .guide-title:hover {
+                text-decoration: underline;
+                color: #6fc46f;
+            }
+            .guide-url {
+                color: #888;
+                text-decoration: none;
+                font-size: 0.8rem;
                 word-break: break-all;
+                margin-top: 0.2rem;
+                display: block;
             }
             .guide-url:hover {
                 text-decoration: underline;
-                color: #6fc46f;
+                color: #aaa;
+            }
+            .guide-description {
+                font-size: 0.85rem;
+                color: #aaa;
+                margin-top: 0.35rem;
+                line-height: 1.4;
             }
             .guide-author {
                 font-size: 0.8rem;
@@ -201,12 +218,22 @@
             <div class="guide-card">
                 <div class="guide-info">
                     <a
+                        class="guide-title"
+                        href="{{ guide.url }}"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        >{{ guide.title or guide.url }}</a
+                    >
+                    <a
                         class="guide-url"
                         href="{{ guide.url }}"
                         target="_blank"
                         rel="noopener noreferrer"
                         >{{ guide.url }}</a
                     >
+                    {% if guide.description %}
+                    <div class="guide-description">{{ guide.description }}</div>
+                    {% endif %}
                     <div class="guide-author">
                         Submitted by {{ guide.author }}
                     </div>
