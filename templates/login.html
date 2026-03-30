@@ -137,10 +137,12 @@
                 <button type="submit">Log In</button>
             </form>
 
+            {% if allow_registration %}
             <p class="alt-link">
                 Don't have an account?
                 <a href="{{ url_for('register') }}">Register</a>
             </p>
+            {% endif %}
         </div>
     </body>
 </html>

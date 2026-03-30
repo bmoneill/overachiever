@@ -23,6 +23,11 @@ DATABASE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "overachieve
 
 OPENXBL_API_KEY = os.environ.get("OPENXBL_API_KEY")
 OPENXBL_BASE_URL = "https://api.xbl.io"
+ALLOW_REGISTRATION = os.environ.get("ALLOW_REGISTRATION", "true").lower() not in (
+    "false",
+    "0",
+    "no",
+)
 
 # ---------------------------------------------------------------------------
 # Database helpers
@@ -194,11 +199,15 @@ def login():
         next_page = request.args.get("next")
         return redirect(next_page or url_for("my_games"))
 
-    return render_template("login.html")
+    return render_template("login.html", allow_registration=ALLOW_REGISTRATION)
 
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
+    if not ALLOW_REGISTRATION:
+        flash("Registration is currently disabled.", "error")
+        return redirect(url_for("login"))
+
     if current_user.is_authenticated:
         return redirect(url_for("my_games"))
 
