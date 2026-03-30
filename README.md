@@ -40,8 +40,9 @@ TODO
 
 ### Disabling User Registration
 
-To disable user registration (to prevent others from using your API requests),
-do the following: TODO
+User registration is disabled by default to protect API rate limits.
+To enable registration, change `ALLOW_REGISTRATION` to `true` in your
+`.env` file.
 
 ## Bugs
 
