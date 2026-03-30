@@ -37,7 +37,9 @@ flask run
 
 ### Docker
 
-TODO
+```shell
+docker compose up --build
+```
 
 ### Disabling User Registration
 
