@@ -64,19 +64,22 @@ def init_db():
             username TEXT UNIQUE NOT NULL,
             email TEXT UNIQUE NOT NULL,
             password_hash TEXT NOT NULL,
-            xuid TEXT NOT NULL
+            xuid TEXT DEFAULT NULL,
+            steamid TEXT DEFAULT NULL,
+            psn_id TEXT DEFAULT NULL
         );
         CREATE TABLE IF NOT EXISTS guides (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             url TEXT NOT NULL,
             title TEXT,
             description TEXT,
+            platform_id INTEGER NOT NULL,
             title_id INTEGER NOT NULL,
             achievement_id INTEGER DEFAULT NULL,
             user_id INTEGER,
             FOREIGN KEY (user_id) REFERENCES users(id)
         );
-        CREATE TABLE IF NOT EXISTS icon360 (
+        CREATE TABLE IF NOT EXISTS xbox360icons (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             url TEXT NOT NULL,
             title_id INTEGER NOT NULL,
@@ -384,7 +387,7 @@ def _normalize_x360_achievement(a: dict) -> dict:
 def _get_icon_url(achievement_id: int, title_id: int) -> str | None:
     db = get_db()
     cursor = db.execute(
-        "SELECT url FROM icon360 WHERE achievement_id = ? AND title_id = ?",
+        "SELECT url FROM xbox360icons WHERE achievement_id = ? AND title_id = ?",
         (achievement_id, title_id),
     )
     result = cursor.fetchone()
