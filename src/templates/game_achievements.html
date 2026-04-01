@@ -330,10 +330,9 @@
                     </form>
                     {% endif %} {% endif %}
                 </div>
-                <div class="achievement-score">
-                    {% if a.gamerscore is not none %} {{ a.gamerscore }}G {%
-                    else %} &mdash; {% endif %}
-                </div>
+                {% if a.gamerscore is not none %}
+                <div class="achievement-score">{{ a.gamerscore }}G</div>
+                {% endif %}
             </div>
             {% endfor %} {% endif %} {% if locked %}
             <div class="section-header locked">
