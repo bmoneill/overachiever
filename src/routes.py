@@ -83,26 +83,75 @@ def _normalize_xbox_titles(titles: list[dict]) -> list[dict]:
     return result
 
 
-def _normalize_steam_games(games: list[dict]) -> list[dict]:
+def _fetch_steam_achievement_counts(
+    steam_id: str, appids: list[str],
+) -> dict[str, tuple[int, int]]:
+    """Batch-fetch achievement counts for Steam games.
+
+    Calls ``GetTopAchievementsForGames`` in batches and returns a dict
+    mapping *appid* → ``(unlocked, total)``.
+    """
+    counts: dict[str, tuple[int, int]] = {}
+    BATCH_SIZE = 100
+    for start in range(0, len(appids), BATCH_SIZE):
+        batch = appids[start : start + BATCH_SIZE]
+        params: dict[str, str] = {
+            "steamid": steam_id,
+            "max_achievements": "10000",
+        }
+        for i, appid in enumerate(batch):
+            params[f"appids[{i}]"] = appid
+        try:
+            data = steam_get(
+                "/IPlayerService/GetTopAchievementsForGames/v1",
+                params=params,
+            )
+            for game in data.get("games", []):
+                aid = str(game.get("appid", ""))
+                total = game.get("total_achievements", 0)
+                unlocked = len(game.get("achievements", []))
+                counts[aid] = (unlocked, total)
+        except AchievementAPIError:
+            continue
+    return counts
+
+
+def _normalize_steam_games(
+    games: list[dict],
+    ach_counts: dict[str, tuple[int, int]] | None = None,
+) -> list[dict]:
     """Normalize Steam owned-games into common game-card dicts."""
     result = []
     for game in games:
         appid = game.get("appid", "")
+        appid_str = str(appid)
         rtime = game.get("rtime_last_played", 0)
         last_played = ""
         if rtime:
             last_played = datetime.fromtimestamp(rtime, tz=timezone.utc).isoformat()
+
+        current_achievements = None
+        total_achievements = None
+        progress_percentage = None
+        if ach_counts and appid_str in ach_counts:
+            current_achievements, total_achievements = ach_counts[appid_str]
+            progress_percentage = (
+                round(current_achievements / total_achievements * 100)
+                if total_achievements > 0
+                else 0
+            )
+
         result.append({
             "platform": "steam",
-            "title_id": str(appid),
+            "title_id": appid_str,
             "name": game.get("name", "Unknown Title"),
             "image_url": (
                 f"https://cdn.cloudflare.steamstatic.com/steam/apps/{appid}/header.jpg"
                 if appid else ""
             ),
-            "current_achievements": None,
-            "total_achievements": None,
-            "progress_percentage": None,
+            "current_achievements": current_achievements,
+            "total_achievements": total_achievements,
+            "progress_percentage": progress_percentage,
             "last_played": last_played,
             "media_type": "",
         })
@@ -153,7 +202,11 @@ def games(username):
                 },
             )
             steam_games = data.get("games", [])
-            all_games.extend(_normalize_steam_games(steam_games))
+            appids = [str(g["appid"]) for g in steam_games if g.get("appid")]
+            ach_counts = _fetch_steam_achievement_counts(
+                target_user.steam_id, appids,
+            )
+            all_games.extend(_normalize_steam_games(steam_games, ach_counts))
         except AchievementAPIError as e:
             flash(f"Steam: {e}", "error")
 
