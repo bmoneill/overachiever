@@ -16,7 +16,7 @@ from flask_login import (
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from api.achievement import AchievementAPIError
-from api.xbox import X360_MEDIA_TYPES, XboxAchievementAPI, xbl_get
+from api.xbox import XboxAchievementAPI, xbl_get
 
 load_dotenv()
 
