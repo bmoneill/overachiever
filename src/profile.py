@@ -4,9 +4,15 @@ from flask_login import current_user, login_required
 from . import app
 from .auth import get_user_by_username
 from .db import get_db
+from .api.platform import PLATFORM_XBOX, PLATFORM_STEAM
 from .api.xbox import XboxProfileAPI
 from .api.steam import SteamProfileAPI
 from .api.profile import ProfileAPIError
+
+PLATFORM_ID_TO_SLUG = {
+    PLATFORM_XBOX: "xbox",
+    PLATFORM_STEAM: "steam",
+}
 
 
 @app.route("/profile/<username>")
@@ -38,12 +44,26 @@ def profile(username):
 
     is_own_profile = current_user.is_authenticated and current_user.id == target_user.id
 
+    db = get_db()
+    showcase_games = db.execute(
+        "SELECT * FROM showcase_games WHERE user_id = ? ORDER BY id",
+        (target_user.id,),
+    ).fetchall()
+
+    showcase_achievements = db.execute(
+        "SELECT * FROM showcase_achievements WHERE user_id = ? ORDER BY id",
+        (target_user.id,),
+    ).fetchall()
+
     return render_template(
         "profile.html",
         target_user=target_user,
         xbox_profile=xbox_profile,
         steam_profile=steam_profile,
         is_own_profile=is_own_profile,
+        showcase_games=showcase_games,
+        showcase_achievements=showcase_achievements,
+        platform_slugs=PLATFORM_ID_TO_SLUG,
     )
 
 

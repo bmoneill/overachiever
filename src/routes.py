@@ -263,6 +263,37 @@ def game_achievements(username, platform, title_id):
     if game_name is None:
         game_name = request.args.get("game_name", f"Title ID: {title_id}")
 
+    platform_id = PLATFORM_SLUG_TO_ID[platform]
+    game_image_url = request.args.get("game_image_url", "")
+    is_own_page = current_user.is_authenticated and current_user.id == target_user.id
+
+    game_in_showcase = False
+    showcase_game_count = 0
+    showcase_achievement_ids: set[str] = set()
+    showcase_achievement_count = 0
+
+    if is_own_page:
+        db = get_db()
+        showcase_game_count = db.execute(
+            "SELECT COUNT(*) AS c FROM showcase_games WHERE user_id = ?",
+            (current_user.id,),
+        ).fetchone()["c"]
+        game_in_showcase = db.execute(
+            "SELECT id FROM showcase_games "
+            "WHERE user_id = ? AND platform_id = ? AND title_id = ?",
+            (current_user.id, platform_id, title_id),
+        ).fetchone() is not None
+        showcase_achievement_count = db.execute(
+            "SELECT COUNT(*) AS c FROM showcase_achievements WHERE user_id = ?",
+            (current_user.id,),
+        ).fetchone()["c"]
+        showcased_rows = db.execute(
+            "SELECT achievement_id FROM showcase_achievements "
+            "WHERE user_id = ? AND platform_id = ? AND title_id = ?",
+            (current_user.id, platform_id, title_id),
+        ).fetchall()
+        showcase_achievement_ids = {str(row["achievement_id"]) for row in showcased_rows}
+
     return render_template(
         "game_achievements.html",
         unlocked=unlocked,
@@ -271,7 +302,14 @@ def game_achievements(username, platform, title_id):
         username=target_user.username,
         title_id=title_id,
         platform=platform,
+        platform_id=platform_id,
         media_type=media_type,
+        game_image_url=game_image_url,
+        is_own_page=is_own_page,
+        game_in_showcase=game_in_showcase,
+        showcase_game_count=showcase_game_count,
+        showcase_achievement_ids=showcase_achievement_ids,
+        showcase_achievement_count=showcase_achievement_count,
     )
 
 
@@ -389,13 +427,21 @@ def achievement_guides(username, platform, title_id, achievement_id):
             else:
                 achievement_summary_id = summary["id"]
 
-            db.execute(
-                "INSERT INTO guides (url, title, description, platform_id, title_id, achievement_summary_id, user_id) "
-                "VALUES (?, ?, ?, ?, ?, ?, ?)",
-                (url, title, description, platform_id, title_id, achievement_summary_id, current_user.id),
-            )
-            db.commit()
-            flash("Guide submitted!", "success")
+            existing = db.execute(
+                "SELECT id FROM guides WHERE url = ? AND achievement_summary_id = ?",
+                (url, achievement_summary_id),
+            ).fetchone()
+
+            if existing:
+                flash("A guide with that URL has already been submitted for this achievement.", "error")
+            else:
+                db.execute(
+                    "INSERT INTO guides (url, title, description, platform_id, title_id, achievement_summary_id, user_id) "
+                    "VALUES (?, ?, ?, ?, ?, ?, ?)",
+                    (url, title, description, platform_id, title_id, achievement_summary_id, current_user.id),
+                )
+                db.commit()
+                flash("Guide submitted!", "success")
         return redirect(
             url_for(
                 "achievement_guides",
@@ -421,7 +467,7 @@ def achievement_guides(username, platform, title_id, achievement_id):
     if summary:
         rows = db.execute(
             "SELECT g.id, g.url, g.title, g.description, g.title_id, g.achievement_summary_id, "
-            "g.user_id, u.username AS author "
+            "g.user_id, g.created_at, u.username AS author "
             "FROM guides g JOIN users u ON g.user_id = u.id "
             "WHERE g.achievement_summary_id = ?",
             (summary["id"],),

@@ -69,6 +69,65 @@
                 text-decoration: underline;
                 color: #6fc46f;
             }
+            .showcase-btn-form {
+                display: inline-block;
+                margin-left: 0.75rem;
+            }
+            .showcase-btn {
+                font-size: 0.8rem;
+                color: #e0c040;
+                background: transparent;
+                border: 1px solid #e0c040;
+                border-radius: 4px;
+                padding: 0.15rem 0.5rem;
+                cursor: pointer;
+                transition:
+                    background 0.2s,
+                    color 0.2s;
+            }
+            .showcase-btn:hover {
+                background: #e0c040;
+                color: #0e0e0e;
+            }
+            .showcase-btn.in-showcase {
+                border-color: #666;
+                color: #666;
+                cursor: default;
+            }
+            .showcase-btn.in-showcase:hover {
+                background: transparent;
+                color: #666;
+            }
+            .showcase-game-form {
+                display: block;
+                text-align: center;
+                margin-bottom: 2rem;
+            }
+            .showcase-game-btn {
+                font-size: 0.95rem;
+                padding: 0.5rem 1.25rem;
+                border-radius: 6px;
+                cursor: pointer;
+                font-weight: 600;
+                transition:
+                    background 0.2s,
+                    color 0.2s;
+            }
+            .showcase-game-btn.add {
+                color: #e0c040;
+                background: transparent;
+                border: 1px solid #e0c040;
+            }
+            .showcase-game-btn.add:hover {
+                background: #e0c040;
+                color: #0e0e0e;
+            }
+            .showcase-game-btn.added {
+                color: #666;
+                background: transparent;
+                border: 1px solid #444;
+                cursor: default;
+            }
             .error {
                 max-width: 600px;
                 margin: 2rem auto;
@@ -206,8 +265,66 @@
                 >📖 Game Guides</a
             >
 
-            {% with messages = get_flashed_messages(with_categories=true) %} {%
-            for category, message in messages %}
+            {% if is_own_page %}
+            <div class="showcase-game-form">
+                {% if game_in_showcase %}
+                <button class="showcase-game-btn added" disabled>
+                    ✓ In Showcase
+                </button>
+                {% elif showcase_game_count >= 5 %}
+                <button class="showcase-game-btn added" disabled>
+                    Showcase Full (5/5)
+                </button>
+                {% else %}
+                <form
+                    method="POST"
+                    action="{{ url_for('showcase_add_game') }}"
+                    style="display: inline"
+                >
+                    <input
+                        type="hidden"
+                        name="platform_id"
+                        value="{{ platform_id }}"
+                    />
+                    <input
+                        type="hidden"
+                        name="title_id"
+                        value="{{ title_id }}"
+                    />
+                    <input
+                        type="hidden"
+                        name="game_name"
+                        value="{{ game_name }}"
+                    />
+                    <input
+                        type="hidden"
+                        name="image_url"
+                        value="{{ game_image_url }}"
+                    />
+                    <input
+                        type="hidden"
+                        name="current_achievements"
+                        value="{{ unlocked | length }}"
+                    />
+                    <input
+                        type="hidden"
+                        name="total_achievements"
+                        value="{{ (unlocked | length) + (locked | length) }}"
+                    />
+                    <input
+                        type="hidden"
+                        name="redirect_url"
+                        value="{{ request.url }}"
+                    />
+                    <button type="submit" class="showcase-game-btn add">
+                        ⭐ Add Game to Showcase
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+            {% endif %} {% with messages =
+            get_flashed_messages(with_categories=true) %} {% for category,
+            message in messages %}
             <div class="error">{{ message }}</div>
             {% endfor %} {% endwith %} {% if unlocked %}
             <div class="section-header unlocked">
@@ -240,6 +357,69 @@
                         href="{{ url_for('achievement_guides', username=username, platform=platform, title_id=title_id, achievement_id=a.achievement_id, game_name=game_name, achievement_name=a.name, achievement_description=a.description, media_type=media_type) }}"
                         >📖 Guides</a
                     >
+                    {% if is_own_page %} {% if a.achievement_id|string in
+                    showcase_achievement_ids %}
+                    <span class="showcase-btn-form">
+                        <button class="showcase-btn in-showcase" disabled>
+                            ✓ Showcased
+                        </button>
+                    </span>
+                    {% elif showcase_achievement_count < 5 %}
+                    <form
+                        class="showcase-btn-form"
+                        method="POST"
+                        action="{{ url_for('showcase_add_achievement') }}"
+                    >
+                        <input
+                            type="hidden"
+                            name="platform_id"
+                            value="{{ platform_id }}"
+                        />
+                        <input
+                            type="hidden"
+                            name="title_id"
+                            value="{{ title_id }}"
+                        />
+                        <input
+                            type="hidden"
+                            name="achievement_id"
+                            value="{{ a.achievement_id }}"
+                        />
+                        <input
+                            type="hidden"
+                            name="game_name"
+                            value="{{ game_name }}"
+                        />
+                        <input
+                            type="hidden"
+                            name="achievement_name"
+                            value="{{ a.name }}"
+                        />
+                        <input
+                            type="hidden"
+                            name="achievement_description"
+                            value="{{ a.description }}"
+                        />
+                        <input
+                            type="hidden"
+                            name="image_url"
+                            value="{{ a.image_url }}"
+                        />
+                        <input
+                            type="hidden"
+                            name="gamerscore"
+                            value="{{ a.gamerscore if a.gamerscore is not none else '' }}"
+                        />
+                        <input
+                            type="hidden"
+                            name="redirect_url"
+                            value="{{ request.url }}"
+                        />
+                        <button type="submit" class="showcase-btn">
+                            ⭐ Showcase
+                        </button>
+                    </form>
+                    {% endif %} {% endif %}
                 </div>
                 <div class="achievement-score">
                     {% if a.gamerscore is not none %} {{ a.gamerscore }}G {%

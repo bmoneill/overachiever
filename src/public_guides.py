@@ -55,7 +55,7 @@ def public_game_guides(platform, title_id):
     ).fetchall()
 
     achievement_rows = db.execute(
-        "SELECT g.id, g.url, g.title, g.description, "
+        "SELECT g.id, g.url, g.title, g.description, g.created_at, "
         "       a.achievement_id, a.achievement_name, a.achievement_description, "
         "       u.username AS author "
         "FROM guides g "

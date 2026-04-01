@@ -250,6 +250,121 @@
             .games-link:hover {
                 text-decoration: underline;
             }
+            .showcase-game-row {
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+                padding: 0.6rem 0;
+            }
+            .showcase-game-row + .showcase-game-row {
+                border-top: 1px solid #2a2a2a;
+            }
+            .showcase-game-thumb {
+                width: 64px;
+                height: 64px;
+                border-radius: 8px;
+                flex-shrink: 0;
+                object-fit: cover;
+                background: #333;
+            }
+            .showcase-game-info {
+                flex: 1;
+                min-width: 0;
+            }
+            .showcase-game-name {
+                font-weight: 600;
+                font-size: 0.95rem;
+                color: #e0e0e0;
+                margin-bottom: 0.2rem;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            .showcase-game-progress {
+                font-size: 0.8rem;
+                color: #aaa;
+                margin-bottom: 0.3rem;
+            }
+            .progress-bar {
+                height: 5px;
+                background: #333;
+                border-radius: 3px;
+                overflow: hidden;
+            }
+            .progress-bar-fill {
+                height: 100%;
+                background: #107c10;
+                border-radius: 3px;
+            }
+            .showcase-achievement-row {
+                display: flex;
+                align-items: flex-start;
+                gap: 0.75rem;
+                padding: 0.6rem 0;
+            }
+            .showcase-achievement-row + .showcase-achievement-row {
+                border-top: 1px solid #2a2a2a;
+            }
+            .showcase-achievement-icon {
+                width: 48px;
+                height: 48px;
+                border-radius: 6px;
+                flex-shrink: 0;
+                object-fit: cover;
+                background: #222;
+            }
+            .showcase-achievement-info {
+                flex: 1;
+                min-width: 0;
+            }
+            .showcase-achievement-name {
+                font-weight: 600;
+                font-size: 0.95rem;
+                color: #e0e0e0;
+                margin-bottom: 0.15rem;
+            }
+            .showcase-achievement-desc {
+                font-size: 0.8rem;
+                color: #aaa;
+                line-height: 1.4;
+                margin-bottom: 0.15rem;
+            }
+            .showcase-achievement-game {
+                font-size: 0.75rem;
+                color: #666;
+            }
+            .showcase-achievement-score {
+                flex-shrink: 0;
+                min-width: 45px;
+                text-align: right;
+                font-size: 0.95rem;
+                font-weight: 700;
+                color: #107c10;
+                padding-top: 0.1rem;
+            }
+            .remove-btn {
+                flex-shrink: 0;
+                background: transparent;
+                border: 1px solid #444;
+                color: #888;
+                border-radius: 4px;
+                width: 26px;
+                height: 26px;
+                font-size: 0.8rem;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition:
+                    background 0.2s,
+                    color 0.2s,
+                    border-color 0.2s;
+            }
+            .remove-btn:hover {
+                background: #3b1010;
+                border-color: #6b2020;
+                color: #f5a0a0;
+            }
             .back-link {
                 display: block;
                 text-align: center;
@@ -266,20 +381,29 @@
     <body>
         <div class="container">
             <div class="nav-bar">
-                <a class="nav-link" href="{{ url_for('my_games') }}">My Games</a>
-                <a class="nav-link" href="{{ url_for('profile', username=current_user.username) }}">Profile</a>
-                <a class="nav-link" href="{{ url_for('settings') }}">Settings</a>
-                <a class="nav-link logout" href="{{ url_for('logout') }}">Log Out</a>
+                <a class="nav-link" href="{{ url_for('my_games') }}"
+                    >My Games</a
+                >
+                <a
+                    class="nav-link"
+                    href="{{ url_for('profile', username=current_user.username) }}"
+                    >Profile</a
+                >
+                <a class="nav-link" href="{{ url_for('settings') }}"
+                    >Settings</a
+                >
+                <a class="nav-link logout" href="{{ url_for('logout') }}"
+                    >Log Out</a
+                >
             </div>
 
             <h1>🏆 Overachiever</h1>
             <p class="subtitle">{{ target_user.username }}'s Profile</p>
 
-            {% with messages = get_flashed_messages(with_categories=true) %}
-            {% for category, message in messages %}
+            {% with messages = get_flashed_messages(with_categories=true) %} {%
+            for category, message in messages %}
             <div class="{{ category }}">{{ message }}</div>
-            {% endfor %}
-            {% endwith %}
+            {% endfor %} {% endwith %}
 
             <!-- View Mode -->
             <div class="view-section" id="view-section">
@@ -287,8 +411,14 @@
 
                 <div class="card">
                     <div class="card-header">Username</div>
-                    <div class="username-display">{{ target_user.username }}</div>
-                    <a class="games-link" href="{{ url_for('games', username=target_user.username) }}">View Games →</a>
+                    <div class="username-display">
+                        {{ target_user.username }}
+                    </div>
+                    <a
+                        class="games-link"
+                        href="{{ url_for('games', username=target_user.username) }}"
+                        >View Games →</a
+                    >
                 </div>
 
                 <div class="card">
@@ -300,32 +430,186 @@
                     {% endif %}
                 </div>
 
-                {% if target_user.display_gamertags %}
+                {% if showcase_games or showcase_achievements %}
+                <h2 class="section-title">Showcase</h2>
+
+                {% if showcase_games %}
+                <div class="card">
+                    <div class="card-header">
+                        🎮 Games ({{ showcase_games | length }}/5)
+                    </div>
+                    {% for game in showcase_games %}
+                    <div class="showcase-game-row">
+                        {% if game.image_url %}
+                        <img
+                            class="showcase-game-thumb"
+                            src="{{ game.image_url }}"
+                            alt="{{ game.game_name }}"
+                        />
+                        {% else %}
+                        <div class="showcase-game-thumb"></div>
+                        {% endif %}
+                        <div class="showcase-game-info">
+                            <div
+                                class="showcase-game-name"
+                                title="{{ game.game_name }}"
+                            >
+                                {{ game.game_name }}
+                            </div>
+                            <div class="showcase-game-progress">
+                                {{ game.current_achievements }} / {{
+                                game.total_achievements }} achievements {% if
+                                game.total_achievements > 0 %} ({{
+                                (game.current_achievements * 100 /
+                                game.total_achievements) | round | int }}%) {%
+                                else %} (0%) {% endif %}
+                            </div>
+                            <div class="progress-bar">
+                                <div
+                                    class="progress-bar-fill"
+                                    style="width: {{ (game.current_achievements * 100 / game.total_achievements) | round | int if game.total_achievements > 0 else 0 }}%"
+                                ></div>
+                            </div>
+                        </div>
+                        {% if is_own_profile %}
+                        <form
+                            method="POST"
+                            action="{{ url_for('showcase_remove_game') }}"
+                        >
+                            <input
+                                type="hidden"
+                                name="showcase_game_id"
+                                value="{{ game.id }}"
+                            />
+                            <input
+                                type="hidden"
+                                name="redirect_url"
+                                value="{{ request.url }}"
+                            />
+                            <button
+                                type="submit"
+                                class="remove-btn"
+                                title="Remove from showcase"
+                            >
+                                ✕
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %} {% if showcase_achievements %}
+                <div class="card">
+                    <div class="card-header">
+                        🏅 Achievements ({{ showcase_achievements | length }}/5)
+                    </div>
+                    {% for ach in showcase_achievements %}
+                    <div class="showcase-achievement-row">
+                        {% if ach.image_url %}
+                        <img
+                            class="showcase-achievement-icon"
+                            src="{{ ach.image_url }}"
+                            alt=""
+                        />
+                        {% else %}
+                        <div class="showcase-achievement-icon"></div>
+                        {% endif %}
+                        <div class="showcase-achievement-info">
+                            <div class="showcase-achievement-name">
+                                {{ ach.achievement_name }}
+                            </div>
+                            {% if ach.achievement_description %}
+                            <div class="showcase-achievement-desc">
+                                {{ ach.achievement_description }}
+                            </div>
+                            {% endif %} {% if ach.game_name %}
+                            <div class="showcase-achievement-game">
+                                {{ ach.game_name }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% if ach.gamerscore is not none and ach.gamerscore %}
+                        <div class="showcase-achievement-score">
+                            {{ ach.gamerscore }}G
+                        </div>
+                        {% endif %} {% if is_own_profile %}
+                        <form
+                            method="POST"
+                            action="{{ url_for('showcase_remove_achievement') }}"
+                        >
+                            <input
+                                type="hidden"
+                                name="showcase_achievement_id"
+                                value="{{ ach.id }}"
+                            />
+                            <input
+                                type="hidden"
+                                name="redirect_url"
+                                value="{{ request.url }}"
+                            />
+                            <button
+                                type="submit"
+                                class="remove-btn"
+                                title="Remove from showcase"
+                            >
+                                ✕
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %} {% elif is_own_profile %}
+                <h2 class="section-title">Showcase</h2>
+                <div class="card">
+                    <div class="bio-empty">
+                        Your showcase is empty. Visit your games to add items!
+                    </div>
+                </div>
+                {% endif %} {% if target_user.display_gamertags %}
                 <h2 class="section-title">Linked Accounts</h2>
 
                 {% if xbox_profile or steam_profile %}
                 <div class="card">
                     {% if xbox_profile %}
                     <div class="gamertag-row">
-                        <img class="platform-icon" src="{{ url_for('static', filename='xbox.svg') }}" alt="Xbox" />
+                        <img
+                            class="platform-icon"
+                            src="{{ url_for('static', filename='xbox.svg') }}"
+                            alt="Xbox"
+                        />
                         {% if xbox_profile.image_url %}
-                        <img class="avatar" src="{{ xbox_profile.image_url }}" alt="Xbox Avatar" />
+                        <img
+                            class="avatar"
+                            src="{{ xbox_profile.image_url }}"
+                            alt="Xbox Avatar"
+                        />
                         {% endif %}
                         <div class="gamertag-info">
-                            <div class="gamertag-name">{{ xbox_profile.name }}</div>
+                            <div class="gamertag-name">
+                                {{ xbox_profile.name }}
+                            </div>
                             <div class="gamertag-label">Xbox Gamertag</div>
                         </div>
                     </div>
-                    {% endif %}
-
-                    {% if steam_profile %}
+                    {% endif %} {% if steam_profile %}
                     <div class="gamertag-row">
-                        <img class="platform-icon" src="{{ url_for('static', filename='steam.svg') }}" alt="Steam" />
+                        <img
+                            class="platform-icon"
+                            src="{{ url_for('static', filename='steam.svg') }}"
+                            alt="Steam"
+                        />
                         {% if steam_profile.image_url %}
-                        <img class="avatar" src="{{ steam_profile.image_url }}" alt="Steam Avatar" />
+                        <img
+                            class="avatar"
+                            src="{{ steam_profile.image_url }}"
+                            alt="Steam Avatar"
+                        />
                         {% endif %}
                         <div class="gamertag-info">
-                            <div class="gamertag-name">{{ steam_profile.name }}</div>
+                            <div class="gamertag-name">
+                                {{ steam_profile.name }}
+                            </div>
                             <div class="gamertag-label">Steam</div>
                         </div>
                     </div>
@@ -333,15 +617,15 @@
                 </div>
                 {% else %}
                 <div class="card">
-                    <div class="no-gamertags">No linked accounts to display.</div>
+                    <div class="no-gamertags">
+                        No linked accounts to display.
+                    </div>
                 </div>
-                {% endif %}
-
-                {% endif %}
-
-                {% if is_own_profile %}
+                {% endif %} {% endif %} {% if is_own_profile %}
                 <div class="edit-actions">
-                    <button class="btn btn-outline" id="edit-btn" type="button">Edit Profile</button>
+                    <button class="btn btn-outline" id="edit-btn" type="button">
+                        Edit Profile
+                    </button>
                 </div>
                 {% endif %}
             </div>
@@ -351,22 +635,52 @@
             <div class="edit-form" id="edit-section">
                 <h2 class="section-title">Edit Profile</h2>
 
-                <form method="POST" action="{{ url_for('profile_edit', username=target_user.username) }}">
+                <form
+                    method="POST"
+                    action="{{ url_for('profile_edit', username=target_user.username) }}"
+                >
                     <div class="card">
                         <div class="form-group">
                             <label for="bio">Bio</label>
-                            <textarea id="bio" name="bio" placeholder="Tell people about yourself…" maxlength="500">{{ target_user.bio or '' }}</textarea>
+                            <textarea
+                                id="bio"
+                                name="bio"
+                                placeholder="Tell people about yourself…"
+                                maxlength="500"
+                            >
+{{ target_user.bio or '' }}</textarea
+                            >
                         </div>
 
                         <div class="checkbox-group">
-                            <input type="checkbox" id="display_gamertags" name="display_gamertags" {% if target_user.display_gamertags %}checked{% endif %} />
-                            <label for="display_gamertags">Show linked gamertags on my profile</label>
+                            <input
+                                type="checkbox"
+                                id="display_gamertags"
+                                name="display_gamertags"
+                                {%
+                                if
+                                target_user.display_gamertags
+                                %}checked{%
+                                endif
+                                %}
+                            />
+                            <label for="display_gamertags"
+                                >Show linked gamertags on my profile</label
+                            >
                         </div>
                     </div>
 
                     <div class="edit-actions">
-                        <button class="btn btn-outline" id="cancel-btn" type="button">Cancel</button>
-                        <button class="btn btn-green" type="submit">Save Changes</button>
+                        <button
+                            class="btn btn-outline"
+                            id="cancel-btn"
+                            type="button"
+                        >
+                            Cancel
+                        </button>
+                        <button class="btn btn-green" type="submit">
+                            Save Changes
+                        </button>
                     </div>
                 </form>
             </div>
@@ -378,7 +692,8 @@
                     var viewSection = document.getElementById("view-section");
                     var editSection = document.getElementById("edit-section");
 
-                    if (!editBtn || !cancelBtn || !viewSection || !editSection) return;
+                    if (!editBtn || !cancelBtn || !viewSection || !editSection)
+                        return;
 
                     editBtn.addEventListener("click", function () {
                         viewSection.classList.add("hidden");
@@ -393,7 +708,9 @@
             </script>
             {% endif %}
 
-            <a class="back-link" href="{{ url_for('my_games') }}">← Back to Games</a>
+            <a class="back-link" href="{{ url_for('my_games') }}"
+                >← Back to Games</a
+            >
         </div>
     </body>
 </html>

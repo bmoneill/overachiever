@@ -255,7 +255,12 @@
                     <div class="guide-description">{{ guide.description }}</div>
                     {% endif %}
                     <div class="guide-author">
-                        Submitted by {{ guide.author }}
+                        Submitted by {{ guide.author }} {% if guide.created_at
+                        %}
+                        <span style="margin-left: 0.5rem; color: #666"
+                            >{{ guide.created_at[:10] }}</span
+                        >
+                        {% endif %}
                     </div>
                 </div>
             </div>

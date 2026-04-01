@@ -67,6 +67,7 @@ def init_db():
             title_id INTEGER NOT NULL,
             achievement_summary_id INTEGER DEFAULT NULL,
             user_id INTEGER DEFAULT NULL,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES users(id),
             FOREIGN KEY (achievement_summary_id) REFERENCES achievement_summaries(id)
         );
@@ -76,6 +77,30 @@ def init_db():
             user_id INTEGER NOT NULL,
             rating BOOLEAN NOT NULL, /* True = upvote, False = downvote */
             FOREIGN KEY (guide_id) REFERENCES guides(id),
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        );
+        CREATE TABLE IF NOT EXISTS showcase_games (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            platform_id INTEGER NOT NULL,
+            title_id TEXT NOT NULL,
+            game_name TEXT NOT NULL,
+            image_url TEXT DEFAULT NULL,
+            current_achievements INTEGER DEFAULT 0,
+            total_achievements INTEGER DEFAULT 0,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        );
+        CREATE TABLE IF NOT EXISTS showcase_achievements (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            platform_id INTEGER NOT NULL,
+            title_id TEXT NOT NULL,
+            achievement_id TEXT NOT NULL,
+            game_name TEXT DEFAULT NULL,
+            achievement_name TEXT NOT NULL,
+            achievement_description TEXT DEFAULT NULL,
+            image_url TEXT DEFAULT NULL,
+            gamerscore INTEGER DEFAULT NULL,
             FOREIGN KEY (user_id) REFERENCES users(id)
         );
         CREATE TABLE IF NOT EXISTS xbox360icons (

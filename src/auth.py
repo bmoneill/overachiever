@@ -13,6 +13,12 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 from . import app, login_manager
 from .db import get_db
+from .api.platform import PLATFORM_XBOX, PLATFORM_STEAM
+
+PLATFORM_ID_TO_SLUG = {
+    PLATFORM_XBOX: "xbox",
+    PLATFORM_STEAM: "steam",
+}
 
 ALLOW_REGISTRATION = os.environ.get("ALLOW_REGISTRATION", "true").lower() not in (
     "false",
@@ -103,7 +109,25 @@ def get_user_by_username(username: str) -> User | None:
 def index():
     if current_user.is_authenticated:
         return redirect(url_for("my_games"))
-    return redirect(url_for("login"))
+
+    db = get_db()
+    recent_guides = db.execute(
+        "SELECT g.id, g.url, g.title, g.description, g.created_at, "
+        "       g.platform_id, g.title_id, "
+        "       a.game_name, a.achievement_name, "
+        "       u.username AS author "
+        "FROM guides g "
+        "LEFT JOIN users u ON g.user_id = u.id "
+        "LEFT JOIN achievement_summaries a ON g.achievement_summary_id = a.id "
+        "ORDER BY g.created_at DESC "
+        "LIMIT 5"
+    ).fetchall()
+
+    return render_template(
+        "index.html",
+        recent_guides=recent_guides,
+        platform_slugs=PLATFORM_ID_TO_SLUG,
+    )
 
 
 @app.route("/login", methods=["GET", "POST"])

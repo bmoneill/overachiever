@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Overachiever — Xbox Achievements</title>
+        <title>Overachiever</title>
         <style>
             * {
                 box-sizing: border-box;
@@ -16,95 +16,239 @@
                     Helvetica, Arial, sans-serif;
                 background: #0e0e0e;
                 color: #e0e0e0;
-                display: flex;
-                justify-content: center;
-                align-items: center;
                 min-height: 100vh;
+                padding: 2rem 1rem;
             }
             .container {
+                max-width: 720px;
+                margin: 0 auto;
+            }
+            .hero {
                 text-align: center;
-                max-width: 480px;
-                padding: 2rem;
+                padding: 3rem 0 2rem;
             }
-            h1 {
-                font-size: 2.4rem;
-                margin-bottom: 0.25rem;
+            .hero h1 {
+                font-size: 2.6rem;
                 color: #107c10;
+                margin-bottom: 0.5rem;
             }
-            .subtitle {
-                color: #888;
-                margin-bottom: 2rem;
-                font-size: 1rem;
+            .hero .tagline {
+                font-size: 1.1rem;
+                color: #aaa;
+                line-height: 1.6;
+                max-width: 540px;
+                margin: 0 auto 1.5rem;
             }
-            form {
-                display: flex;
-                flex-direction: column;
-                gap: 1rem;
-            }
-            label {
+            .hero .description {
                 font-size: 0.95rem;
-                text-align: left;
-                color: #bbb;
+                color: #888;
+                line-height: 1.6;
+                max-width: 540px;
+                margin: 0 auto 2rem;
             }
-            input[type="text"] {
-                padding: 0.75rem 1rem;
-                font-size: 1rem;
-                border: 1px solid #333;
+            .auth-links {
+                display: flex;
+                justify-content: center;
+                gap: 1rem;
+                margin-bottom: 1rem;
+            }
+            .auth-links a {
+                display: inline-block;
+                padding: 0.7rem 1.75rem;
                 border-radius: 6px;
-                background: #1a1a1a;
-                color: #e0e0e0;
-                outline: none;
-                transition: border-color 0.2s;
-            }
-            input[type="text"]:focus {
-                border-color: #107c10;
-            }
-            button {
-                padding: 0.75rem 1rem;
                 font-size: 1rem;
                 font-weight: 600;
-                border: none;
-                border-radius: 6px;
-                background: #107c10;
-                color: #fff;
-                cursor: pointer;
+                text-decoration: none;
                 transition: background 0.2s;
             }
-            button:hover {
+            .btn-primary {
+                background: #107c10;
+                color: #fff;
+            }
+            .btn-primary:hover {
                 background: #0e6b0e;
             }
-            .error {
-                background: #3b1010;
-                border: 1px solid #6b2020;
-                color: #f5a0a0;
-                padding: 0.75rem 1rem;
-                border-radius: 6px;
+            .btn-secondary {
+                background: #1a1a1a;
+                color: #e0e0e0;
+                border: 1px solid #333;
+            }
+            .btn-secondary:hover {
+                background: #252525;
+                border-color: #107c10;
+            }
+            .browse-link {
+                display: block;
+                text-align: center;
+                margin-top: 0.75rem;
+                color: #4ea24e;
+                text-decoration: none;
+                font-size: 0.95rem;
+            }
+            .browse-link:hover {
+                text-decoration: underline;
+                color: #6fc46f;
+            }
+            .divider {
+                border: none;
+                border-top: 1px solid #2a2a2a;
+                margin: 2.5rem 0;
+            }
+            .section-header {
+                font-size: 1.2rem;
+                color: #e0e0e0;
                 margin-bottom: 1rem;
-                text-align: left;
+                padding-bottom: 0.5rem;
+                border-bottom: 1px solid #2a2a2a;
+            }
+            .section-header .count {
+                color: #888;
+                font-weight: normal;
+                font-size: 1rem;
+            }
+            .guide-card {
+                background: #1a1a1a;
+                border: 1px solid #2a2a2a;
+                border-left: 4px solid #107c10;
+                border-radius: 8px;
+                padding: 1rem;
+                margin-bottom: 0.5rem;
+            }
+            .guide-card:hover {
+                background: #222;
+                border-color: #333;
+                border-left-color: #107c10;
+            }
+            .guide-title {
+                color: #4ea24e;
+                text-decoration: none;
+                font-weight: 600;
+                font-size: 1rem;
+            }
+            .guide-title:hover {
+                text-decoration: underline;
+                color: #6fc46f;
+            }
+            .guide-url {
+                color: #888;
+                text-decoration: none;
+                font-size: 0.8rem;
+                word-break: break-all;
+                margin-top: 0.2rem;
+                display: block;
+            }
+            .guide-url:hover {
+                text-decoration: underline;
+                color: #aaa;
+            }
+            .guide-context {
+                font-size: 0.8rem;
+                color: #6c6;
+                margin-top: 0.35rem;
+            }
+            .guide-context a {
+                color: #6c6;
+                text-decoration: none;
+            }
+            .guide-context a:hover {
+                text-decoration: underline;
+            }
+            .guide-description {
+                font-size: 0.85rem;
+                color: #aaa;
+                margin-top: 0.35rem;
+                line-height: 1.4;
+            }
+            .guide-meta {
+                font-size: 0.8rem;
+                color: #888;
+                margin-top: 0.35rem;
+            }
+            .guide-meta .date {
+                margin-left: 0.5rem;
+                color: #666;
+            }
+            .no-results {
+                text-align: center;
+                color: #888;
+                margin-top: 1.5rem;
             }
         </style>
     </head>
     <body>
         <div class="container">
-            <h1>🏆 Overachiever</h1>
-            <p class="subtitle">Look up Xbox achievements by XUID</p>
+            <div class="hero">
+                <h1>🏆 Overachiever</h1>
+                <p class="tagline">
+                    Track your achievements, share guides, and complete every
+                    game.
+                </p>
+                <p class="description">
+                    Overachiever connects to your Xbox and Steam accounts to
+                    give you a unified view of your achievement progress. Browse
+                    community-submitted guides for any game, or sign in to track
+                    your own collection and share tips with fellow
+                    completionists.
+                </p>
+                <div class="auth-links">
+                    <a class="btn-primary" href="{{ url_for('login') }}"
+                        >Log In</a
+                    >
+                    <a class="btn-secondary" href="{{ url_for('register') }}"
+                        >Register</a
+                    >
+                </div>
+                <a
+                    class="browse-link"
+                    href="{{ url_for('public_guides_index') }}"
+                    >📖 Browse all guides</a
+                >
+            </div>
 
-            {% with messages = get_flashed_messages(with_categories=true) %} {%
-            for category, message in messages %}
-            <div class="error">{{ message }}</div>
-            {% endfor %} {% endwith %}
+            <hr class="divider" />
 
-            <form action="/" method="post">
-                <label for="xuid">Xbox User ID (XUID)</label>
-                <input
-                    type="text"
-                    id="xuid"
-                    name="xuid"
-                    placeholder="e.g. 2533274791234567"
-                    required
-                />
-                <button type="submit">View Achievements</button>
-            </form>
+            <h2 class="section-header">🕐 Recently Submitted Guides</h2>
+
+            {% if recent_guides %} {% for guide in recent_guides %}
+            <div class="guide-card">
+                <a
+                    class="guide-title"
+                    href="{{ guide.url }}"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >{{ guide.title or guide.url }}</a
+                >
+                <a
+                    class="guide-url"
+                    href="{{ guide.url }}"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >{{ guide.url }}</a
+                >
+                {% if guide.game_name %}
+                <div class="guide-context">
+                    <a
+                        href="{{ url_for('public_game_guides', platform=platform_slugs[guide.platform_id], title_id=guide.title_id) }}"
+                        >{{ guide.game_name }}</a
+                    >
+                    {% if guide.achievement_name %} &mdash; {{
+                    guide.achievement_name }}{% endif %}
+                </div>
+                {% endif %} {% if guide.description %}
+                <div class="guide-description">{{ guide.description }}</div>
+                {% endif %}
+                <div class="guide-meta">
+                    {% if guide.author %}Submitted by {{ guide.author }}{% else
+                    %}Anonymous{% endif %} {% if guide.created_at %}
+                    <span class="date">{{ guide.created_at[:10] }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %} {% else %}
+            <p class="no-results">
+                No guides have been submitted yet. Be the first!
+            </p>
+            {% endif %}
         </div>
     </body>
 </html>
