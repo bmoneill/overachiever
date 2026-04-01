@@ -179,7 +179,6 @@
         <div class="container">
             {% include '_navbar.html' %}
             <div class="hero">
-                <h1>🏆 Overachiever</h1>
                 <p class="tagline">
                     Track your achievements, share guides, and complete every
                     game.
@@ -249,7 +248,34 @@
             <p class="no-results">
                 No guides have been submitted yet. Be the first!
             </p>
-            {% endif %}
+            {% endif %} {% if top_achievers %}
+            <hr class="divider" />
+
+            <h2 class="section-header">🏅 Top Achievers</h2>
+
+            {% for user in top_achievers %}
+            <div
+                class="guide-card"
+                style="display: flex; align-items: center; gap: 1rem"
+            >
+                <div
+                    style="font-size: 1.4rem; font-weight: 700; color: {% if loop.index == 1 %}#ffd700{% elif loop.index == 2 %}#c0c0c0{% elif loop.index == 3 %}#cd7f32{% else %}#888{% endif %}; min-width: 2rem; text-align: center;"
+                >
+                    #{{ loop.index }}
+                </div>
+                <div style="flex: 1">
+                    <a
+                        class="guide-title"
+                        href="{{ url_for('profile', username=user.username) }}"
+                        >{{ user.username }}</a
+                    >
+                    <div class="guide-meta" style="margin-top: 0.25rem">
+                        {{ user.achievement_count }} achievement{{ 's' if
+                        user.achievement_count != 1 else '' }} unlocked
+                    </div>
+                </div>
+            </div>
+            {% endfor %} {% endif %}
         </div>
     </body>
 </html>

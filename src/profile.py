@@ -16,7 +16,6 @@ PLATFORM_ID_TO_SLUG = {
 
 
 @app.route("/profile/<username>")
-@login_required
 def profile(username):
     """Public-facing user profile page."""
     target_user = get_user_by_username(username)
@@ -55,6 +54,12 @@ def profile(username):
         (target_user.id,),
     ).fetchall()
 
+    achievement_count_row = db.execute(
+        "SELECT achievement_count FROM users WHERE id = ?",
+        (target_user.id,),
+    ).fetchone()
+    achievement_count = achievement_count_row["achievement_count"] if achievement_count_row else 0
+
     return render_template(
         "profile.html",
         target_user=target_user,
@@ -63,6 +68,7 @@ def profile(username):
         is_own_profile=is_own_profile,
         showcase_games=showcase_games,
         showcase_achievements=showcase_achievements,
+        achievement_count=achievement_count,
         platform_slugs=PLATFORM_ID_TO_SLUG,
     )
 

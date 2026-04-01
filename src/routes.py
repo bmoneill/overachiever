@@ -210,6 +210,17 @@ def games(username):
         except AchievementAPIError as e:
             flash(f"Steam: {e}", "error")
 
+    # Compute total achievement count across all platforms and persist it
+    total_achievement_count = sum(
+        g.get("current_achievements") or 0 for g in all_games
+    )
+    db = get_db()
+    db.execute(
+        "UPDATE users SET achievement_count = ? WHERE id = ?",
+        (total_achievement_count, target_user.id),
+    )
+    db.commit()
+
     return render_template(
         "games.html",
         all_games=all_games,

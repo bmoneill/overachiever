@@ -52,6 +52,16 @@
         align-items: center;
         flex-wrap: wrap;
     }
+    .nav-title {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: #107c10;
+        text-decoration: none;
+        white-space: nowrap;
+    }
+    .nav-title:hover {
+        color: #0e6b0e;
+    }
     .nav-link {
         color: #107c10;
         text-decoration: none;
@@ -66,6 +76,7 @@
     }
 </style>
 <div class="nav-bar">
+    <a class="nav-title" href="{{ url_for('index') }}">🏆 Overachiever</a>
     <form class="nav-search" action="{{ url_for('user_search') }}" method="GET">
         <input
             type="text"

@@ -162,22 +162,30 @@
     <body>
         <div class="container">
             {% include '_navbar.html' %}
-            <h1>🏆 Overachiever</h1>
             <p class="subtitle">Edit Profile</p>
 
-            {% with messages = get_flashed_messages(with_categories=true) %}
-            {% for category, message in messages %}
+            {% with messages = get_flashed_messages(with_categories=true) %} {%
+            for category, message in messages %}
             <div class="{{ category }}">{{ message }}</div>
-            {% endfor %}
-            {% endwith %}
+            {% endfor %} {% endwith %}
 
             <h2 class="section-title">Edit Profile</h2>
 
-            <form method="POST" action="{{ url_for('profile_edit', username=target_user.username) }}">
+            <form
+                method="POST"
+                action="{{ url_for('profile_edit', username=target_user.username) }}"
+            >
                 <div class="card">
                     <div class="form-group">
                         <label for="bio">Bio</label>
-                        <textarea id="bio" name="bio" placeholder="Tell people about yourself…" maxlength="500">{{ target_user.bio or '' }}</textarea>
+                        <textarea
+                            id="bio"
+                            name="bio"
+                            placeholder="Tell people about yourself…"
+                            maxlength="500"
+                        >
+{{ target_user.bio or '' }}</textarea
+                        >
                     </div>
 
                     <div class="checkbox-group">
@@ -185,19 +193,36 @@
                             type="checkbox"
                             id="display_gamertags"
                             name="display_gamertags"
-                            {% if target_user.display_gamertags %}checked{% endif %}
+                            {%
+                            if
+                            target_user.display_gamertags
+                            %}checked{%
+                            endif
+                            %}
                         />
-                        <label for="display_gamertags">Show linked gamertags on my profile</label>
+                        <label for="display_gamertags"
+                            >Show linked gamertags on my profile</label
+                        >
                     </div>
                 </div>
 
                 <div class="edit-actions">
-                    <a class="btn btn-outline" href="{{ url_for('profile', username=target_user.username) }}">Cancel</a>
-                    <button class="btn btn-green" type="submit">Save Changes</button>
+                    <a
+                        class="btn btn-outline"
+                        href="{{ url_for('profile', username=target_user.username) }}"
+                        >Cancel</a
+                    >
+                    <button class="btn btn-green" type="submit">
+                        Save Changes
+                    </button>
                 </div>
             </form>
 
-            <a class="back-link" href="{{ url_for('profile', username=target_user.username) }}">← Back to Profile</a>
+            <a
+                class="back-link"
+                href="{{ url_for('profile', username=target_user.username) }}"
+                >← Back to Profile</a
+            >
         </div>
     </body>
 </html>

@@ -123,10 +123,18 @@ def index():
         "LIMIT 5"
     ).fetchall()
 
+    top_achievers = db.execute(
+        "SELECT username, achievement_count FROM users "
+        "WHERE achievement_count > 0 "
+        "ORDER BY achievement_count DESC "
+        "LIMIT 5"
+    ).fetchall()
+
     return render_template(
         "index.html",
         recent_guides=recent_guides,
         platform_slugs=PLATFORM_ID_TO_SLUG,
+        top_achievers=top_achievers,
     )
 
 

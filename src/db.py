@@ -40,7 +40,8 @@ def init_db():
             xuid TEXT DEFAULT NULL,
             steam_id TEXT DEFAULT NULL,
             psn_id TEXT DEFAULT NULL,
-            display_gamertags BOOLEAN DEFAULT FALSE
+            display_gamertags BOOLEAN DEFAULT FALSE,
+            achievement_count INTEGER DEFAULT 0
         );
         CREATE TABLE IF NOT EXISTS achievement_summaries (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -112,3 +113,10 @@ def init_db():
         """
     )
     db.commit()
+
+    # Migrations for existing databases
+    cursor = db.execute("PRAGMA table_info(users)")
+    existing_columns = {row[1] for row in cursor.fetchall()}
+    if "achievement_count" not in existing_columns:
+        db.execute("ALTER TABLE users ADD COLUMN achievement_count INTEGER DEFAULT 0")
+        db.commit()

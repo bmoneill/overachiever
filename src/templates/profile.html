@@ -224,6 +224,16 @@
                 color: #ccc;
                 cursor: pointer;
             }
+            .achievement-count {
+                font-size: 1.05rem;
+                color: #aaa;
+                padding: 0.6rem 1rem 0.2rem;
+            }
+            .achievement-count-number {
+                font-size: 1.3rem;
+                font-weight: 700;
+                color: #107c10;
+            }
             .games-link {
                 display: inline-block;
                 margin-top: 0.25rem;
@@ -366,7 +376,6 @@
         <div class="container">
             {% include '_navbar.html' %}
 
-            <h1>🏆 Overachiever</h1>
             <p class="subtitle">{{ target_user.username }}'s Profile</p>
 
             {% with messages = get_flashed_messages(with_categories=true) %} {%
@@ -383,6 +392,16 @@
                     <div class="username-display">
                         {{ target_user.username }}
                     </div>
+                    {% if achievement_count is defined and achievement_count %}
+                    <div class="achievement-count">
+                        🏆
+                        <span class="achievement-count-number"
+                            >{{ achievement_count }}</span
+                        >
+                        achievement{{ 's' if achievement_count != 1 else '' }}
+                        unlocked
+                    </div>
+                    {% endif %}
                     <a
                         class="games-link"
                         href="{{ url_for('games', username=target_user.username) }}"
