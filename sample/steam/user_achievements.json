@@ -1,0 +1,184 @@
+// Request: https://api.steampowered.com/IPlayerService/GetTopAchievementsForGames/v1/?key=API_KEY&steamid=STEAMID&appids[0]=TITLEID&max_achievements=10000'
+// These are unlocked achievements
+{
+  "response": {
+    "games": [
+      {
+        "appid": 42700,
+        "total_achievements": 68,
+        "achievements": [
+          {
+            "statid": 2,
+            "bit": 4,
+            "name": "Slingshot Kid ",
+            "desc": "Destroy all slingshot targets in 3 attempts.",
+            "icon": "5e4644a4b38f3fc47114804ec397ea4700629285.jpg",
+            "icon_gray": "999b3f2eb45cfafde0c9aaad7cbb669e9aa7367b.jpg",
+            "hidden": false,
+            "player_percent_unlocked": "10.4"
+          },
+          {
+            "statid": 3,
+            "bit": 15,
+            "name": "\"Insert Coin\"",
+            "desc": "Access the terminal and battle the forces of the Cosmic Silverback in Dead Ops Arcade.",
+            "icon": "54d9340f91dbdb3e22ff5fc256ce30d0fa6a963c.jpg",
+            "icon_gray": "3dec16afb749e32317a52e172f24bda992426529.jpg",
+            "hidden": false,
+            "player_percent_unlocked": "32.3"
+          },
+          {
+            "statid": 3,
+            "bit": 18,
+            "name": "Eaten by a Grue",
+            "desc": "Play Zork on the terminal.",
+            "icon": "35e478ea8071694ca9be384f361aea9c2928c420.jpg",
+            "icon_gray": "50256c7d54b260fb44909add49d260dc05981641.jpg",
+            "hidden": true,
+            "player_percent_unlocked": "8.5"
+          },
+          {
+            "statid": 3,
+            "bit": 0,
+            "name": "Sally Likes Blood",
+            "desc": "Demonstrate killer economic sensibilities by taking down 3 enemies with a single bullet",
+            "icon": "82c5e869cf17efa57d7c2a6d19903cb2aee7ff0d.jpg",
+            "icon_gray": "4232128f7a239d19db87188af1a5d6a2af2d0c97.jpg",
+            "hidden": false,
+            "player_percent_unlocked": "30.7"
+          },
+          {
+            "statid": 3,
+            "bit": 17,
+            "name": "Just ask me nicely",
+            "desc": "Break free from the torture chair.",
+            "icon": "f6e25d8f4ebbe3166dfc3b58c34867f268f2d033.jpg",
+            "icon_gray": "91bb7f795ef5b242ee9677d04c22b11773a1d69d.jpg",
+            "hidden": true,
+            "player_percent_unlocked": "33.6"
+          },
+          {
+            "statid": 2,
+            "bit": 17,
+            "name": "Never get off the boat",
+            "desc": "Find the Soviet connection in Laos.",
+            "icon": "066c88a94e5a4b27555d5c643a08859ddf915d0f.jpg",
+            "icon_gray": "d3b87f3446f2ff1e4d73a4e7387c0600cd9cf644.jpg",
+            "hidden": false,
+            "player_percent_unlocked": "44.2"
+          },
+          {
+            "statid": 2,
+            "bit": 13,
+            "name": "Up close and personal",
+            "desc": "Silently take out 3 VC.",
+            "icon": "77911ac60f573a18fe2b136fe366c6eed30fe108.jpg",
+            "icon_gray": "c4a7dc81daa807eab5cf39da42318176b80b34ac.jpg",
+            "hidden": false,
+            "player_percent_unlocked": "39.7"
+          },
+          {
+            "statid": 2,
+            "bit": 24,
+            "name": "Some wounds never heal",
+            "desc": "Escape the past.",
+            "icon": "e8d0caf4122d896eb05024593bb3b66dadf4e88d.jpg",
+            "icon_gray": "68a537ef09d3abb19326b21cfe0e4755771f49a5.jpg",
+            "hidden": false,
+            "player_percent_unlocked": "46.1"
+          },
+          {
+            "statid": 2,
+            "bit": 15,
+            "name": "Broken English",
+            "desc": "Escape Kowloon.",
+            "icon": "e9d07584f66650764670664404079276b4a3406b.jpg",
+            "icon_gray": "beb6a6d5ff564abae2535f2808c7e399c9282454.jpg",
+            "hidden": false,
+            "player_percent_unlocked": "47.6"
+          },
+          {
+            "statid": 2,
+            "bit": 9,
+            "name": "SOG Rules",
+            "desc": "Retrieve the dossier and the defector from Hue City.",
+            "icon": "f2edbcfaed969439c62f7a4e6f1eb068b413e158.jpg",
+            "icon_gray": "5073ff21b45471ac64630618a97fa8fbba7aaa57.jpg",
+            "hidden": false,
+            "player_percent_unlocked": "49.5"
+          },
+          {
+            "statid": 2,
+            "bit": 11,
+            "name": "The Dragon Within",
+            "desc": "Kill 10 NVA with Dragon's Breath rounds.",
+            "icon": "b5b0accacfbcfa0396cb41f268b5ad8d9a65c613.jpg",
+            "icon_gray": "c4cbb8653509a04ff4b3748acd2e32cc2c93342f.jpg",
+            "hidden": false,
+            "player_percent_unlocked": "47.5"
+          },
+          {
+            "statid": 2,
+            "bit": 8,
+            "name": "Looks don't count",
+            "desc": "Break the siege in the battle of Khe Sanh.",
+            "icon": "aa159223f265ab937d7d5b6690ddcf49020a2cbc.jpg",
+            "icon_gray": "e6a159e6766f95d7018893882b79acd6bb84835a.jpg",
+            "hidden": false,
+            "player_percent_unlocked": "52.1"
+          },
+          {
+            "statid": 2,
+            "bit": 6,
+            "name": "A safer place",
+            "desc": "Sabotage the Soviet space program.",
+            "icon": "b1b1349e22f48972109b743d520183ba70caad3c.jpg",
+            "icon_gray": "b6eca983c5be3b24af12146fdad2368a3f33bfbf.jpg",
+            "hidden": false,
+            "player_percent_unlocked": "56.3"
+          },
+          {
+            "statid": 2,
+            "bit": 5,
+            "name": "VIP",
+            "desc": "Receive orders from Lancer.",
+            "icon": "584c74c05982e10c4441dd65324f277b7539eae2.jpg",
+            "icon_gray": "1f2b2fed5d2d9f33db0f9c5f479cb221e098bca1.jpg",
+            "hidden": false,
+            "player_percent_unlocked": "59.9"
+          },
+          {
+            "statid": 2,
+            "bit": 3,
+            "name": "Give me liberty, or give me death",
+            "desc": "Escape Vorkuta.",
+            "icon": "0a2812d34a7fa98e20285368bc1a763bd792f889.jpg",
+            "icon_gray": "a0dad33664f3cf44fa39ebf26f64bcadff7d40c7.jpg",
+            "hidden": false,
+            "player_percent_unlocked": "61.0"
+          },
+          {
+            "statid": 2,
+            "bit": 1,
+            "name": "Sacrifice ",
+            "desc": "Ensure your squad escapes safely from Cuba.",
+            "icon": "f84ba26b1844819ea9e52aef0d0570559b57a75a.jpg",
+            "icon_gray": "749acb62c1aca5d9c61c74eeb31570b9ed181392.jpg",
+            "hidden": false,
+            "player_percent_unlocked": "66.2"
+          },
+          {
+            "statid": 2,
+            "bit": 0,
+            "name": "Death to Dictators",
+            "desc": "Take down Castro with a headshot.",
+            "icon": "e3b18cd1c090368b0386de8cc46f5a169c4038e9.jpg",
+            "icon_gray": "ce2781821273321eb7f15a7eafb0b6918ccaaa3a.jpg",
+            "hidden": false,
+            "player_percent_unlocked": "63.4"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -15,6 +15,9 @@ from flask_login import (
 )
 from werkzeug.security import check_password_hash, generate_password_hash
 
+from api.achievement import AchievementAPIError
+from api.xbox import X360_MEDIA_TYPES, XboxAchievementAPI, xbl_get
+
 load_dotenv()
 
 app = Flask(__name__)
@@ -26,8 +29,6 @@ DATABASE = os.environ.get(
     os.path.join(os.path.dirname(os.path.abspath(__file__)), "overachiever.db"),
 )
 
-OPENXBL_API_KEY = os.environ.get("OPENXBL_API_KEY")
-OPENXBL_BASE_URL = "https://api.xbl.io"
 ALLOW_REGISTRATION = os.environ.get("ALLOW_REGISTRATION", "true").lower() not in (
     "false",
     "0",
@@ -65,7 +66,7 @@ def init_db():
             email TEXT UNIQUE NOT NULL,
             password_hash TEXT NOT NULL,
             xuid TEXT DEFAULT NULL,
-            steamid TEXT DEFAULT NULL,
+            steam_id TEXT DEFAULT NULL,
             psn_id TEXT DEFAULT NULL
         );
         CREATE TABLE IF NOT EXISTS guides (
@@ -88,15 +89,6 @@ def init_db():
         """
     )
     db.commit()
-
-    # Migrate existing databases: add title and description to guides
-    existing = {row[1] for row in db.execute("PRAGMA table_info(guides)").fetchall()}
-    if "title" not in existing:
-        db.execute("ALTER TABLE guides ADD COLUMN title TEXT")
-    if "description" not in existing:
-        db.execute("ALTER TABLE guides ADD COLUMN description TEXT")
-    db.commit()
-
 
 with app.app_context():
     init_db()
@@ -186,49 +178,19 @@ def get_user_by_username(username: str) -> User | None:
 
 
 # ---------------------------------------------------------------------------
-# OpenXBL API helper
+# Xbox 360 icon helper (depends on Flask context)
 # ---------------------------------------------------------------------------
 
 
-def xbl_get(path: str) -> dict | None:
-    """Make an authenticated GET request to the OpenXBL API.
-
-    Returns the unwrapped 'content' payload on success, or None on failure.
-    On failure a flash message is set automatically.
-    """
-    if not OPENXBL_API_KEY:
-        flash("OPENXBL_API_KEY is not set. Please add it to your .env file.", "error")
-        return None
-
-    headers = {
-        "X-Authorization": OPENXBL_API_KEY,
-        "Accept": "application/json",
-    }
-
-    try:
-        resp = requests.get(
-            f"{OPENXBL_BASE_URL}{path}",
-            headers=headers,
-            timeout=15,
-        )
-        resp.raise_for_status()
-        data = resp.json()
-    except requests.exceptions.RequestException as exc:
-        if hasattr(exc, "response") and exc.response is not None:
-            flash(
-                f"OpenXBL returned status {exc.response.status_code}. "
-                "Check that the XUID is correct.",
-                "error",
-            )
-        else:
-            flash(f"Failed to reach OpenXBL: {exc}", "error")
-        return None
-
-    # The OpenXBL API wraps responses in {"content": ..., "code": ...}.
-    # Unwrap if present, otherwise return the raw data.
-    if isinstance(data, dict) and "content" in data:
-        return data["content"]
-    return data
+def _get_icon_url(achievement_id: int | str, title_id: int) -> str | None:
+    """Look up a locally-cached Xbox 360 icon from the database."""
+    db = get_db()
+    cursor = db.execute(
+        "SELECT url FROM xbox360icons WHERE achievement_id = ? AND title_id = ?",
+        (achievement_id, title_id),
+    )
+    result = cursor.fetchone()
+    return url_for("static", filename=result[0]) if result else None
 
 
 # ---------------------------------------------------------------------------
@@ -339,8 +301,10 @@ def games(username):
         flash("User not found.", "error")
         return redirect(url_for("my_games"))
 
-    content = xbl_get(f"/v2/titles/{target_user.xuid}")
-    if content is None:
+    try:
+        content = xbl_get(f"/v2/titles/{target_user.xuid}")
+    except AchievementAPIError as e:
+        flash(str(e), "error")
         return redirect(url_for("my_games"))
 
     titles = content.get("titles", []) if isinstance(content, dict) else []
@@ -353,49 +317,6 @@ def games(username):
     )
 
 
-X360_MEDIA_TYPES = {"Xbox360Game", "XboxArcadeGame"}
-
-
-def _normalize_x360_achievement(a: dict) -> dict:
-    """Convert an Xbox 360 achievement dict into the modern schema so the
-    template can render both formats identically.
-    """
-    image_url = a.get("imageResolved") or ""
-    gamerscore = a.get("gamerscore")
-
-    normalized = {
-        "id": a.get("id", ""),
-        "name": a.get("name", ""),
-        "description": a.get("description", ""),
-        "lockedDescription": a.get("lockedDescription", ""),
-        "progressState": "Achieved" if a.get("unlocked") else "NotStarted",
-        "mediaAssets": [{"url": image_url}] if image_url else [],
-        "rewards": ([{"value": str(gamerscore)}] if gamerscore is not None else []),
-        "progression": {},
-        "unlocked": a.get("unlocked", False),
-        "titleAssociations": a.get("titleAssociations", []),
-        "rarity": a.get("rarity"),
-    }
-
-    time_unlocked = a.get("timeUnlocked")
-    if time_unlocked:
-        normalized["progression"]["timeUnlocked"] = time_unlocked
-
-    return normalized
-
-
-def _get_icon_url(achievement_id: int, title_id: int) -> str | None:
-    db = get_db()
-    cursor = db.execute(
-        "SELECT url FROM xbox360icons WHERE achievement_id = ? AND title_id = ?",
-        (achievement_id, title_id),
-    )
-    result = cursor.fetchone()
-    if result:
-        print(f"Found icon: {result}")
-    return url_for("static", filename=result[0]) if result else None
-
-
 @app.route("/games/<username>/<title_id>")
 @login_required
 def game_achievements(username, title_id):
@@ -406,65 +327,22 @@ def game_achievements(username, title_id):
         return redirect(url_for("my_games"))
 
     media_type = request.args.get("media_type", "")
-    is_x360 = media_type in X360_MEDIA_TYPES
 
-    if is_x360:
-        # player achievements
-        content = xbl_get(f"/v2/achievements/x360/{target_user.xuid}/title/{title_id}")
-        # title achievements
-        title_achievements = xbl_get(
-            f"/v2/achievements/player/{target_user.xuid}/title/{title_id}"
-        )
-    else:
-        content = xbl_get(f"/v2/achievements/player/{target_user.xuid}/{title_id}")
-        title_achievements = {}
-
-    if content is None or title_achievements is None:
+    try:
+        api = XboxAchievementAPI(target_user.xuid, title_id, media_type)
+        unlocked = api.get_unlocked_achievements()
+        locked = api.get_locked_achievements()
+        game_name = api.game_name
+    except AchievementAPIError as e:
+        flash(str(e), "error")
         return redirect(url_for("games", username=username))
 
-    # The response may be a dict with an "achievements" key, or a list directly.
-    if isinstance(content, dict):
-        achievements = content.get("achievements", [])
-    else:
-        achievements = []
-
-    # Normalize Xbox 360 achievements into the modern shape and
-    # combine player achievements with title achievements.
-    if is_x360:
-        player_achievements = [_normalize_x360_achievement(a) for a in achievements]
-        title_achievements = [
-            _normalize_x360_achievement(a)
-            for a in title_achievements.get("achievements", [])
-        ]
-        achievements = player_achievements
-        for ta in title_achievements:
-            if ta["id"] not in [a["id"] for a in achievements]:
-                achievements.append(ta)
-
-    unlocked = []
-    locked = []
-    game_name = None
-
-    for a in achievements:
-        # Try to grab the game name from the first achievement's titleAssociations
-        if game_name is None:
-            assocs = a.get("titleAssociations", [])
-            if assocs:
-                game_name = assocs[0].get("name")
-
-        if a.get("progressState") == "Achieved":
-            unlocked.append(a)
-        else:
-            locked.append(a)
-
-        # Attempt to populate icon with local 360 icon
-        if is_x360:
-            if a["id"] == 91:
-                print(f"Looking up icon for achievement {a['id']} in title {title_id}")
-            icon = _get_icon_url(a["id"], title_id)
+    # Override with locally-cached Xbox 360 icons when available.
+    if api.is_x360:
+        for a in unlocked + locked:
+            icon = _get_icon_url(a.achievement_id, a.title_id)
             if icon:
-                print("Got here: " + icon)
-                a["mediaAssets"] = [{"url": icon}]
+                a.image_url = icon
 
     if game_name is None:
         game_name = request.args.get("game_name", f"Title ID: {title_id}")
