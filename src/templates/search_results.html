@@ -3,38 +3,14 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Search{% if query %}: {{ query }}{% endif %} — Overachiever</title>
+        <title>
+            Search{% if query %}: {{ query }}{% endif %} — Overachiever
+        </title>
+        <link
+            rel="stylesheet"
+            href="{{ url_for('static', filename='base.css') }}"
+        />
         <style>
-            * {
-                box-sizing: border-box;
-                margin: 0;
-                padding: 0;
-            }
-            body {
-                font-family:
-                    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-                    Helvetica, Arial, sans-serif;
-                background: #0e0e0e;
-                color: #e0e0e0;
-                min-height: 100vh;
-                padding: 2rem 1rem;
-            }
-            .container {
-                max-width: 640px;
-                margin: 0 auto;
-            }
-            h1 {
-                text-align: center;
-                margin-bottom: 0.25rem;
-                color: #107c10;
-                font-size: 1.8rem;
-            }
-            .subtitle {
-                text-align: center;
-                color: #888;
-                margin-bottom: 2rem;
-                font-size: 0.95rem;
-            }
             .user-card {
                 display: flex;
                 align-items: center;
@@ -74,11 +50,6 @@
                 text-overflow: ellipsis;
                 white-space: nowrap;
             }
-            .no-results {
-                text-align: center;
-                color: #888;
-                margin-top: 2rem;
-            }
             .result-count {
                 font-size: 0.85rem;
                 color: #888;
@@ -95,25 +66,31 @@
             <p class="subtitle">Results for "{{ query }}"</p>
             {% else %}
             <p class="subtitle">Enter a username to search</p>
-            {% endif %}
-
-            {% if query and results %}
+            {% endif %} {% if query and results %}
             <div class="result-count">
-                {{ results | length }} user{{ 's' if results | length != 1 else '' }} found
+                {{ results | length }} user{{ 's' if results | length != 1 else
+                '' }} found
             </div>
             {% for user in results %}
-            <a class="user-card" href="{{ url_for('profile', username=user.username) }}">
+            <a
+                class="user-card"
+                href="{{ url_for('profile', username=user.username) }}"
+            >
                 <div class="user-info">
                     <div class="user-name">{{ user.username }}</div>
                     {% if user.bio %}
                     <div class="user-bio">{{ user.bio }}</div>
                     {% else %}
-                    <div class="user-bio" style="color: #666; font-style: italic">No bio set</div>
+                    <div
+                        class="user-bio"
+                        style="color: #666; font-style: italic"
+                    >
+                        No bio set
+                    </div>
                     {% endif %}
                 </div>
             </a>
-            {% endfor %}
-            {% elif query %}
+            {% endfor %} {% elif query %}
             <p class="no-results">No users found matching "{{ query }}".</p>
             {% endif %}
         </div>

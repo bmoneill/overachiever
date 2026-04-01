@@ -4,52 +4,11 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Games — Overachiever</title>
+        <link
+            rel="stylesheet"
+            href="{{ url_for('static', filename='base.css') }}"
+        />
         <style>
-            * {
-                box-sizing: border-box;
-                margin: 0;
-                padding: 0;
-            }
-            body {
-                font-family:
-                    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-                    Helvetica, Arial, sans-serif;
-                background: #0e0e0e;
-                color: #e0e0e0;
-                min-height: 100vh;
-                padding: 2rem 1rem;
-            }
-            h1 {
-                text-align: center;
-                margin-bottom: 0.25rem;
-                color: #107c10;
-                font-size: 2rem;
-            }
-            .subtitle {
-                text-align: center;
-                color: #888;
-                margin-bottom: 2rem;
-            }
-            .back-link {
-                display: block;
-                text-align: center;
-                margin-bottom: 2rem;
-                color: #107c10;
-                text-decoration: none;
-            }
-            .back-link:hover {
-                text-decoration: underline;
-            }
-            .error {
-                max-width: 700px;
-                margin: 1rem auto;
-                padding: 0.75rem 1rem;
-                background: #3b1010;
-                border: 1px solid #6b2020;
-                color: #f5a0a0;
-                border-radius: 8px;
-                text-align: center;
-            }
             .controls {
                 max-width: 900px;
                 margin: 0 auto 1.5rem auto;
@@ -98,89 +57,6 @@
             .sort-select:focus,
             .platform-select:focus {
                 border-color: #107c10;
-            }
-            .games-grid {
-                max-width: 900px;
-                margin: 0 auto;
-                display: grid;
-                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-                gap: 1rem;
-            }
-            .game-card {
-                display: flex;
-                align-items: center;
-                gap: 1rem;
-                background: #1a1a1a;
-                border: 1px solid #2a2a2a;
-                border-radius: 10px;
-                padding: 1rem;
-                text-decoration: none;
-                color: #e0e0e0;
-                transition:
-                    background 0.2s,
-                    border-color 0.2s;
-                position: relative;
-            }
-            .game-card:hover {
-                background: #222;
-                border-color: #107c10;
-            }
-            .game-card.hidden {
-                display: none;
-            }
-            .game-card img.game-thumb {
-                width: 64px;
-                height: 64px;
-                border-radius: 8px;
-                flex-shrink: 0;
-                object-fit: cover;
-                background: #333;
-            }
-            .game-info {
-                flex: 1;
-                min-width: 0;
-            }
-            .game-name-row {
-                display: flex;
-                align-items: center;
-                gap: 0.4rem;
-                margin-bottom: 0.35rem;
-            }
-            .platform-icon {
-                width: 16px;
-                height: 16px;
-                flex-shrink: 0;
-                opacity: 0.7;
-            }
-            .game-name {
-                font-weight: 600;
-                font-size: 1rem;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-            }
-            .game-progress {
-                font-size: 0.85rem;
-                color: #aaa;
-                margin-bottom: 0.4rem;
-            }
-            .progress-bar {
-                height: 6px;
-                background: #333;
-                border-radius: 3px;
-                overflow: hidden;
-            }
-            .progress-bar-fill {
-                height: 100%;
-                background: #107c10;
-                border-radius: 3px;
-                transition: width 0.3s;
-            }
-            .no-results {
-                text-align: center;
-                color: #888;
-                margin-top: 3rem;
-                grid-column: 1 / -1;
             }
         </style>
     </head>

@@ -11,6 +11,5 @@ build/
 *.egg-info/
 .eggs/
 *.db
-*static*
 
 .zed

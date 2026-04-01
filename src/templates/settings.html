@@ -4,62 +4,11 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Settings – Overachiever</title>
+        <link
+            rel="stylesheet"
+            href="{{ url_for('static', filename='base.css') }}"
+        />
         <style>
-            * {
-                box-sizing: border-box;
-                margin: 0;
-                padding: 0;
-            }
-            body {
-                font-family:
-                    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-                    Helvetica, Arial, sans-serif;
-                background: #0e0e0e;
-                color: #e0e0e0;
-                display: flex;
-                justify-content: center;
-                min-height: 100vh;
-                padding: 2rem 1rem;
-            }
-            .container {
-                max-width: 560px;
-                width: 100%;
-            }
-            h1 {
-                font-size: 2.4rem;
-                margin-bottom: 0.25rem;
-                color: #107c10;
-                text-align: center;
-            }
-            .subtitle {
-                color: #888;
-                margin-bottom: 2rem;
-                font-size: 1rem;
-                text-align: center;
-            }
-            .section-title {
-                font-size: 1.1rem;
-                font-weight: 600;
-                margin-bottom: 1rem;
-                color: #bbb;
-                border-bottom: 1px solid #333;
-                padding-bottom: 0.5rem;
-            }
-            .card {
-                background: #1a1a1a;
-                border: 1px solid #333;
-                border-radius: 8px;
-                padding: 1.25rem;
-                margin-bottom: 1rem;
-            }
-            .card-header {
-                font-size: 0.85rem;
-                font-weight: 600;
-                text-transform: uppercase;
-                letter-spacing: 0.05em;
-                color: #888;
-                margin-bottom: 0.75rem;
-            }
             .profile-row {
                 display: flex;
                 align-items: center;
@@ -85,72 +34,9 @@
                 color: #666;
                 margin-top: 0.15rem;
             }
-            .btn {
-                display: inline-block;
-                padding: 0.6rem 1.2rem;
-                font-size: 0.9rem;
-                font-weight: 600;
-                border: none;
-                border-radius: 6px;
-                cursor: pointer;
-                text-decoration: none;
-                text-align: center;
-                transition:
-                    background 0.2s,
-                    opacity 0.2s;
-            }
-            .btn-green {
-                background: #107c10;
-                color: #fff;
-            }
-            .btn-green:hover {
-                background: #0e6b0e;
-            }
-            .btn-red {
-                background: #6b2020;
-                color: #f5a0a0;
-            }
-            .btn-red:hover {
-                background: #7d2828;
-            }
-            .btn-disabled {
-                background: #333;
-                color: #666;
-                cursor: not-allowed;
-            }
-            .btn-disabled:hover {
-                background: #333;
-            }
             .not-linked {
                 color: #666;
                 font-size: 0.9rem;
-            }
-            .error {
-                background: #3b1010;
-                border: 1px solid #6b2020;
-                color: #f5a0a0;
-                padding: 0.75rem 1rem;
-                border-radius: 6px;
-                margin-bottom: 1rem;
-            }
-            .success {
-                background: #0a2e0a;
-                border: 1px solid #107c10;
-                color: #6fcf6f;
-                padding: 0.75rem 1rem;
-                border-radius: 6px;
-                margin-bottom: 1rem;
-            }
-            .back-link {
-                display: block;
-                text-align: center;
-                margin-top: 2rem;
-                font-size: 0.9rem;
-                color: #107c10;
-                text-decoration: none;
-            }
-            .back-link:hover {
-                text-decoration: underline;
             }
         </style>
     </head>

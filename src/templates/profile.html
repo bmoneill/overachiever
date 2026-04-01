@@ -4,63 +4,11 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>{{ target_user.username }} – Overachiever</title>
+        <link
+            rel="stylesheet"
+            href="{{ url_for('static', filename='base.css') }}"
+        />
         <style>
-            * {
-                box-sizing: border-box;
-                margin: 0;
-                padding: 0;
-            }
-            body {
-                font-family:
-                    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-                    Helvetica, Arial, sans-serif;
-                background: #0e0e0e;
-                color: #e0e0e0;
-                display: flex;
-                justify-content: center;
-                min-height: 100vh;
-                padding: 2rem 1rem;
-            }
-            .container {
-                max-width: 620px;
-                width: 100%;
-            }
-            h1 {
-                font-size: 2.4rem;
-                margin-bottom: 0.25rem;
-                color: #107c10;
-                text-align: center;
-            }
-            .subtitle {
-                color: #888;
-                margin-bottom: 2rem;
-                font-size: 1rem;
-                text-align: center;
-            }
-
-            .section-title {
-                font-size: 1.1rem;
-                font-weight: 600;
-                margin-bottom: 1rem;
-                color: #bbb;
-                border-bottom: 1px solid #333;
-                padding-bottom: 0.5rem;
-            }
-            .card {
-                background: #1a1a1a;
-                border: 1px solid #333;
-                border-radius: 8px;
-                padding: 1.25rem;
-                margin-bottom: 1rem;
-            }
-            .card-header {
-                font-size: 0.85rem;
-                font-weight: 600;
-                text-transform: uppercase;
-                letter-spacing: 0.05em;
-                color: #888;
-                margin-bottom: 0.75rem;
-            }
             .username-display {
                 font-size: 1.6rem;
                 font-weight: 700;
@@ -120,57 +68,6 @@
                 font-size: 0.9rem;
                 font-style: italic;
             }
-            .btn {
-                display: inline-block;
-                padding: 0.6rem 1.2rem;
-                font-size: 0.9rem;
-                font-weight: 600;
-                border: none;
-                border-radius: 6px;
-                cursor: pointer;
-                text-decoration: none;
-                text-align: center;
-                transition:
-                    background 0.2s,
-                    opacity 0.2s;
-            }
-            .btn-green {
-                background: #107c10;
-                color: #fff;
-            }
-            .btn-green:hover {
-                background: #0e6b0e;
-            }
-            .btn-outline {
-                background: transparent;
-                color: #107c10;
-                border: 1px solid #107c10;
-            }
-            .btn-outline:hover {
-                background: rgba(16, 124, 16, 0.1);
-            }
-            .edit-actions {
-                display: flex;
-                gap: 0.75rem;
-                margin-top: 0.75rem;
-                justify-content: flex-end;
-            }
-            .error {
-                background: #3b1010;
-                border: 1px solid #6b2020;
-                color: #f5a0a0;
-                padding: 0.75rem 1rem;
-                border-radius: 6px;
-                margin-bottom: 1rem;
-            }
-            .success {
-                background: #0a2e0a;
-                border: 1px solid #107c10;
-                color: #6fcf6f;
-                padding: 0.75rem 1rem;
-                border-radius: 6px;
-                margin-bottom: 1rem;
-            }
             .edit-form {
                 display: none;
             }
@@ -179,50 +76,6 @@
             }
             .view-section.hidden {
                 display: none;
-            }
-            .form-group {
-                margin-bottom: 1rem;
-            }
-            .form-group label {
-                display: block;
-                font-size: 0.85rem;
-                font-weight: 600;
-                color: #aaa;
-                margin-bottom: 0.4rem;
-            }
-            .form-group textarea {
-                width: 100%;
-                min-height: 100px;
-                padding: 0.6rem 0.75rem;
-                font-size: 0.9rem;
-                font-family: inherit;
-                background: #0e0e0e;
-                border: 1px solid #444;
-                border-radius: 6px;
-                color: #e0e0e0;
-                outline: none;
-                resize: vertical;
-                transition: border-color 0.2s;
-            }
-            .form-group textarea:focus {
-                border-color: #107c10;
-            }
-            .checkbox-group {
-                display: flex;
-                align-items: center;
-                gap: 0.6rem;
-                margin-bottom: 1rem;
-            }
-            .checkbox-group input[type="checkbox"] {
-                width: 18px;
-                height: 18px;
-                accent-color: #107c10;
-                cursor: pointer;
-            }
-            .checkbox-group label {
-                font-size: 0.9rem;
-                color: #ccc;
-                cursor: pointer;
             }
             .achievement-count {
                 font-size: 1.05rem;
@@ -278,17 +131,6 @@
                 font-size: 0.8rem;
                 color: #aaa;
                 margin-bottom: 0.3rem;
-            }
-            .progress-bar {
-                height: 5px;
-                background: #333;
-                border-radius: 3px;
-                overflow: hidden;
-            }
-            .progress-bar-fill {
-                height: 100%;
-                background: #107c10;
-                border-radius: 3px;
             }
             .showcase-achievement-row {
                 display: flex;
@@ -358,17 +200,6 @@
                 background: #3b1010;
                 border-color: #6b2020;
                 color: #f5a0a0;
-            }
-            .back-link {
-                display: block;
-                text-align: center;
-                margin-top: 2rem;
-                font-size: 0.9rem;
-                color: #107c10;
-                text-decoration: none;
-            }
-            .back-link:hover {
-                text-decoration: underline;
             }
         </style>
     </head>
