@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from .platform import PLATFORM_PSN, PLATFORM_XBOX, PLATFORM_STEAM
 
 class Profile:
-    """Platform-agnostic representation of a user profile."""
+    """Platform-agnostic representation of an external user profile."""
 
     def __init__(
         self,

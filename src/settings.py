@@ -18,6 +18,7 @@ def settings():
             api = XboxProfileAPI()
             xbox_profile = api.get_user_profile(current_user.xuid)
         except ProfileAPIError:
+            print("Some error occurred while fetching the Xbox profile.")
             # If we can't fetch the profile, just show XUID
             pass
 

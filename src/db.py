@@ -35,10 +35,28 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE NOT NULL,
             email TEXT UNIQUE NOT NULL,
+            bio TEXT DEFAULT NULL,
             password_hash TEXT NOT NULL,
             xuid TEXT DEFAULT NULL,
             steam_id TEXT DEFAULT NULL,
-            psn_id TEXT DEFAULT NULL
+            psn_id TEXT DEFAULT NULL,
+            display_gamertags BOOLEAN DEFAULT FALSE
+        );
+        CREATE TABLE IF NOT EXISTS achievement_summaries (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            platform_id INTEGER NOT NULL,
+            title_id INTEGER NOT NULL,
+            achievement_id INTEGER NOT NULL,
+            game_name TEXT DEFAULT NULL,
+            achievement_name TEXT DEFAULT NULL,
+            achievement_description TEXT DEFAULT NULL
+        );
+        CREATE TABLE IF NOT EXISTS pinned_achievements (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            achievement_summary_id INTEGER NOT NULL,
+            FOREIGN KEY (user_id) REFERENCES users(id),
+            FOREIGN KEY (achievement_summary_id) REFERENCES achievement_summaries(id)
         );
         CREATE TABLE IF NOT EXISTS guides (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -47,8 +65,17 @@ def init_db():
             description TEXT,
             platform_id INTEGER NOT NULL,
             title_id INTEGER NOT NULL,
-            achievement_id INTEGER DEFAULT NULL,
-            user_id INTEGER,
+            achievement_summary_id INTEGER DEFAULT NULL,
+            user_id INTEGER DEFAULT NULL,
+            FOREIGN KEY (user_id) REFERENCES users(id),
+            FOREIGN KEY (achievement_summary_id) REFERENCES achievement_summaries(id)
+        );
+        CREATE TABLE IF NOT EXISTS guide_rating (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            guide_id INTEGER NOT NULL,
+            user_id INTEGER NOT NULL,
+            rating BOOLEAN NOT NULL, /* True = upvote, False = downvote */
+            FOREIGN KEY (guide_id) REFERENCES guides(id),
             FOREIGN KEY (user_id) REFERENCES users(id)
         );
         CREATE TABLE IF NOT EXISTS xbox360icons (

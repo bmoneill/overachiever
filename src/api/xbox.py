@@ -324,6 +324,7 @@ class XboxProfileAPI(ProfileAPI):
                 f"Failed to fetch Xbox profile for user {user_id}: {exc}"
             ) from exc
 
+        print(f"Xbox profile for user {user_id}: {content}")
         try:
             settings = content["profileUsers"][0]["settings"]
         except (KeyError, IndexError, TypeError) as exc:

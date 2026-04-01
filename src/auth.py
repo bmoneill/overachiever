@@ -28,7 +28,16 @@ ALLOW_REGISTRATION = os.environ.get("ALLOW_REGISTRATION", "true").lower() not in
 
 class User(UserMixin):
     def __init__(
-        self, id: int, username: str, email: str, password_hash: str, xuid: str, steam_id: str | None, psn_id: str | None
+        self,
+        id: int,
+        username: str,
+        email: str,
+        password_hash: str,
+        xuid: str,
+        steam_id: str | None,
+        psn_id: str | None,
+        bio: str | None = None,
+        display_gamertags: bool = False,
     ):
         self.id = id
         self.username = username
@@ -37,6 +46,8 @@ class User(UserMixin):
         self.xuid = xuid
         self.steam_id = steam_id
         self.psn_id = psn_id
+        self.bio = bio
+        self.display_gamertags = display_gamertags
 
 
 # ---------------------------------------------------------------------------
@@ -60,6 +71,8 @@ def load_user(user_id: int):
         xuid=row["xuid"],
         steam_id=row["steam_id"],
         psn_id=row["psn_id"],
+        bio=row["bio"],
+        display_gamertags=bool(row["display_gamertags"]),
     )
 
 
@@ -77,6 +90,8 @@ def get_user_by_username(username: str) -> User | None:
         xuid=row["xuid"],
         steam_id=row["steam_id"],
         psn_id=row["psn_id"],
+        bio=row["bio"],
+        display_gamertags=bool(row["display_gamertags"]),
     )
 
 

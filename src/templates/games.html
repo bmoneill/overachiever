@@ -204,6 +204,11 @@
     </head>
     <body>
         <div class="nav-bar">
+            <a
+                class="nav-link"
+                href="{{ url_for('profile', username=current_user.username) }}"
+                >Profile</a
+            >
             <a class="nav-link" href="{{ url_for('my_games') }}">My Games</a>
             <a class="nav-link" href="{{ url_for('settings') }}">Settings</a>
             <a class="nav-link logout" href="{{ url_for('logout') }}"

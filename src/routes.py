@@ -300,7 +300,7 @@ def game_guides(username, platform, title_id):
             title, description = fetch_url_metadata(url)
             db = get_db()
             db.execute(
-                "INSERT INTO guides (url, title, description, platform_id, title_id, achievement_id, user_id) "
+                "INSERT INTO guides (url, title, description, platform_id, title_id, achievement_summary_id, user_id) "
                 "VALUES (?, ?, ?, ?, ?, NULL, ?)",
                 (url, title, description, platform_id, title_id, current_user.id),
             )
@@ -319,10 +319,10 @@ def game_guides(username, platform, title_id):
 
     db = get_db()
     rows = db.execute(
-        "SELECT g.id, g.url, g.title, g.description, g.title_id, g.achievement_id, "
+        "SELECT g.id, g.url, g.title, g.description, g.title_id, g.achievement_summary_id, "
         "g.user_id, u.username AS author "
         "FROM guides g JOIN users u ON g.user_id = u.id "
-        "WHERE g.platform_id = ? AND g.title_id = ? AND g.achievement_id IS NULL",
+        "WHERE g.platform_id = ? AND g.title_id = ? AND g.achievement_summary_id IS NULL",
         (platform_id, title_id),
     ).fetchall()
 
@@ -361,6 +361,7 @@ def achievement_guides(username, platform, title_id, achievement_id):
     achievement_name = request.args.get(
         "achievement_name", f"Achievement ID: {achievement_id}"
     )
+    achievement_description = request.args.get("achievement_description", "")
 
     if request.method == "POST":
         url = request.form.get("url", "").strip()
@@ -369,10 +370,29 @@ def achievement_guides(username, platform, title_id, achievement_id):
         else:
             title, description = fetch_url_metadata(url)
             db = get_db()
+
+            # Ensure an achievement_summaries record exists for this achievement
+            summary = db.execute(
+                "SELECT id FROM achievement_summaries "
+                "WHERE platform_id = ? AND title_id = ? AND achievement_id = ?",
+                (platform_id, title_id, achievement_id),
+            ).fetchone()
+
+            if summary is None:
+                cursor = db.execute(
+                    "INSERT INTO achievement_summaries "
+                    "(platform_id, title_id, achievement_id, game_name, achievement_name, achievement_description) "
+                    "VALUES (?, ?, ?, ?, ?, ?)",
+                    (platform_id, title_id, achievement_id, game_name, achievement_name, achievement_description),
+                )
+                achievement_summary_id = cursor.lastrowid
+            else:
+                achievement_summary_id = summary["id"]
+
             db.execute(
-                "INSERT INTO guides (url, title, description, platform_id, title_id, achievement_id, user_id) "
+                "INSERT INTO guides (url, title, description, platform_id, title_id, achievement_summary_id, user_id) "
                 "VALUES (?, ?, ?, ?, ?, ?, ?)",
-                (url, title, description, platform_id, title_id, achievement_id, current_user.id),
+                (url, title, description, platform_id, title_id, achievement_summary_id, current_user.id),
             )
             db.commit()
             flash("Guide submitted!", "success")
@@ -385,18 +405,29 @@ def achievement_guides(username, platform, title_id, achievement_id):
                 achievement_id=achievement_id,
                 game_name=game_name,
                 achievement_name=achievement_name,
+                achievement_description=achievement_description,
                 media_type=media_type,
             )
         )
 
     db = get_db()
-    rows = db.execute(
-        "SELECT g.id, g.url, g.title, g.description, g.title_id, g.achievement_id, "
-        "g.user_id, u.username AS author "
-        "FROM guides g JOIN users u ON g.user_id = u.id "
-        "WHERE g.platform_id = ? AND g.title_id = ? AND g.achievement_id = ?",
+
+    summary = db.execute(
+        "SELECT id FROM achievement_summaries "
+        "WHERE platform_id = ? AND title_id = ? AND achievement_id = ?",
         (platform_id, title_id, achievement_id),
-    ).fetchall()
+    ).fetchone()
+
+    if summary:
+        rows = db.execute(
+            "SELECT g.id, g.url, g.title, g.description, g.title_id, g.achievement_summary_id, "
+            "g.user_id, u.username AS author "
+            "FROM guides g JOIN users u ON g.user_id = u.id "
+            "WHERE g.achievement_summary_id = ?",
+            (summary["id"],),
+        ).fetchall()
+    else:
+        rows = []
 
     guides = rows
 
