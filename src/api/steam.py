@@ -8,6 +8,8 @@ from .achievement import (
     AchievementAPI,
     AchievementAPIError,
 )
+from .profile import Profile, ProfileAPI, ProfileAPIError
+from .platform import PLATFORM_STEAM as _PLATFORM_STEAM
 
 STEAM_API_KEY = os.environ.get("STEAM_API_KEY")
 STEAM_API_BASE_URL = "https://api.steampowered.com"
@@ -299,4 +301,69 @@ class SteamAchievementAPI(AchievementAPI):
         raise AchievementAPIError(
             f"Achievement {achievement_id} not found for user {user_id} "
             f"in title {title_id}."
+        )
+
+
+class SteamProfileAPI(ProfileAPI):
+    """Fetch Steam user profiles from the Steam Web API."""
+
+    def resolve_vanity_url(self, vanity_name: str) -> str:
+        """Resolve a Steam vanity URL name to a 64-bit Steam ID.
+
+        Raises :class:`ProfileAPIError` if the name cannot be resolved.
+        """
+        try:
+            data = steam_get(
+                "/ISteamUser/ResolveVanityURL/v0001",
+                params={"vanityurl": vanity_name},
+            )
+        except AchievementAPIError as exc:
+            raise ProfileAPIError(
+                f"Failed to resolve Steam vanity URL '{vanity_name}': {exc}"
+            ) from exc
+
+        if data.get("success") != 1:
+            raise ProfileAPIError(
+                f"Could not resolve Steam vanity URL '{vanity_name}'. "
+                "Check that the username is correct."
+            )
+
+        steam_id = data.get("steamid", "").strip()
+        if not steam_id:
+            raise ProfileAPIError(
+                f"No Steam ID returned for vanity URL '{vanity_name}'."
+            )
+
+        return steam_id
+
+    def get_user_profile(self, user_id: str) -> Profile:
+        """Return the Steam profile for the given 64-bit Steam ID.
+
+        Raises :class:`ProfileAPIError` if the request fails or the
+        player is not found.
+        """
+        try:
+            data = steam_get(
+                "/ISteamUser/GetPlayerSummaries/v0002",
+                params={"steamids": user_id},
+            )
+        except AchievementAPIError as exc:
+            raise ProfileAPIError(
+                f"Failed to fetch Steam profile for user {user_id}: {exc}"
+            ) from exc
+
+        players = data.get("players", [])
+        if not players:
+            raise ProfileAPIError(
+                f"No Steam player found for ID {user_id}."
+            )
+
+        player = players[0]
+        persona_name = player.get("personaname", "")
+        avatar_url = player.get("avatarfull", "")
+
+        return Profile(
+            platform_id=_PLATFORM_STEAM,
+            name=persona_name,
+            image_url=avatar_url,
         )

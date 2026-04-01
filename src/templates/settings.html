@@ -220,6 +220,63 @@
                 {% endif %}
             </div>
 
+            <div class="card">
+                <div class="card-header">Steam</div>
+                {% if current_user.steam_id %}
+                <div class="profile-row">
+                    {% if steam_profile and steam_profile.image_url %}
+                    <img
+                        src="{{ steam_profile.image_url }}"
+                        alt="Steam Avatar"
+                    />
+                    {% endif %}
+                    <div class="profile-info">
+                        {% if steam_profile %}
+                        <div class="gamertag">{{ steam_profile.name }}</div>
+                        {% else %}
+                        <div class="gamertag">Linked</div>
+                        {% endif %}
+                        <div class="xuid-label">
+                            Steam ID: {{ current_user.steam_id }}
+                        </div>
+                    </div>
+                    <form method="POST" action="{{ url_for('steam_unlink') }}">
+                        <button
+                            type="submit"
+                            class="btn btn-red"
+                            onclick="return confirm('Unlink your Steam account?')"
+                        >
+                            Unlink
+                        </button>
+                    </form>
+                </div>
+                {% else %}
+                <form
+                    method="POST"
+                    action="{{ url_for('steam_link') }}"
+                    style="display: flex; align-items: center; gap: 0.75rem"
+                >
+                    <input
+                        type="text"
+                        name="vanity_url"
+                        placeholder="Enter Steam vanity username"
+                        required
+                        style="
+                            flex: 1;
+                            padding: 0.6rem 0.75rem;
+                            font-size: 0.9rem;
+                            background: #0e0e0e;
+                            border: 1px solid #444;
+                            border-radius: 6px;
+                            color: #e0e0e0;
+                            outline: none;
+                        "
+                    />
+                    <button type="submit" class="btn btn-green">Link</button>
+                </form>
+                {% endif %}
+            </div>
+
             <a class="nav-link" href="{{ url_for('my_games') }}"
                 >← Back to Games</a
             >
