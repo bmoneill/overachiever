@@ -1,0 +1,154 @@
+// Request: https://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v0001/?appid=42700&key=API_KEY&steamid=STEAM_ID
+{
+  "playerstats": {
+    "steamID": "76561198156320048",
+    "gameName": "Call of Duty: Black Ops",
+    "achievements": [
+      {
+        "apiname": "SP_LVL_CUBA_CASTRO_ONESHOT",
+        "achieved": 1,
+        "unlocktime": 1419813127
+      },
+      { "apiname": "SP_WIN_CUBA", "achieved": 1, "unlocktime": 1419813773 },
+      { "apiname": "SP_LVL_VORKUTA_VEHICULAR", "achieved": 0, "unlocktime": 0 },
+      { "apiname": "SP_WIN_VORKUTA", "achieved": 1, "unlocktime": 1420164636 },
+      {
+        "apiname": "SP_LVL_VORKUTA_SLINGSHOT",
+        "achieved": 1,
+        "unlocktime": 1497199420
+      },
+      { "apiname": "SP_WIN_PENTAGON", "achieved": 1, "unlocktime": 1420165044 },
+      {
+        "apiname": "SP_WIN_FLASHPOINT",
+        "achieved": 1,
+        "unlocktime": 1420212294
+      },
+      { "apiname": "SP_LVL_KHESANH_MISSILES", "achieved": 0, "unlocktime": 0 },
+      { "apiname": "SP_WIN_KHE_SANH", "achieved": 1, "unlocktime": 1420221176 },
+      { "apiname": "SP_WIN_HUE_CITY", "achieved": 1, "unlocktime": 1420340132 },
+      {
+        "apiname": "SP_LVL_HUECITY_AIRSUPPORT",
+        "achieved": 0,
+        "unlocktime": 0
+      },
+      {
+        "apiname": "SP_LVL_HUECITY_DRAGON",
+        "achieved": 1,
+        "unlocktime": 1420221176
+      },
+      { "apiname": "SP_LVL_CREEK1_DESTROY_MG", "achieved": 0, "unlocktime": 0 },
+      {
+        "apiname": "SP_LVL_CREEK1_KNIFING",
+        "achieved": 1,
+        "unlocktime": 1420933318
+      },
+      { "apiname": "SP_LVL_KOWLOON_DUAL", "achieved": 0, "unlocktime": 0 },
+      { "apiname": "SP_WIN_KOWLOON", "achieved": 1, "unlocktime": 1420596438 },
+      { "apiname": "SP_LVL_RIVER_TARGETS", "achieved": 0, "unlocktime": 0 },
+      { "apiname": "SP_WIN_RIVER", "achieved": 1, "unlocktime": 1420992937 },
+      { "apiname": "SP_LVL_WMD_RSO", "achieved": 0, "unlocktime": 0 },
+      { "apiname": "SP_LVL_WMD_RELAY", "achieved": 0, "unlocktime": 0 },
+      { "apiname": "SP_LVL_POW_HIND", "achieved": 0, "unlocktime": 0 },
+      { "apiname": "SP_LVL_POW_FLAMETHROWER", "achieved": 0, "unlocktime": 0 },
+      { "apiname": "SP_LVL_FULLAHEAD_2MIN", "achieved": 0, "unlocktime": 0 },
+      {
+        "apiname": "SP_WIN_FULLAHEAD",
+        "achieved": 1,
+        "unlocktime": 1420674311
+      },
+      { "apiname": "SP_LVL_REBIRTH_MONKEYS", "achieved": 0, "unlocktime": 0 },
+      { "apiname": "SP_LVL_REBIRTH_NOLEAKS", "achieved": 0, "unlocktime": 0 },
+      {
+        "apiname": "SP_WIN_INTERROGATION_ESCAPE",
+        "achieved": 0,
+        "unlocktime": 0
+      },
+      {
+        "apiname": "SP_LVL_UNDERWATERBASE_MINI",
+        "achieved": 0,
+        "unlocktime": 0
+      },
+      { "apiname": "SP_GEN_MASTER", "achieved": 0, "unlocktime": 0 },
+      { "apiname": "SP_WIN_UNDERWATERBASE", "achieved": 0, "unlocktime": 0 },
+      { "apiname": "SP_GEN_FRAGMASTER", "achieved": 0, "unlocktime": 0 },
+      {
+        "apiname": "SP_GEN_ROUGH_ECO",
+        "achieved": 1,
+        "unlocktime": 1453156479
+      },
+      { "apiname": "SP_GEN_CROSSBOW", "achieved": 0, "unlocktime": 0 },
+      { "apiname": "SP_VWIN_FLASHPOINT", "achieved": 0, "unlocktime": 0 },
+      { "apiname": "SP_VWIN_HUE_CITY", "achieved": 0, "unlocktime": 0 },
+      { "apiname": "SP_VWIN_FULLAHEAD", "achieved": 0, "unlocktime": 0 },
+      { "apiname": "SP_VWIN_RIVER", "achieved": 0, "unlocktime": 0 },
+      { "apiname": "SP_VWIN_UNDERWATERBASE", "achieved": 0, "unlocktime": 0 },
+      { "apiname": "SP_GEN_FOUNDFILMS", "achieved": 0, "unlocktime": 0 },
+      { "apiname": "SP_ZOM_COLLECTOR", "achieved": 0, "unlocktime": 0 },
+      { "apiname": "SP_ZOM_NODAMAGE", "achieved": 0, "unlocktime": 0 },
+      { "apiname": "SP_ZOM_TRAPS", "achieved": 0, "unlocktime": 0 },
+      { "apiname": "SP_ZOM_SILVERBACK", "achieved": 0, "unlocktime": 0 },
+      {
+        "apiname": "SP_ZOM_FLAMINGBULL",
+        "achieved": 1,
+        "unlocktime": 1456611433
+      },
+      { "apiname": "SP_ZOM_CHICKENS", "achieved": 0, "unlocktime": 0 },
+      {
+        "apiname": "SP_LVL_FRONTEND_CHAIR",
+        "achieved": 1,
+        "unlocktime": 1437528660
+      },
+      {
+        "apiname": "SP_LVL_FRONTEND_ZORK",
+        "achieved": 1,
+        "unlocktime": 1456611314
+      },
+      { "apiname": "DLC2_ZOM_LUNARLANDERS", "achieved": 0, "unlocktime": 0 },
+      { "apiname": "DLC2_ZOM_BLACKHOLE", "achieved": 0, "unlocktime": 0 },
+      { "apiname": "DLC2_ZOM_PACKAPUNCH", "achieved": 0, "unlocktime": 0 },
+      { "apiname": "DLC2_ZOM_FIREMONKEY", "achieved": 0, "unlocktime": 0 },
+      { "apiname": "DLC3_ZOM_STAND_IN", "achieved": 0, "unlocktime": 0 },
+      { "apiname": "DLC3_ZOM_ENSEMBLE_CAST", "achieved": 0, "unlocktime": 0 },
+      { "apiname": "DLC3_ZOM_STUNTMAN", "achieved": 0, "unlocktime": 0 },
+      {
+        "apiname": "DLC3_ZOM_SHOOTING_ON_LOCATION",
+        "achieved": 0,
+        "unlocktime": 0
+      },
+      {
+        "apiname": "DLC3_ZOM_QUIET_ON_THE_SET",
+        "achieved": 0,
+        "unlocktime": 0
+      },
+      {
+        "apiname": "DLC4_ZOM_TEMPLE_SIDEQUEST",
+        "achieved": 0,
+        "unlocktime": 0
+      },
+      {
+        "apiname": "DLC4_ZOM_BLINDED_BY_THE_FRIGHT",
+        "achieved": 0,
+        "unlocktime": 0
+      },
+      { "apiname": "DLC4_ZOM_ZOMB_DISPOSAL", "achieved": 0, "unlocktime": 0 },
+      {
+        "apiname": "DLC4_ZOM_MONKEY_SEE_MONKEY_DONT",
+        "achieved": 0,
+        "unlocktime": 0
+      },
+      {
+        "apiname": "DLC4_ZOM_SMALL_CONSOLATION",
+        "achieved": 0,
+        "unlocktime": 0
+      },
+      { "apiname": "DLC5_ZOM_CRYOGENIC_PARTY", "achieved": 0, "unlocktime": 0 },
+      { "apiname": "DLC5_ZOM_ONE_SMALL_HACK", "achieved": 0, "unlocktime": 0 },
+      { "apiname": "DLC5_ZOM_ONE_GIANT_LEAP", "achieved": 0, "unlocktime": 0 },
+      { "apiname": "DLC5_ZOM_PERKS_IN_SPACE", "achieved": 0, "unlocktime": 0 },
+      { "apiname": "DLC5_ZOM_FULLY_ARMED", "achieved": 0, "unlocktime": 0 },
+      { "apiname": "DLC5_ZOM_GROUND_CONTROL", "achieved": 0, "unlocktime": 0 },
+      { "apiname": "DLC5_ZOM_BIG_BANG_THEORY", "achieved": 0, "unlocktime": 0 }
+    ],
+    "success": true
+  }
+}
