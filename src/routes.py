@@ -1,4 +1,5 @@
 import requests
+from datetime import datetime, timezone
 from bs4 import BeautifulSoup
 from flask import flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
@@ -7,7 +8,15 @@ from . import app
 from .auth import get_user_by_username
 from .db import get_db
 from .api.achievement import AchievementAPIError
+from .api.platform import PLATFORM_XBOX, PLATFORM_STEAM
 from .api.xbox import XboxAchievementAPI, xbl_get
+from .api.steam import SteamAchievementAPI, steam_get
+
+
+PLATFORM_SLUG_TO_ID = {
+    "xbox": PLATFORM_XBOX,
+    "steam": PLATFORM_STEAM,
+}
 
 
 # ---------------------------------------------------------------------------
@@ -54,6 +63,52 @@ def _get_icon_url(achievement_id: int | str, title_id: int) -> str | None:
     return url_for("static", filename=result[0]) if result else None
 
 
+def _normalize_xbox_titles(titles: list[dict]) -> list[dict]:
+    """Normalize Xbox titles into common game-card dicts."""
+    result = []
+    for title in titles:
+        ach = title.get("achievement") or {}
+        hist = title.get("titleHistory") or {}
+        result.append({
+            "platform": "xbox",
+            "title_id": str(title.get("titleId", "")),
+            "name": title.get("name", "Unknown Title"),
+            "image_url": title.get("displayImage", ""),
+            "current_achievements": ach.get("currentAchievements", 0),
+            "total_achievements": ach.get("totalAchievements", 0),
+            "progress_percentage": ach.get("progressPercentage", 0),
+            "last_played": hist.get("lastTimePlayed", ""),
+            "media_type": title.get("mediaItemType", ""),
+        })
+    return result
+
+
+def _normalize_steam_games(games: list[dict]) -> list[dict]:
+    """Normalize Steam owned-games into common game-card dicts."""
+    result = []
+    for game in games:
+        appid = game.get("appid", "")
+        rtime = game.get("rtime_last_played", 0)
+        last_played = ""
+        if rtime:
+            last_played = datetime.fromtimestamp(rtime, tz=timezone.utc).isoformat()
+        result.append({
+            "platform": "steam",
+            "title_id": str(appid),
+            "name": game.get("name", "Unknown Title"),
+            "image_url": (
+                f"https://cdn.cloudflare.steamstatic.com/steam/apps/{appid}/header.jpg"
+                if appid else ""
+            ),
+            "current_achievements": None,
+            "total_achievements": None,
+            "progress_percentage": None,
+            "last_played": last_played,
+            "media_type": "",
+        })
+    return result
+
+
 # ---------------------------------------------------------------------------
 # Game / Achievement routes
 # ---------------------------------------------------------------------------
@@ -69,54 +124,88 @@ def my_games():
 @app.route("/games/<username>")
 @login_required
 def games(username):
-    """Show the list of games a player owns with achievement counts."""
+    """Show the list of games a player owns across all linked platforms."""
     target_user = get_user_by_username(username)
     if target_user is None:
         flash("User not found.", "error")
         return redirect(url_for("my_games"))
 
-    try:
-        content = xbl_get(f"/v2/titles/{target_user.xuid}")
-    except AchievementAPIError as e:
-        flash(str(e), "error")
-        return redirect(url_for("my_games"))
+    all_games: list[dict] = []
 
-    titles = content.get("titles", []) if isinstance(content, dict) else []
+    # Fetch Xbox games
+    if target_user.xuid:
+        try:
+            content = xbl_get(f"/v2/titles/{target_user.xuid}")
+            titles = content.get("titles", []) if isinstance(content, dict) else []
+            all_games.extend(_normalize_xbox_titles(titles))
+        except AchievementAPIError as e:
+            flash(f"Xbox: {e}", "error")
+
+    # Fetch Steam games
+    if target_user.steam_id:
+        try:
+            data = steam_get(
+                "/IPlayerService/GetOwnedGames/v1",
+                params={
+                    "steamid": target_user.steam_id,
+                    "include_played_free_games": "1",
+                    "include_appinfo": "1",
+                },
+            )
+            steam_games = data.get("games", [])
+            all_games.extend(_normalize_steam_games(steam_games))
+        except AchievementAPIError as e:
+            flash(f"Steam: {e}", "error")
 
     return render_template(
         "games.html",
-        titles=titles,
-        xuid=target_user.xuid,
+        all_games=all_games,
         username=target_user.username,
     )
 
 
-@app.route("/games/<username>/<title_id>")
+@app.route("/games/<username>/<platform>/<title_id>")
 @login_required
-def game_achievements(username, title_id):
+def game_achievements(username, platform, title_id):
     """Show unlocked and locked achievements for a specific game."""
     target_user = get_user_by_username(username)
     if target_user is None:
         flash("User not found.", "error")
         return redirect(url_for("my_games"))
 
+    if platform not in PLATFORM_SLUG_TO_ID:
+        flash("Invalid platform.", "error")
+        return redirect(url_for("games", username=username))
+
     media_type = request.args.get("media_type", "")
 
     try:
-        api = XboxAchievementAPI(xuid=target_user.xuid, media_type=media_type)
-        unlocked = api.get_unlocked_title_achievements(target_user.xuid, title_id)
-        locked = api.get_locked_title_achievements(target_user.xuid, title_id)
-        game_name = api.game_name
+        if platform == "xbox":
+            if not target_user.xuid:
+                flash("This user has no linked Xbox account.", "error")
+                return redirect(url_for("games", username=username))
+            api = XboxAchievementAPI(xuid=target_user.xuid, media_type=media_type)
+            unlocked = api.get_unlocked_title_achievements(target_user.xuid, title_id)
+            locked = api.get_locked_title_achievements(target_user.xuid, title_id)
+            game_name = api.game_name
+
+            # Override with locally-cached Xbox 360 icons when available.
+            if api.is_x360:
+                for a in unlocked + locked:
+                    icon = _get_icon_url(a.achievement_id, a.title_id)
+                    if icon:
+                        a.image_url = icon
+        else:
+            if not target_user.steam_id:
+                flash("This user has no linked Steam account.", "error")
+                return redirect(url_for("games", username=username))
+            api = SteamAchievementAPI(steam_id=target_user.steam_id)
+            unlocked = api.get_unlocked_title_achievements(target_user.steam_id, title_id)
+            locked = api.get_locked_title_achievements(target_user.steam_id, title_id)
+            game_name = api.game_name
     except AchievementAPIError as e:
         flash(str(e), "error")
         return redirect(url_for("games", username=username))
-
-    # Override with locally-cached Xbox 360 icons when available.
-    if api.is_x360:
-        for a in unlocked + locked:
-            icon = _get_icon_url(a.achievement_id, a.title_id)
-            if icon:
-                a.image_url = icon
 
     if game_name is None:
         game_name = request.args.get("game_name", f"Title ID: {title_id}")
@@ -126,22 +215,27 @@ def game_achievements(username, title_id):
         unlocked=unlocked,
         locked=locked,
         game_name=game_name,
-        xuid=target_user.xuid,
         username=target_user.username,
         title_id=title_id,
+        platform=platform,
         media_type=media_type,
     )
 
 
-@app.route("/games/<username>/<title_id>/guides", methods=["GET", "POST"])
+@app.route("/games/<username>/<platform>/<title_id>/guides", methods=["GET", "POST"])
 @login_required
-def game_guides(username, title_id):
+def game_guides(username, platform, title_id):
     """Show and submit guides for a game (not tied to a specific achievement)."""
     target_user = get_user_by_username(username)
     if target_user is None:
         flash("User not found.", "error")
         return redirect(url_for("my_games"))
 
+    if platform not in PLATFORM_SLUG_TO_ID:
+        flash("Invalid platform.", "error")
+        return redirect(url_for("games", username=username))
+
+    platform_id = PLATFORM_SLUG_TO_ID[platform]
     game_name = request.args.get("game_name", f"Title ID: {title_id}")
     media_type = request.args.get("media_type", "")
 
@@ -155,7 +249,7 @@ def game_guides(username, title_id):
             db.execute(
                 "INSERT INTO guides (url, title, description, platform_id, title_id, achievement_id, user_id) "
                 "VALUES (?, ?, ?, ?, ?, NULL, ?)",
-                (url, title, description, 1, title_id, current_user.id),
+                (url, title, description, platform_id, title_id, current_user.id),
             )
             db.commit()
             flash("Guide submitted!", "success")
@@ -163,6 +257,7 @@ def game_guides(username, title_id):
             url_for(
                 "game_guides",
                 username=username,
+                platform=platform,
                 title_id=title_id,
                 game_name=game_name,
                 media_type=media_type,
@@ -174,8 +269,8 @@ def game_guides(username, title_id):
         "SELECT g.id, g.url, g.title, g.description, g.title_id, g.achievement_id, "
         "g.user_id, u.username AS author "
         "FROM guides g JOIN users u ON g.user_id = u.id "
-        "WHERE g.title_id = ? AND g.achievement_id IS NULL",
-        (title_id,),
+        "WHERE g.platform_id = ? AND g.title_id = ? AND g.achievement_id IS NULL",
+        (platform_id, title_id),
     ).fetchall()
 
     guides = rows
@@ -186,22 +281,28 @@ def game_guides(username, title_id):
         game_name=game_name,
         username=username,
         title_id=title_id,
+        platform=platform,
         media_type=media_type,
     )
 
 
 @app.route(
-    "/games/<username>/<title_id>/achievement/<achievement_id>/guides",
+    "/games/<username>/<platform>/<title_id>/achievement/<achievement_id>/guides",
     methods=["GET", "POST"],
 )
 @login_required
-def achievement_guides(username, title_id, achievement_id):
+def achievement_guides(username, platform, title_id, achievement_id):
     """Show and submit guides for a specific achievement."""
     target_user = get_user_by_username(username)
     if target_user is None:
         flash("User not found.", "error")
         return redirect(url_for("my_games"))
 
+    if platform not in PLATFORM_SLUG_TO_ID:
+        flash("Invalid platform.", "error")
+        return redirect(url_for("games", username=username))
+
+    platform_id = PLATFORM_SLUG_TO_ID[platform]
     game_name = request.args.get("game_name", f"Title ID: {title_id}")
     media_type = request.args.get("media_type", "")
     achievement_name = request.args.get(
@@ -218,7 +319,7 @@ def achievement_guides(username, title_id, achievement_id):
             db.execute(
                 "INSERT INTO guides (url, title, description, platform_id, title_id, achievement_id, user_id) "
                 "VALUES (?, ?, ?, ?, ?, ?, ?)",
-                (url, title, description, 1, title_id, achievement_id, current_user.id),
+                (url, title, description, platform_id, title_id, achievement_id, current_user.id),
             )
             db.commit()
             flash("Guide submitted!", "success")
@@ -226,6 +327,7 @@ def achievement_guides(username, title_id, achievement_id):
             url_for(
                 "achievement_guides",
                 username=username,
+                platform=platform,
                 title_id=title_id,
                 achievement_id=achievement_id,
                 game_name=game_name,
@@ -239,8 +341,8 @@ def achievement_guides(username, title_id, achievement_id):
         "SELECT g.id, g.url, g.title, g.description, g.title_id, g.achievement_id, "
         "g.user_id, u.username AS author "
         "FROM guides g JOIN users u ON g.user_id = u.id "
-        "WHERE g.title_id = ? AND g.achievement_id = ?",
-        (title_id, achievement_id),
+        "WHERE g.platform_id = ? AND g.title_id = ? AND g.achievement_id = ?",
+        (platform_id, title_id, achievement_id),
     ).fetchall()
 
     guides = rows
@@ -253,5 +355,6 @@ def achievement_guides(username, title_id, achievement_id):
         username=username,
         title_id=title_id,
         achievement_id=achievement_id,
+        platform=platform,
         media_type=media_type,
     )

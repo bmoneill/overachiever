@@ -202,7 +202,7 @@
             >
             <a
                 class="guides-link"
-                href="{{ url_for('game_guides', username=username, title_id=title_id, game_name=game_name, media_type=media_type) }}"
+                href="{{ url_for('game_guides', username=username, platform=platform, title_id=title_id, game_name=game_name, media_type=media_type) }}"
                 >📖 Game Guides</a
             >
 
@@ -237,7 +237,7 @@
                     {% endif %}
                     <a
                         class="achievement-guides-link"
-                        href="{{ url_for('achievement_guides', username=username, title_id=title_id, achievement_id=a.achievement_id, game_name=game_name, achievement_name=a.name, media_type=media_type) }}"
+                        href="{{ url_for('achievement_guides', username=username, platform=platform, title_id=title_id, achievement_id=a.achievement_id, game_name=game_name, achievement_name=a.name, media_type=media_type) }}"
                         >📖 Guides</a
                     >
                 </div>
@@ -271,7 +271,7 @@
                     {% endif %}
                     <a
                         class="achievement-guides-link"
-                        href="{{ url_for('achievement_guides', username=username, title_id=title_id, achievement_id=a.achievement_id, game_name=game_name, achievement_name=a.name, media_type=media_type) }}"
+                        href="{{ url_for('achievement_guides', username=username, platform=platform, title_id=title_id, achievement_id=a.achievement_id, game_name=game_name, achievement_name=a.name, media_type=media_type) }}"
                         >📖 Guides</a
                     >
                 </div>

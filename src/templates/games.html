@@ -76,7 +76,8 @@
             .search-input:focus {
                 border-color: #107c10;
             }
-            .sort-select {
+            .sort-select,
+            .platform-select {
                 padding: 0.6rem 0.85rem;
                 font-size: 0.95rem;
                 background: #1a1a1a;
@@ -94,7 +95,8 @@
                 background-position: right 0.7rem center;
                 padding-right: 2rem;
             }
-            .sort-select:focus {
+            .sort-select:focus,
+            .platform-select:focus {
                 border-color: #107c10;
             }
             .games-grid {
@@ -117,6 +119,7 @@
                 transition:
                     background 0.2s,
                     border-color 0.2s;
+                position: relative;
             }
             .game-card:hover {
                 background: #222;
@@ -125,7 +128,7 @@
             .game-card.hidden {
                 display: none;
             }
-            .game-card img {
+            .game-card img.game-thumb {
                 width: 64px;
                 height: 64px;
                 border-radius: 8px;
@@ -137,10 +140,21 @@
                 flex: 1;
                 min-width: 0;
             }
+            .game-name-row {
+                display: flex;
+                align-items: center;
+                gap: 0.4rem;
+                margin-bottom: 0.35rem;
+            }
+            .platform-icon {
+                width: 16px;
+                height: 16px;
+                flex-shrink: 0;
+                opacity: 0.7;
+            }
             .game-name {
                 font-weight: 600;
                 font-size: 1rem;
-                margin-bottom: 0.35rem;
                 white-space: nowrap;
                 overflow: hidden;
                 text-overflow: ellipsis;
@@ -202,7 +216,7 @@
         {% with messages = get_flashed_messages(with_categories=true) %} {% for
         category, message in messages %}
         <div class="error">{{ message }}</div>
-        {% endfor %} {% endwith %} {% if titles %}
+        {% endfor %} {% endwith %} {% if all_games %}
 
         <div class="controls">
             <input
@@ -212,6 +226,11 @@
                 placeholder="Search games…"
                 autocomplete="off"
             />
+            <select class="platform-select" id="platform-filter">
+                <option value="all">All Platforms</option>
+                <option value="xbox">Xbox</option>
+                <option value="steam">Steam</option>
+            </select>
             <select class="sort-select" id="game-sort">
                 <option value="last-played">Last Played</option>
                 <option value="achievements">Achievements Unlocked</option>
@@ -220,43 +239,54 @@
         </div>
 
         <div class="games-grid" id="games-grid">
-            {% for title in titles %} {% set current =
-            title.achievement.currentAchievements | default(0) if
-            title.achievement else 0 %} {% set total =
-            title.achievement.totalAchievements | default(0) if
-            title.achievement else 0 %} {% set pct =
-            title.achievement.progressPercentage | default(0) if
-            title.achievement else 0 %} {% set last_played =
-            title.titleHistory.lastTimePlayed | default('') if
-            title.titleHistory else '' %}
+            {% for game in all_games %}
             <a
                 class="game-card"
-                href="{{ url_for('game_achievements', username=username, title_id=title.titleId, media_type=title.mediaItemType, game_name=title.name) }}"
-                data-name="{{ title.name | lower }}"
-                data-achievements="{{ current }}"
-                data-last-played="{{ last_played }}"
+                href="{{ url_for('game_achievements', username=username, platform=game.platform, title_id=game.title_id, media_type=game.media_type, game_name=game.name) }}"
+                data-name="{{ game.name | lower }}"
+                data-achievements="{{ game.current_achievements if game.current_achievements is not none else 0 }}"
+                data-last-played="{{ game.last_played }}"
+                data-platform="{{ game.platform }}"
             >
-                {% if title.displayImage %}
-                <img src="{{ title.displayImage }}" alt="{{ title.name }}" />
+                {% if game.image_url %}
+                <img
+                    class="game-thumb"
+                    src="{{ game.image_url }}"
+                    alt="{{ game.name }}"
+                />
                 {% else %}
                 <img
+                    class="game-thumb"
                     src="https://via.placeholder.com/64?text=?"
                     alt="No image"
                 />
                 {% endif %}
                 <div class="game-info">
-                    <div class="game-name" title="{{ title.name }}">
-                        {{ title.name or "Unknown Title" }}
+                    <div class="game-name-row">
+                        <img
+                            class="platform-icon"
+                            src="{{ url_for('static', filename=game.platform + '.svg') }}"
+                            alt="{{ game.platform }}"
+                        />
+                        <div class="game-name" title="{{ game.name }}">
+                            {{ game.name or "Unknown Title" }}
+                        </div>
                     </div>
+                    {% if game.current_achievements is not none and
+                    game.total_achievements is not none %}
                     <div class="game-progress">
-                        {{ current }} / {{ total }} achievements
+                        {{ game.current_achievements }} / {{
+                        game.total_achievements }} achievements
                     </div>
                     <div class="progress-bar">
                         <div
                             class="progress-bar-fill"
-                            style="width: {{ pct }}%"
+                            style="width: {{ game.progress_percentage or 0 }}%"
                         ></div>
                     </div>
+                    {% else %}
+                    <div class="game-progress">Achievements available</div>
+                    {% endif %}
                 </div>
             </a>
             {% endfor %}
@@ -266,7 +296,13 @@
         </div>
         {% else %}
         <div class="games-grid">
-            <p class="no-results">No games found for this XUID.</p>
+            <p class="no-results">
+                No games found. Link an account in
+                <a href="{{ url_for('settings') }}" style="color: #107c10"
+                    >Settings</a
+                >
+                to get started.
+            </p>
         </div>
         {% endif %}
 
@@ -274,8 +310,10 @@
             (function () {
                 var searchInput = document.getElementById("game-search");
                 var sortSelect = document.getElementById("game-sort");
+                var platformFilter = document.getElementById("platform-filter");
                 var grid = document.getElementById("games-grid");
-                if (!searchInput || !sortSelect || !grid) return;
+                if (!searchInput || !sortSelect || !platformFilter || !grid)
+                    return;
 
                 var cards = Array.prototype.slice.call(
                     grid.querySelectorAll(".game-card"),
@@ -284,12 +322,18 @@
 
                 function applyFilter() {
                     var query = searchInput.value.toLowerCase().trim();
+                    var platform = platformFilter.value;
                     var visibleCount = 0;
                     for (var i = 0; i < cards.length; i++) {
                         var name = cards[i].getAttribute("data-name") || "";
-                        var match = !query || name.indexOf(query) !== -1;
-                        cards[i].classList.toggle("hidden", !match);
-                        if (match) visibleCount++;
+                        var cardPlatform =
+                            cards[i].getAttribute("data-platform") || "";
+                        var matchSearch = !query || name.indexOf(query) !== -1;
+                        var matchPlatform =
+                            platform === "all" || cardPlatform === platform;
+                        var visible = matchSearch && matchPlatform;
+                        cards[i].classList.toggle("hidden", !visible);
+                        if (visible) visibleCount++;
                     }
                     if (noResults) {
                         noResults.style.display =
@@ -329,6 +373,9 @@
                 }
 
                 searchInput.addEventListener("input", applyFilter);
+                platformFilter.addEventListener("change", function () {
+                    applyFilter();
+                });
                 sortSelect.addEventListener("change", function () {
                     applySort();
                     applyFilter();
