@@ -171,7 +171,6 @@ def my_games():
 
 
 @app.route("/games/<username>")
-@login_required
 def games(username):
     """Show the list of games a player owns across all linked platforms."""
     target_user = get_user_by_username(username)
@@ -229,7 +228,6 @@ def games(username):
 
 
 @app.route("/games/<username>/<platform>/<title_id>")
-@login_required
 def game_achievements(username, platform, title_id):
     """Show unlocked and locked achievements for a specific game."""
     target_user = get_user_by_username(username)
@@ -325,7 +323,6 @@ def game_achievements(username, platform, title_id):
 
 
 @app.route("/games/<username>/<platform>/<title_id>/guides", methods=["GET", "POST"])
-@login_required
 def game_guides(username, platform, title_id):
     """Show and submit guides for a game (not tied to a specific achievement)."""
     target_user = get_user_by_username(username)
@@ -392,7 +389,6 @@ def game_guides(username, platform, title_id):
     "/games/<username>/<platform>/<title_id>/achievement/<achievement_id>/guides",
     methods=["GET", "POST"],
 )
-@login_required
 def achievement_guides(username, platform, title_id, achievement_id):
     """Show and submit guides for a specific achievement."""
     target_user = get_user_by_username(username)

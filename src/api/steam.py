@@ -1,4 +1,5 @@
 import os
+from datetime import datetime, timezone
 
 import requests
 
@@ -99,27 +100,40 @@ class SteamAchievementAPI(AchievementAPI):
         self._schema_cache[title_id] = schema
         return schema
 
-    def _fetch_user_unlocked(
+    def _fetch_user_player_achievements(
         self, user_id: str, title_id: str
-    ) -> list[dict]:
-        """Return the user's *unlocked* achievements for one title.
+    ) -> dict[str, dict]:
+        """Return a mapping of *apiname* → achievement dict for one title.
 
-        Uses ``GetTopAchievementsForGames`` with a high
-        ``max_achievements`` cap so that every unlock is returned.
+        Uses ``ISteamUserStats/GetPlayerAchievements`` which provides
+        ``unlocktime`` for every achievement.  Returns **all**
+        achievements (both unlocked and locked) keyed by their internal
+        API name.
         """
         data = steam_get(
-            "/IPlayerService/GetTopAchievementsForGames/v1",
+            "/ISteamUserStats/GetPlayerAchievements/v0001",
             params={
                 "steamid": user_id,
-                "appids[0]": title_id,
-                "max_achievements": "10000",
+                "appid": title_id,
             },
         )
 
-        games = data.get("games", [])
-        if not games:
-            return []
-        return games[0].get("achievements", [])
+        playerstats = data.get("playerstats", {})
+        if not playerstats.get("success"):
+            return {}
+
+        # The endpoint also returns the game name — use it if we
+        # haven't resolved one yet.
+        game_name = playerstats.get("gameName")
+        if game_name and self.game_name is None:
+            self.game_name = game_name
+
+        result: dict[str, dict] = {}
+        for ach in playerstats.get("achievements", []):
+            apiname = ach.get("apiname", "")
+            if apiname:
+                result[apiname] = ach
+        return result
 
     def _build_title_achievements(self, title_id: str) -> list[Achievement]:
         """Fetch and cache all achievement definitions for a title.
@@ -158,6 +172,9 @@ class SteamAchievementAPI(AchievementAPI):
     ) -> list[Achievement]:
         """Merge title schema with user unlock data and cache the result.
 
+        Uses ``ISteamUserStats/GetPlayerAchievements`` to obtain unlock
+        status and timestamps, matched against the schema by *apiname*.
+
         Hidden achievements that are still locked have their description
         replaced with ``"Hidden achievement."``.  Once unlocked the real
         description is revealed.
@@ -167,29 +184,25 @@ class SteamAchievementAPI(AchievementAPI):
             return self._cache[cache_key]
 
         schema = self._fetch_title_schema(title_id)
-        unlocked_raw = self._fetch_user_unlocked(user_id, title_id)
-
-        # The user endpoint uses the *display* name in the "name" field.
-        unlocked_map: dict[str, dict] = {}
-        for ua in unlocked_raw:
-            unlocked_map[ua.get("name", "")] = ua
+        user_map = self._fetch_user_player_achievements(user_id, title_id)
 
         achievements: list[Achievement] = []
         for raw in schema:
+            api_name = raw.get("name", "")
             display_name = raw.get("displayName", "")
-            ua = unlocked_map.get(display_name)
+            ua = user_map.get(api_name)
             hidden = raw.get("hidden", 0) in (1, True)
-            is_unlocked = ua is not None
+            is_unlocked = ua is not None and ua.get("achieved", 0) == 1
 
-            # Resolve rarity from the user unlock payload.
-            rarity: float | None = None
-            if ua:
-                rarity_str = ua.get("player_percent_unlocked")
-                if rarity_str:
-                    try:
-                        rarity = float(rarity_str)
-                    except ValueError:
-                        pass
+            # Convert the Unix timestamp to an ISO 8601 string so the
+            # template can render it the same way as Xbox unlock times.
+            time_unlocked: str | None = None
+            if is_unlocked and ua:
+                unlock_ts = ua.get("unlocktime", 0)
+                if unlock_ts:
+                    time_unlocked = datetime.fromtimestamp(
+                        unlock_ts, tz=timezone.utc
+                    ).isoformat()
 
             # For hidden achievements that are still locked, suppress
             # the real description so the template falls through to
@@ -205,14 +218,14 @@ class SteamAchievementAPI(AchievementAPI):
             achievements.append(
                 Achievement(
                     platform_id=PLATFORM_STEAM,
-                    achievement_id=raw.get("name", ""),
+                    achievement_id=api_name,
                     title_id=int(title_id),
                     name=display_name,
                     description=description,
                     image_url=raw.get("icon", ""),
                     unlocked=is_unlocked,
                     locked_description=locked_description,
-                    rarity_percentage=rarity,
+                    time_unlocked=time_unlocked,
                 )
             )
 
