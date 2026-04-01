@@ -87,39 +87,49 @@ class XboxAchievementAPI(AchievementAPI):
 
     Parameters
     ----------
-    xuid : str
-        The Xbox User ID.
-    title_id : str
-        The game's title ID on Xbox.
+    xuid : str, optional
+        A default Xbox User ID used by methods that don't accept a
+        ``user_id`` parameter (``get_title_achievements`` and
+        ``get_achievement``).  The OpenXBL API always requires *some*
+        user context, so these methods will raise
+        :class:`AchievementAPIError` if no default XUID was provided.
     media_type : str, optional
-        The media type string (e.g. ``"Xbox360Game"``).  Used to determine
-        whether Xbox 360 normalisation is required.
+        The media type string (e.g. ``"Xbox360Game"``).  Used to
+        determine whether Xbox 360 normalisation is required.
     """
 
-    def __init__(self, xuid: str, title_id: str, media_type: str = ""):
+    def __init__(self, xuid: str | None = None, media_type: str = ""):
         self.xuid = xuid
-        self.title_id = title_id
         self.media_type = media_type
         self.is_x360 = media_type in X360_MEDIA_TYPES
-        self._achievements: list[Achievement] | None = None
+        self._cache: dict[str, list[Achievement]] = {}
         self.game_name: str | None = None
 
     # -----------------------------------------------------------------
     # Internal helpers
     # -----------------------------------------------------------------
 
-    def _fetch_raw_achievements(self) -> list[dict]:
+    def _require_xuid(self) -> str:
+        """Return ``self.xuid`` or raise if it was not set."""
+        if not self.xuid:
+            raise AchievementAPIError(
+                "A default XUID is required for this operation. "
+                "Pass xuid to the XboxAchievementAPI constructor."
+            )
+        return self.xuid
+
+    def _fetch_raw_achievements(self, xuid: str, title_id: str) -> list[dict]:
         """Fetch raw achievement dicts from the OpenXBL API."""
         if self.is_x360:
             content = xbl_get(
-                f"/v2/achievements/x360/{self.xuid}/title/{self.title_id}"
+                f"/v2/achievements/x360/{xuid}/title/{title_id}"
             )
             title_content = xbl_get(
-                f"/v2/achievements/player/{self.xuid}/title/{self.title_id}"
+                f"/v2/achievements/player/{xuid}/title/{title_id}"
             )
         else:
             content = xbl_get(
-                f"/v2/achievements/player/{self.xuid}/{self.title_id}"
+                f"/v2/achievements/player/{xuid}/{title_id}"
             )
             title_content = {}
 
@@ -139,6 +149,31 @@ class XboxAchievementAPI(AchievementAPI):
             raw = player + [a for a in title if a["id"] not in player_ids]
 
         return raw
+
+    def _build_achievements(
+        self, xuid: str, title_id: str
+    ) -> list[Achievement]:
+        """Fetch, parse, and cache achievements for a *user + title* pair."""
+        cache_key = f"{xuid}:{title_id}"
+        if cache_key in self._cache:
+            return self._cache[cache_key]
+
+        raw_list = self._fetch_raw_achievements(xuid, title_id)
+
+        achievements: list[Achievement] = []
+        for raw in raw_list:
+            # Grab the game name from the first achievement that has one.
+            if self.game_name is None:
+                assocs = raw.get("titleAssociations", [])
+                if assocs:
+                    self.game_name = assocs[0].get("name")
+
+            achievements.append(
+                self._parse_achievement(raw, int(title_id))
+            )
+
+        self._cache[cache_key] = achievements
+        return achievements
 
     @staticmethod
     def _parse_achievement(raw: dict, title_id: int) -> Achievement:
@@ -175,32 +210,95 @@ class XboxAchievementAPI(AchievementAPI):
         )
 
     # -----------------------------------------------------------------
-    # Public API (AchievementAPI interface)
+    # Public API  — AchievementAPI abstract interface
     # -----------------------------------------------------------------
 
-    def get_all_achievements(self) -> list[Achievement]:
-        """Return every achievement for the configured game/player.
+    def get_user_achievements(self, user_id: str) -> list[Achievement]:
+        """Return every achievement across all of the user's titles.
 
-        Results are cached after the first call so that
-        ``get_unlocked_achievements`` and ``get_locked_achievements``
-        (which delegate here) don't trigger additional HTTP requests.
+        .. note::
+
+           This issues one HTTP request per title the user owns and can
+           therefore be *very* slow.  Prefer
+           ``get_user_achievements_for_title`` when you already know the
+           title ID.
         """
-        if self._achievements is not None:
-            return self._achievements
+        content = xbl_get(f"/v2/titles/{user_id}")
+        titles = content.get("titles", []) if isinstance(content, dict) else []
 
-        raw_list = self._fetch_raw_achievements()
+        all_achievements: list[Achievement] = []
+        for title in titles:
+            tid = str(title.get("titleId", ""))
+            if not tid:
+                continue
+            try:
+                all_achievements.extend(self._build_achievements(user_id, tid))
+            except AchievementAPIError:
+                # Skip titles whose achievements can't be fetched.
+                continue
 
-        achievements: list[Achievement] = []
-        for raw in raw_list:
-            # Grab the game name from the first achievement that has one.
-            if self.game_name is None:
-                assocs = raw.get("titleAssociations", [])
-                if assocs:
-                    self.game_name = assocs[0].get("name")
+        return all_achievements
 
-            achievements.append(
-                self._parse_achievement(raw, int(self.title_id))
+    def get_title_achievements(self, title_id: str) -> list[Achievement]:
+        """Return every achievement defined for *title_id*.
+
+        The OpenXBL API always requires a user context, so the default
+        ``xuid`` supplied to the constructor is used here.  The returned
+        achievements have ``unlocked`` set to ``False`` and
+        ``time_unlocked`` cleared because they represent title-level
+        definitions rather than any particular player's progress.
+        """
+        xuid = self._require_xuid()
+        user_achievements = self._build_achievements(xuid, title_id)
+
+        return [
+            Achievement(
+                platform_id=a.platform_id,
+                achievement_id=a.achievement_id,
+                title_id=a.title_id,
+                name=a.name,
+                description=a.description,
+                image_url=a.image_url,
+                unlocked=False,
+                locked_description=a.locked_description,
+                time_unlocked=None,
+                gamerscore=a.gamerscore,
+                rarity_percentage=a.rarity_percentage,
             )
+            for a in user_achievements
+        ]
 
-        self._achievements = achievements
-        return self._achievements
+    def get_user_achievements_for_title(
+        self, user_id: str, title_id: str
+    ) -> list[Achievement]:
+        """Return user achievements for *title_id* (including progress)."""
+        return self._build_achievements(user_id, title_id)
+
+    def get_achievement(
+        self, title_id: str, achievement_id: str
+    ) -> Achievement:
+        """Return a single achievement definition by title and achievement ID.
+
+        Raises :class:`AchievementAPIError` if not found.
+        """
+        for a in self.get_title_achievements(title_id):
+            if str(a.achievement_id) == str(achievement_id):
+                return a
+        raise AchievementAPIError(
+            f"Achievement {achievement_id} not found in title {title_id}."
+        )
+
+    def get_user_achievement(
+        self, user_id: str, title_id: str, achievement_id: str
+    ) -> Achievement:
+        """Return a single user achievement (with progress).
+
+        Raises :class:`AchievementAPIError` if not found.
+        """
+        for a in self.get_user_achievements_for_title(user_id, title_id):
+            if str(a.achievement_id) == str(achievement_id):
+                return a
+        raise AchievementAPIError(
+            f"Achievement {achievement_id} not found for user {user_id} "
+            f"in title {title_id}."
+        )

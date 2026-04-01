@@ -329,9 +329,9 @@ def game_achievements(username, title_id):
     media_type = request.args.get("media_type", "")
 
     try:
-        api = XboxAchievementAPI(target_user.xuid, title_id, media_type)
-        unlocked = api.get_unlocked_achievements()
-        locked = api.get_locked_achievements()
+        api = XboxAchievementAPI(xuid=target_user.xuid, media_type=media_type)
+        unlocked = api.get_unlocked_title_achievements(target_user.xuid, title_id)
+        locked = api.get_locked_title_achievements(target_user.xuid, title_id)
         game_name = api.game_name
     except AchievementAPIError as e:
         flash(str(e), "error")

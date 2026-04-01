@@ -42,23 +42,46 @@ class AchievementAPIError(Exception):
 
 
 class AchievementAPI(ABC):
-    """Abstract base class for platform-specific achievement APIs.
-
-    Subclass this and implement ``get_all_achievements`` to add support
-    for a new platform.  The filtered helpers (``get_unlocked_achievements``
-    and ``get_locked_achievements``) work automatically once
-    ``get_all_achievements`` is provided.
-    """
+    """Abstract base class for platform-specific achievement APIs."""
 
     @abstractmethod
-    def get_all_achievements(self) -> list[Achievement]:
-        """Return every achievement for the configured game/player."""
+    def get_user_achievements(self, user_id: str) -> list[Achievement]:
+        """Return every achievement for games the user has played or owns, regardless of progress."""
         ...
 
-    def get_unlocked_achievements(self) -> list[Achievement]:
-        """Return only achievements the player has unlocked."""
-        return [a for a in self.get_all_achievements() if a.unlocked]
+    @abstractmethod
+    def get_title_achievements(self, title_id: str) -> list[Achievement]:
+        """Return all achievements for the given title ID."""
+        ...
 
-    def get_locked_achievements(self) -> list[Achievement]:
-        """Return only achievements the player has *not* unlocked."""
-        return [a for a in self.get_all_achievements() if not a.unlocked]
+    @abstractmethod
+    def get_user_achievements_for_title(self, user_id: str, title_id: str) -> list[Achievement]:
+        """Return user achievements for the given title ID (including progress)."""
+        ...
+
+    @abstractmethod
+    def get_achievement(self, title_id: str, achievement_id: str) -> Achievement:
+        """Return the achievement for the given title and achievement ID."""
+        ...
+
+    @abstractmethod
+    def get_user_achievement(self, user_id: str, title_id: str, achievement_id: str) -> Achievement:
+        """Return the user's achievement for the given title and achievement ID (including progress)."""
+        ...
+
+
+    def get_unlocked_user_achievements(self, user_id: str) -> list[Achievement]:
+        """Return only achievements the player has unlocked across all titles."""
+        return [a for a in self.get_user_achievements(user_id) if a.unlocked]
+
+    def get_locked_user_achievements(self, user_id: str) -> list[Achievement]:
+        """Return only achievements the player has *not* unlocked across all titles."""
+        return [a for a in self.get_user_achievements(user_id) if not a.unlocked]
+
+    def get_unlocked_title_achievements(self, user_id: str, title_id: str) -> list[Achievement]:
+        """Return only achievements the player has unlocked for the given title."""
+        return [a for a in self.get_user_achievements_for_title(user_id, title_id) if a.unlocked]
+
+    def get_locked_title_achievements(self, user_id: str, title_id: str) -> list[Achievement]:
+        """Return only achievements the player has *not* unlocked for the given title."""
+        return [a for a in self.get_user_achievements_for_title(user_id, title_id) if not a.unlocked]
