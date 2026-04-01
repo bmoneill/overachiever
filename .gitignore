@@ -2,6 +2,7 @@
 __pycache__/
 *.pyc
 *.pyo
+pyproject.toml
 .venv/
 venv/
 env/
@@ -10,3 +11,6 @@ build/
 *.egg-info/
 .eggs/
 *.db
+*static*
+
+.zed
