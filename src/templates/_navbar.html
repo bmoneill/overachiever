@@ -1,0 +1,92 @@
+<style>
+    .nav-bar {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+    }
+    .nav-search {
+        display: flex;
+        gap: 0.35rem;
+        align-items: center;
+    }
+    .nav-search input[type="text"] {
+        padding: 0.4rem 0.7rem;
+        font-size: 0.85rem;
+        background: #1a1a1a;
+        border: 1px solid #333;
+        border-radius: 5px;
+        color: #e0e0e0;
+        outline: none;
+        width: 160px;
+        transition: border-color 0.2s;
+    }
+    .nav-search input[type="text"]:focus {
+        border-color: #107c10;
+    }
+    .nav-search input[type="text"]::placeholder {
+        color: #666;
+    }
+    .nav-search button {
+        padding: 0.35rem 0.55rem;
+        font-size: 0.85rem;
+        background: #1a1a1a;
+        border: 1px solid #333;
+        border-radius: 5px;
+        color: #e0e0e0;
+        cursor: pointer;
+        transition:
+            border-color 0.2s,
+            background 0.2s;
+        line-height: 1;
+    }
+    .nav-search button:hover {
+        border-color: #107c10;
+        background: #222;
+    }
+    .nav-links {
+        display: flex;
+        gap: 1.5rem;
+        margin-left: auto;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    .nav-link {
+        color: #107c10;
+        text-decoration: none;
+        font-size: 0.95rem;
+        white-space: nowrap;
+    }
+    .nav-link:hover {
+        text-decoration: underline;
+    }
+    .nav-link.logout {
+        color: #888;
+    }
+</style>
+<div class="nav-bar">
+    <form class="nav-search" action="{{ url_for('user_search') }}" method="GET">
+        <input
+            type="text"
+            name="q"
+            placeholder="Search users…"
+            value="{{ request.args.get('q', '') }}"
+        />
+        <button type="submit">🔍</button>
+    </form>
+    <div class="nav-links">
+        {% if current_user.is_authenticated %}
+        <a class="nav-link" href="{{ url_for('my_games') }}">My Games</a>
+        <a
+            class="nav-link"
+            href="{{ url_for('profile', username=current_user.username) }}"
+            >Profile</a
+        >
+        <a class="nav-link" href="{{ url_for('settings') }}">Settings</a>
+        <a class="nav-link logout" href="{{ url_for('logout') }}">Log Out</a>
+        {% else %}
+        <a class="nav-link" href="{{ url_for('login') }}">Log In</a>
+        {% endif %}
+    </div>
+</div>

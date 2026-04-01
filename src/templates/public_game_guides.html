@@ -23,23 +23,7 @@
                 max-width: 800px;
                 margin: 0 auto;
             }
-            .nav-bar {
-                display: flex;
-                justify-content: flex-end;
-                gap: 1.5rem;
-                margin-bottom: 1.5rem;
-            }
-            .nav-link {
-                color: #107c10;
-                text-decoration: none;
-                font-size: 0.95rem;
-            }
-            .nav-link:hover {
-                text-decoration: underline;
-            }
-            .nav-link.logout {
-                color: #888;
-            }
+
             h1 {
                 text-align: center;
                 margin-bottom: 0.25rem;
@@ -156,21 +140,7 @@
     </head>
     <body>
         <div class="container">
-            <div class="nav-bar">
-                {% if current_user.is_authenticated %}
-                <a class="nav-link" href="{{ url_for('my_games') }}"
-                    >My Games</a
-                >
-                <a class="nav-link" href="{{ url_for('settings') }}"
-                    >Settings</a
-                >
-                <a class="nav-link logout" href="{{ url_for('logout') }}"
-                    >Log Out</a
-                >
-                {% else %}
-                <a class="nav-link" href="{{ url_for('login') }}">Log In</a>
-                {% endif %}
-            </div>
+            {% include '_navbar.html' %}
 
             <h1>🏆 {{ game_name }}</h1>
             <p class="subtitle">Achievement Guides</p>

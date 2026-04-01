@@ -146,7 +146,7 @@
                 border-radius: 6px;
                 margin-bottom: 1rem;
             }
-            .nav-link {
+            .back-link {
                 display: block;
                 text-align: center;
                 margin-top: 2rem;
@@ -154,13 +154,14 @@
                 color: #107c10;
                 text-decoration: none;
             }
-            .nav-link:hover {
+            .back-link:hover {
                 text-decoration: underline;
             }
         </style>
     </head>
     <body>
         <div class="container">
+            {% include '_navbar.html' %}
             <h1>🏆 Overachiever</h1>
             <p class="subtitle">Edit Profile</p>
 
@@ -196,7 +197,7 @@
                 </div>
             </form>
 
-            <a class="nav-link" href="{{ url_for('profile', username=target_user.username) }}">← Back to Profile</a>
+            <a class="back-link" href="{{ url_for('profile', username=target_user.username) }}">← Back to Profile</a>
         </div>
     </body>
 </html>

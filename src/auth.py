@@ -130,6 +130,20 @@ def index():
     )
 
 
+@app.route("/search")
+def user_search():
+    """Search for users by Overachiever username."""
+    q = request.args.get("q", "").strip()
+    results = []
+    if q:
+        db = get_db()
+        results = db.execute(
+            "SELECT id, username, bio FROM users WHERE username LIKE ? ORDER BY username LIMIT 20",
+            (f"%{q}%",),
+        ).fetchall()
+    return render_template("search_results.html", query=q, results=results)
+
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if current_user.is_authenticated:
