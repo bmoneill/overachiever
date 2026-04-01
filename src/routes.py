@@ -1,98 +1,18 @@
-import os
-import sqlite3
-
 import requests
 from bs4 import BeautifulSoup
-from dotenv import load_dotenv
-from flask import Flask, flash, g, redirect, render_template, request, url_for
-from flask_login import (
-    LoginManager,
-    UserMixin,
-    current_user,
-    login_required,
-    login_user,
-    logout_user,
-)
-from werkzeug.security import check_password_hash, generate_password_hash
+from flask import flash, redirect, render_template, request, url_for
+from flask_login import current_user, login_required
 
-from api.achievement import AchievementAPIError
-from api.xbox import XboxAchievementAPI, xbl_get
+from . import app
+from .auth import get_user_by_username
+from .db import get_db
+from .api.achievement import AchievementAPIError
+from .api.xbox import XboxAchievementAPI, xbl_get
 
-load_dotenv()
-
-app = Flask(__name__)
-app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)
-app._static_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
-
-DATABASE = os.environ.get(
-    "DATABASE",
-    os.path.join(os.path.dirname(os.path.abspath(__file__)), "overachiever.db"),
-)
-
-ALLOW_REGISTRATION = os.environ.get("ALLOW_REGISTRATION", "true").lower() not in (
-    "false",
-    "0",
-    "no",
-)
 
 # ---------------------------------------------------------------------------
-# Database helpers
+# Helpers
 # ---------------------------------------------------------------------------
-
-
-def get_db():
-    """Open a database connection scoped to the current request."""
-    if "db" not in g:
-        g.db = sqlite3.connect(DATABASE)
-        g.db.row_factory = sqlite3.Row
-    return g.db
-
-
-@app.teardown_appcontext
-def close_db(exception):
-    db = g.pop("db", None)
-    if db is not None:
-        db.close()
-
-
-def init_db():
-    """Create the tables if they don't exist."""
-    db = get_db()
-    db.executescript(
-        """
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE NOT NULL,
-            email TEXT UNIQUE NOT NULL,
-            password_hash TEXT NOT NULL,
-            xuid TEXT DEFAULT NULL,
-            steam_id TEXT DEFAULT NULL,
-            psn_id TEXT DEFAULT NULL
-        );
-        CREATE TABLE IF NOT EXISTS guides (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            url TEXT NOT NULL,
-            title TEXT,
-            description TEXT,
-            platform_id INTEGER NOT NULL,
-            title_id INTEGER NOT NULL,
-            achievement_id INTEGER DEFAULT NULL,
-            user_id INTEGER,
-            FOREIGN KEY (user_id) REFERENCES users(id)
-        );
-        CREATE TABLE IF NOT EXISTS xbox360icons (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            url TEXT NOT NULL,
-            title_id INTEGER NOT NULL,
-            achievement_id INTEGER NOT NULL
-        );
-        """
-    )
-    db.commit()
-
-with app.app_context():
-    init_db()
-
 
 def fetch_url_metadata(url):
     """Fetch the title and description from a URL's HTML meta tags."""
@@ -123,65 +43,6 @@ def fetch_url_metadata(url):
     return title, description
 
 
-# ---------------------------------------------------------------------------
-# Flask-Login setup
-# ---------------------------------------------------------------------------
-
-login_manager = LoginManager()
-login_manager.init_app(app)
-login_manager.login_view = "login"
-login_manager.login_message = "Please log in to access this page."
-login_manager.login_message_category = "error"
-
-
-class User(UserMixin):
-    def __init__(
-        self, id: int, username: str, email: str, password_hash: str, xuid: str
-    ):
-        self.id = id
-        self.username = username
-        self.email = email
-        self.password_hash = password_hash
-        self.xuid = xuid
-
-
-@login_manager.user_loader
-def load_user(user_id: int):
-    db: sqlite3.Connection = get_db()
-    row: sqlite3.Row | None = db.execute(
-        "SELECT * FROM users WHERE id = ?", (user_id,)
-    ).fetchone()
-    if row is None:
-        return None
-    return User(
-        id=row["id"],
-        username=row["username"],
-        email=row["email"],
-        password_hash=row["password_hash"],
-        xuid=row["xuid"],
-    )
-
-
-def get_user_by_username(username: str) -> User | None:
-    """Look up a user by username. Returns a User or None."""
-    db = get_db()
-    row = db.execute("SELECT * FROM users WHERE username = ?", (username,)).fetchone()
-    if row is None:
-        return None
-    return User(
-        id=row["id"],
-        username=row["username"],
-        email=row["email"],
-        password_hash=row["password_hash"],
-        xuid=row["xuid"],
-    )
-
-
-# ---------------------------------------------------------------------------
-# Xbox 360 icon helper (depends on Flask context)
-# ---------------------------------------------------------------------------
-
-
 def _get_icon_url(achievement_id: int | str, title_id: int) -> str | None:
     """Look up a locally-cached Xbox 360 icon from the database."""
     db = get_db()
@@ -191,93 +52,6 @@ def _get_icon_url(achievement_id: int | str, title_id: int) -> str | None:
     )
     result = cursor.fetchone()
     return url_for("static", filename=result[0]) if result else None
-
-
-# ---------------------------------------------------------------------------
-# Auth routes
-# ---------------------------------------------------------------------------
-
-
-@app.route("/")
-def index():
-    if current_user.is_authenticated:
-        return redirect(url_for("my_games"))
-    return redirect(url_for("login"))
-
-
-@app.route("/login", methods=["GET", "POST"])
-def login():
-    if current_user.is_authenticated:
-        return redirect(url_for("my_games"))
-
-    if request.method == "POST":
-        username = request.form.get("username", "").strip()
-        password = request.form.get("password", "")
-
-        if not username or not password:
-            flash("Please fill in all fields.", "error")
-            return redirect(url_for("login"))
-
-        user = get_user_by_username(username)
-        if user is None or not check_password_hash(user.password_hash, password):
-            flash("Invalid username or password.", "error")
-            return redirect(url_for("login"))
-
-        login_user(user)
-        next_page = request.args.get("next")
-        return redirect(next_page or url_for("my_games"))
-
-    return render_template("login.html", allow_registration=ALLOW_REGISTRATION)
-
-
-@app.route("/register", methods=["GET", "POST"])
-def register():
-    if not ALLOW_REGISTRATION:
-        flash("Registration is currently disabled.", "error")
-        return redirect(url_for("login"))
-
-    if current_user.is_authenticated:
-        return redirect(url_for("my_games"))
-
-    if request.method == "POST":
-        username = request.form.get("username", "").strip()
-        email = request.form.get("email", "").strip()
-        password = request.form.get("password", "")
-        xuid = request.form.get("xuid", "").strip()
-
-        if not username or not email or not password or not xuid:
-            flash("Please fill in all fields.", "error")
-            return redirect(url_for("register"))
-
-        db = get_db()
-
-        # Check for existing username or email
-        existing = db.execute(
-            "SELECT id FROM users WHERE username = ? OR email = ?",
-            (username, email),
-        ).fetchone()
-        if existing:
-            flash("Username or email is already taken.", "error")
-            return redirect(url_for("register"))
-
-        password_hash = generate_password_hash(password)
-        db.execute(
-            "INSERT INTO users (username, email, password_hash, xuid) VALUES (?, ?, ?, ?)",
-            (username, email, password_hash, xuid),
-        )
-        db.commit()
-
-        flash("Account created! Please log in.", "success")
-        return redirect(url_for("login"))
-
-    return render_template("register.html")
-
-
-@app.route("/logout")
-@login_required
-def logout():
-    logout_user()
-    return redirect(url_for("login"))
 
 
 # ---------------------------------------------------------------------------
@@ -379,9 +153,9 @@ def game_guides(username, title_id):
             title, description = fetch_url_metadata(url)
             db = get_db()
             db.execute(
-                "INSERT INTO guides (url, title, description, title_id, achievement_id, user_id) "
-                "VALUES (?, ?, ?, ?, NULL, ?)",
-                (url, title, description, title_id, current_user.id),
+                "INSERT INTO guides (url, title, description, platform_id, title_id, achievement_id, user_id) "
+                "VALUES (?, ?, ?, ?, ?, NULL, ?)",
+                (url, title, description, 1, title_id, current_user.id),
             )
             db.commit()
             flash("Guide submitted!", "success")
@@ -442,9 +216,9 @@ def achievement_guides(username, title_id, achievement_id):
             title, description = fetch_url_metadata(url)
             db = get_db()
             db.execute(
-                "INSERT INTO guides (url, title, description, title_id, achievement_id, user_id) "
-                "VALUES (?, ?, ?, ?, ?, ?)",
-                (url, title, description, title_id, achievement_id, current_user.id),
+                "INSERT INTO guides (url, title, description, platform_id, title_id, achievement_id, user_id) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (url, title, description, 1, title_id, achievement_id, current_user.id),
             )
             db.commit()
             flash("Guide submitted!", "success")
@@ -481,7 +255,3 @@ def achievement_guides(username, title_id, achievement_id):
         achievement_id=achievement_id,
         media_type=media_type,
     )
-
-
-if __name__ == "__main__":
-    app.run(debug=True)
