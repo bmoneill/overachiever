@@ -1,0 +1,27 @@
+// REQUEST: http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key=STEAM_API_KEY&steamids=STEAM_ID
+{
+  "response": {
+    "players": [
+      {
+        "steamid": "76561198156320048",
+        "communityvisibilitystate": 3,
+        "profilestate": 1,
+        "personaname": "swegbun",
+        "commentpermission": 1,
+        "profileurl": "https://steamcommunity.com/id/swegbun/",
+        "avatar": "https://avatars.steamstatic.com/a52fcac5826e3ddafca74b2bb7eceb1382fc56d3.jpg",
+        "avatarmedium": "https://avatars.steamstatic.com/a52fcac5826e3ddafca74b2bb7eceb1382fc56d3_medium.jpg",
+        "avatarfull": "https://avatars.steamstatic.com/a52fcac5826e3ddafca74b2bb7eceb1382fc56d3_full.jpg",
+        "avatarhash": "a52fcac5826e3ddafca74b2bb7eceb1382fc56d3",
+        "personastate": 0,
+        "realname": "Ben O'Neill",
+        "primaryclanid": "103582791440870933",
+        "timecreated": 1411861117,
+        "personastateflags": 0,
+        "loccountrycode": "US",
+        "locstatecode": "MA",
+        "loccityid": 1846
+      }
+    ]
+  }
+}
