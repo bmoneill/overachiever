@@ -1,9 +1,6 @@
 from abc import ABC, abstractmethod
 
-PLATFORM_PSN = 0
-PLATFORM_XBOX = 1
-PLATFORM_STEAM = 2
-
+from .platform import PLATFORM_PSN, PLATFORM_XBOX, PLATFORM_STEAM
 
 class Achievement:
     """Platform-agnostic representation of a single achievement."""

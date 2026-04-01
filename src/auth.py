@@ -123,9 +123,8 @@ def register():
         username = request.form.get("username", "").strip()
         email = request.form.get("email", "").strip()
         password = request.form.get("password", "")
-        xuid = request.form.get("xuid", "").strip()
 
-        if not username or not email or not password or not xuid:
+        if not username or not email or not password:
             flash("Please fill in all fields.", "error")
             return redirect(url_for("register"))
 
@@ -142,8 +141,8 @@ def register():
 
         password_hash = generate_password_hash(password)
         db.execute(
-            "INSERT INTO users (username, email, password_hash, xuid) VALUES (?, ?, ?, ?)",
-            (username, email, password_hash, xuid),
+            "INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)",
+            (username, email, password_hash),
         )
         db.commit()
 

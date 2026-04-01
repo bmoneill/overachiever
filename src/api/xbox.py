@@ -302,3 +302,48 @@ class XboxAchievementAPI(AchievementAPI):
             f"Achievement {achievement_id} not found for user {user_id} "
             f"in title {title_id}."
         )
+
+
+from .profile import Profile, ProfileAPI, ProfileAPIError
+from .platform import PLATFORM_XBOX as _PLATFORM_XBOX
+
+
+class XboxProfileAPI(ProfileAPI):
+    """Fetch Xbox user profiles from the OpenXBL API."""
+
+    def get_user_profile(self, user_id: str) -> Profile:
+        """Return the Xbox profile for the given XUID.
+
+        Raises :class:`ProfileAPIError` if the request fails or the
+        response format is unexpected.
+        """
+        try:
+            content = xbl_get(f"/v2/account/{user_id}")
+        except AchievementAPIError as exc:
+            raise ProfileAPIError(
+                f"Failed to fetch Xbox profile for user {user_id}: {exc}"
+            ) from exc
+
+        try:
+            settings = content["profileUsers"][0]["settings"]
+        except (KeyError, IndexError, TypeError) as exc:
+            raise ProfileAPIError(
+                f"Unexpected response format when fetching Xbox profile "
+                f"for user {user_id}."
+            ) from exc
+
+        settings_map = {s["id"]: s["value"] for s in settings}
+
+        gamertag = settings_map.get("Gamertag")
+        if not gamertag:
+            raise ProfileAPIError(
+                f"Gamertag not found in Xbox profile for user {user_id}."
+            )
+
+        avatar_url = settings_map.get("GameDisplayPicRaw", "")
+
+        return Profile(
+            platform_id=_PLATFORM_XBOX,
+            name=gamertag,
+            image_url=avatar_url,
+        )
