@@ -141,21 +141,44 @@
                 border-radius: 6px;
                 margin-bottom: 1rem;
             }
+            .nav-bar {
+                max-width: 900px;
+                margin: 0 auto 2rem auto;
+                display: flex;
+                justify-content: flex-end;
+                gap: 1.5rem;
+            }
             .nav-link {
-                display: block;
-                text-align: center;
-                margin-top: 2rem;
-                font-size: 0.9rem;
                 color: #107c10;
                 text-decoration: none;
+                font-size: 0.95rem;
             }
             .nav-link:hover {
                 text-decoration: underline;
+            }
+            .nav-link.logout {
+                color: #888;
             }
         </style>
     </head>
     <body>
         <div class="container">
+            <div class="nav-bar">
+                <a class="nav-link" href="{{ url_for('my_games') }}"
+                    >My Games</a
+                >
+                <a
+                    class="nav-link"
+                    href="{{ url_for('profile', username=current_user.username) }}"
+                    >Profile</a
+                >
+                <a class="nav-link" href="{{ url_for('settings') }}"
+                    >Settings</a
+                >
+                <a class="nav-link logout" href="{{ url_for('logout') }}"
+                    >Log Out</a
+                >
+            </div>
             <h1>🏆 Overachiever</h1>
             <p class="subtitle">Account Settings</p>
 
