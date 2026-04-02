@@ -1,7 +1,6 @@
 import os
-import sqlite3
 
-from flask import g
+from .models import db
 
 _APP_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -11,113 +10,187 @@ DATABASE = os.environ.get(
 )
 
 
-def get_db():
-    """Open a database connection scoped to the current request."""
-    if "db" not in g:
-        g.db = sqlite3.connect(DATABASE)
-        g.db.row_factory = sqlite3.Row
-    return g.db
-
-
-def close_db(exception):
-    """Close the database connection at the end of a request."""
-    db = g.pop("db", None)
-    if db is not None:
-        db.close()
-
-
-def init_db():
-    """Create the tables if they don't exist."""
-    db = get_db()
-    db.executescript(
-        """
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE NOT NULL,
-            email TEXT UNIQUE NOT NULL,
-            bio TEXT DEFAULT NULL,
-            password_hash TEXT NOT NULL,
-            xuid TEXT DEFAULT NULL,
-            steam_id TEXT DEFAULT NULL,
-            psn_id TEXT DEFAULT NULL,
-            display_gamertags BOOLEAN DEFAULT FALSE,
-            achievement_count INTEGER DEFAULT 0
-        );
-        CREATE TABLE IF NOT EXISTS achievements (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            platform_id INTEGER NOT NULL,
-            title_id INTEGER NOT NULL,
-            achievement_id INTEGER NOT NULL,
-            game_name TEXT NOT NULL,
-            achievement_name TEXT NOT NULL,
-            achievement_description TEXT DEFAULT NULL,
-            image_url TEXT DEFAULT NULL
-        );
-        CREATE TABLE IF NOT EXISTS pinned_achievements (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER NOT NULL,
-            achievement_id INTEGER NOT NULL,
-            FOREIGN KEY (user_id) REFERENCES users(id),
-            FOREIGN KEY (achievement_id) REFERENCES achievements(id)
-        );
-        CREATE TABLE IF NOT EXISTS guides (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            url TEXT NOT NULL,
-            title TEXT,
-            description TEXT,
-            platform_id INTEGER NOT NULL,
-            title_id INTEGER NOT NULL,
-            achievement_id INTEGER DEFAULT NULL,
-            user_id INTEGER DEFAULT NULL,
-            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users(id),
-            FOREIGN KEY (achievement_id) REFERENCES achievements(id)
-        );
-        CREATE TABLE IF NOT EXISTS guide_rating (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            guide_id INTEGER NOT NULL,
-            user_id INTEGER NOT NULL,
-            rating BOOLEAN NOT NULL, /* True = upvote, False = downvote */
-            FOREIGN KEY (guide_id) REFERENCES guides(id),
-            FOREIGN KEY (user_id) REFERENCES users(id)
-        );
-        CREATE TABLE IF NOT EXISTS showcase_games (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER NOT NULL,
-            platform_id INTEGER NOT NULL,
-            title_id TEXT NOT NULL,
-            game_name TEXT NOT NULL,
-            image_url TEXT DEFAULT NULL,
-            current_achievements INTEGER DEFAULT 0,
-            total_achievements INTEGER DEFAULT 0,
-            FOREIGN KEY (user_id) REFERENCES users(id)
-        );
-        CREATE TABLE IF NOT EXISTS showcase_achievements (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER NOT NULL,
-            platform_id INTEGER NOT NULL,
-            title_id TEXT NOT NULL,
-            achievement_id TEXT NOT NULL,
-            game_name TEXT DEFAULT NULL,
-            achievement_name TEXT NOT NULL,
-            achievement_description TEXT DEFAULT NULL,
-            image_url TEXT DEFAULT NULL,
-            gamerscore INTEGER DEFAULT NULL,
-            FOREIGN KEY (user_id) REFERENCES users(id)
-        );
-        CREATE TABLE IF NOT EXISTS xbox360icons (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            url TEXT NOT NULL,
-            title_id INTEGER NOT NULL,
-            achievement_id INTEGER NOT NULL
-        );
-        """
+def init_app(app):
+    """Configure SQLAlchemy on the Flask application and create tables."""
+    app.config.setdefault(
+        "SQLALCHEMY_DATABASE_URI",
+        f"sqlite:///{os.path.abspath(DATABASE)}",
     )
-    db.commit()
+    app.config.setdefault("SQLALCHEMY_TRACK_MODIFICATIONS", False)
 
-    # Migrations for existing databases
-    cursor = db.execute("PRAGMA table_info(users)")
-    existing_columns = {row[1] for row in cursor.fetchall()}
-    if "achievement_count" not in existing_columns:
-        db.execute("ALTER TABLE users ADD COLUMN achievement_count INTEGER DEFAULT 0")
-        db.commit()
+    db.init_app(app)
+
+    with app.app_context():
+        _migrate_legacy_tables()
+        db.create_all()
+
+
+def _migrate_legacy_tables():
+    """Handle one-time migrations for databases created before SQLAlchemy.
+
+    * Renames the old ``achievement_summaries`` table to
+      ``_achievement_summaries_backup`` so its data is preserved but it
+      no longer conflicts with the ``achievements`` table that now
+      serves both purposes.
+    * Adds the ``achievement_id`` column to ``guides`` if it is missing
+      and migrates data from the legacy ``achievement_summary_id``
+      column by copying matching rows into the ``achievements`` table.
+    * Adds any missing columns that were introduced after the original
+      schema (e.g. ``achievement_count`` on ``users``).
+    """
+    from sqlalchemy import inspect, text
+
+    bind = db.engine
+    inspector = inspect(bind)
+    existing_tables = inspector.get_table_names()
+
+    with bind.connect() as conn:
+        # ------------------------------------------------------------------
+        # 1. Rename legacy achievement_summaries → _achievement_summaries_backup
+        # ------------------------------------------------------------------
+        has_summaries_backup = "_achievement_summaries_backup" in existing_tables
+        if "achievement_summaries" in existing_tables:
+            conn.execute(
+                text(
+                    "ALTER TABLE achievement_summaries "
+                    "RENAME TO _achievement_summaries_backup"
+                )
+            )
+            conn.commit()
+            has_summaries_backup = True
+            # Refresh table list after rename
+            inspector = inspect(bind)
+            existing_tables = inspector.get_table_names()
+
+        # ------------------------------------------------------------------
+        # 2. Ensure guides.achievement_id exists and migrate from the
+        #    legacy achievement_summary_id column if present.
+        # ------------------------------------------------------------------
+        if "guides" in existing_tables:
+            guide_cols = {
+                col["name"] for col in inspector.get_columns("guides")
+            }
+
+            has_old_col = "achievement_summary_id" in guide_cols
+            has_new_col = "achievement_id" in guide_cols
+
+            if not has_new_col:
+                conn.execute(
+                    text(
+                        "ALTER TABLE guides "
+                        "ADD COLUMN achievement_id INTEGER DEFAULT NULL "
+                        "REFERENCES achievements(id)"
+                    )
+                )
+                conn.commit()
+
+            # Migrate data: for each guide row that references the old
+            # achievement_summaries table, ensure a matching row exists
+            # in the achievements table and point the new FK there.
+            if has_old_col and has_summaries_backup:
+                # Fetch all distinct summary IDs referenced by guides
+                rows = conn.execute(
+                    text(
+                        "SELECT DISTINCT g.achievement_summary_id, "
+                        "       s.platform_id, s.title_id, s.achievement_id, "
+                        "       s.game_name, s.achievement_name, "
+                        "       s.achievement_description "
+                        "FROM guides g "
+                        "JOIN _achievement_summaries_backup s "
+                        "  ON s.id = g.achievement_summary_id "
+                        "WHERE g.achievement_summary_id IS NOT NULL"
+                    )
+                ).fetchall()
+
+                for row in rows:
+                    (
+                        old_summary_id,
+                        platform_id,
+                        title_id,
+                        achievement_id_val,
+                        game_name,
+                        achievement_name,
+                        achievement_description,
+                    ) = row
+
+                    # Check if an achievements row already exists for
+                    # this (platform_id, title_id, achievement_id) triple.
+                    existing = conn.execute(
+                        text(
+                            "SELECT id FROM achievements "
+                            "WHERE platform_id = :pid "
+                            "  AND title_id = :tid "
+                            "  AND achievement_id = :aid"
+                        ),
+                        {
+                            "pid": platform_id,
+                            "tid": str(title_id),
+                            "aid": str(achievement_id_val),
+                        },
+                    ).fetchone()
+
+                    if existing:
+                        new_ach_id = existing[0]
+                    else:
+                        # Insert a new achievement row from the summary data
+                        conn.execute(
+                            text(
+                                "INSERT INTO achievements "
+                                "(platform_id, title_id, achievement_id, "
+                                " game_name, achievement_name, description) "
+                                "VALUES (:pid, :tid, :aid, :gname, :aname, :desc)"
+                            ),
+                            {
+                                "pid": platform_id,
+                                "tid": str(title_id),
+                                "aid": str(achievement_id_val),
+                                "gname": game_name or "Unknown",
+                                "aname": achievement_name or "Unknown",
+                                "desc": achievement_description,
+                            },
+                        )
+                        new_row = conn.execute(
+                            text(
+                                "SELECT id FROM achievements "
+                                "WHERE platform_id = :pid "
+                                "  AND title_id = :tid "
+                                "  AND achievement_id = :aid"
+                            ),
+                            {
+                                "pid": platform_id,
+                                "tid": str(title_id),
+                                "aid": str(achievement_id_val),
+                            },
+                        ).fetchone()
+                        new_ach_id = new_row[0] if new_row else None
+
+                    if new_ach_id is not None:
+                        conn.execute(
+                            text(
+                                "UPDATE guides "
+                                "SET achievement_id = :new_id "
+                                "WHERE achievement_summary_id = :old_id"
+                            ),
+                            {
+                                "new_id": new_ach_id,
+                                "old_id": old_summary_id,
+                            },
+                        )
+
+                conn.commit()
+
+        # ------------------------------------------------------------------
+        # 3. Add missing columns to legacy users table.
+        # ------------------------------------------------------------------
+        if "users" in existing_tables:
+            user_cols = {
+                col["name"] for col in inspector.get_columns("users")
+            }
+            if "achievement_count" not in user_cols:
+                conn.execute(
+                    text(
+                        "ALTER TABLE users "
+                        "ADD COLUMN achievement_count INTEGER DEFAULT 0"
+                    )
+                )
+                conn.commit()

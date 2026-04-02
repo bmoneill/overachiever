@@ -2,7 +2,8 @@ from flask import flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from . import app
-from .db import get_db
+from .models import db
+from .models.user import User
 from .api.xbox import XboxProfileAPI
 from .api.steam import SteamProfileAPI
 from .api.profile import ProfileAPIError
@@ -19,7 +20,6 @@ def settings():
             xbox_profile = api.get_user_profile(current_user.xuid)
         except ProfileAPIError:
             print("Some error occurred while fetching the Xbox profile.")
-            # If we can't fetch the profile, just show XUID
             pass
 
     steam_profile = None
@@ -28,7 +28,6 @@ def settings():
             api = SteamProfileAPI()
             steam_profile = api.get_user_profile(current_user.steam_id)
         except ProfileAPIError:
-            # If we can't fetch the profile, just show Steam ID
             pass
 
     return render_template(
@@ -55,19 +54,15 @@ def xbox_link():
         flash("XUID must be a numeric value.", "error")
         return redirect(url_for("settings"))
 
-    # Check if this XUID is already linked to another account
-    db = get_db()
-    existing = db.execute(
-        "SELECT id, username FROM users WHERE xuid = ? AND id != ?",
-        (xuid, current_user.id),
-    ).fetchone()
+    existing = User.query.filter(
+        User.xuid == xuid, User.id != current_user.id
+    ).first()
     if existing:
         flash("This Xbox account is already linked to another user.", "error")
         return redirect(url_for("settings"))
 
-    # Store the XUID
-    db.execute("UPDATE users SET xuid = ? WHERE id = ?", (xuid, current_user.id))
-    db.commit()
+    current_user.xuid = xuid
+    db.session.commit()
 
     flash("Xbox account linked successfully!", "success")
     return redirect(url_for("settings"))
@@ -77,9 +72,8 @@ def xbox_link():
 @login_required
 def xbox_unlink():
     """Unlink the user's Xbox account (set XUID to NULL)."""
-    db = get_db()
-    db.execute("UPDATE users SET xuid = NULL WHERE id = ?", (current_user.id,))
-    db.commit()
+    current_user.xuid = None
+    db.session.commit()
     flash("Xbox account unlinked.", "success")
     return redirect(url_for("settings"))
 
@@ -97,7 +91,6 @@ def steam_link():
         flash("Your Steam account is already linked.", "error")
         return redirect(url_for("settings"))
 
-    # Resolve vanity URL to Steam ID
     try:
         api = SteamProfileAPI()
         steam_id = api.resolve_vanity_url(vanity)
@@ -105,19 +98,15 @@ def steam_link():
         flash(f"Could not resolve Steam username: {exc}", "error")
         return redirect(url_for("settings"))
 
-    # Check if this Steam ID is already linked to another account
-    db = get_db()
-    existing = db.execute(
-        "SELECT id, username FROM users WHERE steam_id = ? AND id != ?",
-        (steam_id, current_user.id),
-    ).fetchone()
+    existing = User.query.filter(
+        User.steam_id == steam_id, User.id != current_user.id
+    ).first()
     if existing:
         flash("This Steam account is already linked to another user.", "error")
         return redirect(url_for("settings"))
 
-    # Store the Steam ID
-    db.execute("UPDATE users SET steam_id = ? WHERE id = ?", (steam_id, current_user.id))
-    db.commit()
+    current_user.steam_id = steam_id
+    db.session.commit()
 
     flash("Steam account linked successfully!", "success")
     return redirect(url_for("settings"))
@@ -127,8 +116,7 @@ def steam_link():
 @login_required
 def steam_unlink():
     """Unlink the user's Steam account (set steam_id to NULL)."""
-    db = get_db()
-    db.execute("UPDATE users SET steam_id = NULL WHERE id = ?", (current_user.id,))
-    db.commit()
+    current_user.steam_id = None
+    db.session.commit()
     flash("Steam account unlinked.", "success")
     return redirect(url_for("settings"))

@@ -2,7 +2,9 @@ from flask import flash, redirect, request, url_for
 from flask_login import current_user, login_required
 
 from . import app
-from .db import get_db
+from .models import db
+from .models.showcase_game import ShowcaseGame
+from .models.showcase_achievement import ShowcaseAchievement
 
 MAX_SHOWCASE_GAMES = 5
 MAX_SHOWCASE_ACHIEVEMENTS = 5
@@ -24,43 +26,31 @@ def showcase_add_game():
         flash("Missing game information.", "error")
         return redirect(redirect_url)
 
-    db = get_db()
-
-    count = db.execute(
-        "SELECT COUNT(*) AS c FROM showcase_games WHERE user_id = ?",
-        (current_user.id,),
-    ).fetchone()["c"]
+    count = ShowcaseGame.query.filter_by(user_id=current_user.id).count()
 
     if count >= MAX_SHOWCASE_GAMES:
         flash("You can only showcase up to 5 games.", "error")
         return redirect(redirect_url)
 
-    existing = db.execute(
-        "SELECT id FROM showcase_games "
-        "WHERE user_id = ? AND platform_id = ? AND title_id = ?",
-        (current_user.id, platform_id, title_id),
-    ).fetchone()
+    existing = ShowcaseGame.query.filter_by(
+        user_id=current_user.id, platform_id=platform_id, title_id=title_id
+    ).first()
 
     if existing:
         flash("This game is already in your showcase.", "error")
         return redirect(redirect_url)
 
-    db.execute(
-        "INSERT INTO showcase_games "
-        "(user_id, platform_id, title_id, game_name, image_url, "
-        "current_achievements, total_achievements) "
-        "VALUES (?, ?, ?, ?, ?, ?, ?)",
-        (
-            current_user.id,
-            platform_id,
-            title_id,
-            game_name,
-            image_url or None,
-            current_achievements,
-            total_achievements,
-        ),
+    game = ShowcaseGame(
+        user_id=current_user.id,
+        platform_id=platform_id,
+        title_id=title_id,
+        game_name=game_name,
+        image_url=image_url or None,
+        current_achievements=current_achievements,
+        total_achievements=total_achievements,
     )
-    db.commit()
+    db.session.add(game)
+    db.session.commit()
     flash("Game added to your showcase!", "success")
     return redirect(redirect_url)
 
@@ -76,12 +66,10 @@ def showcase_remove_game():
         flash("Missing game information.", "error")
         return redirect(redirect_url)
 
-    db = get_db()
-    db.execute(
-        "DELETE FROM showcase_games WHERE id = ? AND user_id = ?",
-        (showcase_game_id, current_user.id),
-    )
-    db.commit()
+    ShowcaseGame.query.filter_by(
+        id=showcase_game_id, user_id=current_user.id
+    ).delete()
+    db.session.commit()
     flash("Game removed from your showcase.", "success")
     return redirect(redirect_url)
 
@@ -104,45 +92,36 @@ def showcase_add_achievement():
         flash("Missing achievement information.", "error")
         return redirect(redirect_url)
 
-    db = get_db()
-
-    count = db.execute(
-        "SELECT COUNT(*) AS c FROM showcase_achievements WHERE user_id = ?",
-        (current_user.id,),
-    ).fetchone()["c"]
+    count = ShowcaseAchievement.query.filter_by(user_id=current_user.id).count()
 
     if count >= MAX_SHOWCASE_ACHIEVEMENTS:
         flash("You can only showcase up to 5 achievements.", "error")
         return redirect(redirect_url)
 
-    existing = db.execute(
-        "SELECT id FROM showcase_achievements "
-        "WHERE user_id = ? AND platform_id = ? AND title_id = ? AND achievement_id = ?",
-        (current_user.id, platform_id, title_id, achievement_id),
-    ).fetchone()
+    existing = ShowcaseAchievement.query.filter_by(
+        user_id=current_user.id,
+        platform_id=platform_id,
+        title_id=title_id,
+        achievement_id=achievement_id,
+    ).first()
 
     if existing:
         flash("This achievement is already in your showcase.", "error")
         return redirect(redirect_url)
 
-    db.execute(
-        "INSERT INTO showcase_achievements "
-        "(user_id, platform_id, title_id, achievement_id, game_name, "
-        "achievement_name, achievement_description, image_url, gamerscore) "
-        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-        (
-            current_user.id,
-            platform_id,
-            title_id,
-            achievement_id,
-            game_name or None,
-            achievement_name,
-            achievement_description or None,
-            image_url or None,
-            gamerscore,
-        ),
+    sa = ShowcaseAchievement(
+        user_id=current_user.id,
+        platform_id=platform_id,
+        title_id=title_id,
+        achievement_id=achievement_id,
+        game_name=game_name or None,
+        achievement_name=achievement_name,
+        achievement_description=achievement_description or None,
+        image_url=image_url or None,
+        gamerscore=gamerscore,
     )
-    db.commit()
+    db.session.add(sa)
+    db.session.commit()
     flash("Achievement added to your showcase!", "success")
     return redirect(redirect_url)
 
@@ -158,11 +137,9 @@ def showcase_remove_achievement():
         flash("Missing achievement information.", "error")
         return redirect(redirect_url)
 
-    db = get_db()
-    db.execute(
-        "DELETE FROM showcase_achievements WHERE id = ? AND user_id = ?",
-        (showcase_achievement_id, current_user.id),
-    )
-    db.commit()
+    ShowcaseAchievement.query.filter_by(
+        id=showcase_achievement_id, user_id=current_user.id
+    ).delete()
+    db.session.commit()
     flash("Achievement removed from your showcase.", "success")
     return redirect(redirect_url)

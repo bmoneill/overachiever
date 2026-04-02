@@ -3,7 +3,9 @@ from flask_login import current_user, login_required
 
 from . import app
 from .auth import get_user_by_username
-from .db import get_db
+from .models import db
+from .models.showcase_game import ShowcaseGame
+from .models.showcase_achievement import ShowcaseAchievement
 from .api.platform import PLATFORM_XBOX, PLATFORM_STEAM
 from .api.xbox import XboxProfileAPI
 from .api.steam import SteamProfileAPI
@@ -43,22 +45,21 @@ def profile(username):
 
     is_own_profile = current_user.is_authenticated and current_user.id == target_user.id
 
-    db = get_db()
-    showcase_games = db.execute(
-        "SELECT * FROM showcase_games WHERE user_id = ? ORDER BY id",
-        (target_user.id,),
-    ).fetchall()
+    showcase_games = (
+        ShowcaseGame.query
+        .filter_by(user_id=target_user.id)
+        .order_by(ShowcaseGame.id)
+        .all()
+    )
 
-    showcase_achievements = db.execute(
-        "SELECT * FROM showcase_achievements WHERE user_id = ? ORDER BY id",
-        (target_user.id,),
-    ).fetchall()
+    showcase_achievements = (
+        ShowcaseAchievement.query
+        .filter_by(user_id=target_user.id)
+        .order_by(ShowcaseAchievement.id)
+        .all()
+    )
 
-    achievement_count_row = db.execute(
-        "SELECT achievement_count FROM users WHERE id = ?",
-        (target_user.id,),
-    ).fetchone()
-    achievement_count = achievement_count_row["achievement_count"] if achievement_count_row else 0
+    achievement_count = target_user.achievement_count or 0
 
     return render_template(
         "profile.html",
@@ -90,12 +91,9 @@ def profile_edit(username):
         bio = request.form.get("bio", "").strip()
         display_gamertags = request.form.get("display_gamertags") == "on"
 
-        db = get_db()
-        db.execute(
-            "UPDATE users SET bio = ?, display_gamertags = ? WHERE id = ?",
-            (bio or None, display_gamertags, current_user.id),
-        )
-        db.commit()
+        current_user.bio = bio or None
+        current_user.display_gamertags = display_gamertags
+        db.session.commit()
 
         flash("Profile updated!", "success")
         return redirect(url_for("profile", username=username))

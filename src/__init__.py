@@ -21,7 +21,4 @@ login_manager.login_message_category = "error"
 # instances, avoiding circular-import issues.
 from . import db, auth, routes, settings, profile, public_guides, showcase  # noqa: E402, F401
 
-app.teardown_appcontext(db.close_db)
-
-with app.app_context():
-    db.init_db()
+db.init_app(app)

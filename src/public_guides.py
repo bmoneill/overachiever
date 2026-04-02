@@ -1,7 +1,9 @@
+from sqlalchemy import func
 from flask import abort, render_template
 
 from . import app
-from .db import get_db
+from .models.achievement import Achievement
+from .models.guide import Guide
 from .api.platform import PLATFORM_XBOX, PLATFORM_STEAM
 
 PLATFORM_ID_TO_SLUG = {
@@ -17,18 +19,30 @@ PLATFORM_SLUG_TO_ID = {
 
 @app.route("/guides")
 def public_guides_index():
-    db = get_db()
-    games = db.execute(
-        "SELECT g.platform_id, g.title_id, "
-        "  (SELECT a.game_name FROM achievement_summaries a "
-        "   WHERE a.platform_id = g.platform_id AND a.title_id = g.title_id "
-        "   AND a.game_name IS NOT NULL LIMIT 1) as game_name, "
-        "  COUNT(*) as guide_count "
-        "FROM guides g "
-        "GROUP BY g.platform_id, g.title_id "
-        "HAVING game_name IS NOT NULL "
-        "ORDER BY game_name"
-    ).fetchall()
+    # Get guide counts grouped by (platform_id, title_id)
+    guide_groups = (
+        Guide.query
+        .with_entities(Guide.platform_id, Guide.title_id, func.count().label("guide_count"))
+        .group_by(Guide.platform_id, Guide.title_id)
+        .all()
+    )
+
+    games = []
+    for row in guide_groups:
+        ach = (
+            Achievement.query
+            .filter_by(platform_id=row.platform_id, title_id=str(row.title_id))
+            .filter(Achievement.game_name.isnot(None))
+            .first()
+        )
+        if ach:
+            games.append({
+                "platform_id": row.platform_id,
+                "title_id": row.title_id,
+                "game_name": ach.game_name,
+                "guide_count": row.guide_count,
+            })
+    games.sort(key=lambda g: g["game_name"])
 
     return render_template(
         "public_guides_index.html",
@@ -44,48 +58,46 @@ def public_game_guides(platform, title_id):
 
     platform_id = PLATFORM_SLUG_TO_ID[platform]
 
-    db = get_db()
+    game_guides = (
+        Guide.query
+        .filter_by(platform_id=platform_id, title_id=title_id)
+        .filter(Guide.achievement_id.is_(None))
+        .order_by(Guide.id)
+        .all()
+    )
 
-    game_guides = db.execute(
-        "SELECT g.id, g.url, g.title, g.description, u.username AS author "
-        "FROM guides g LEFT JOIN users u ON g.user_id = u.id "
-        "WHERE g.platform_id = ? AND g.title_id = ? AND g.achievement_id IS NULL "
-        "ORDER BY g.id",
-        (platform_id, title_id),
-    ).fetchall()
-
-    achievement_rows = db.execute(
-        "SELECT g.id, g.url, g.title, g.description, g.created_at, "
-        "       a.achievement_id, a.achievement_name, a.achievement_description, "
-        "       u.username AS author "
-        "FROM guides g "
-        "LEFT JOIN users u ON g.user_id = u.id "
-        "JOIN achievement_summaries a ON g.achievement_id = a.id "
-        "WHERE g.platform_id = ? AND g.title_id = ? AND g.achievement_id IS NOT NULL "
-        "ORDER BY a.achievement_name, g.id",
-        (platform_id, title_id),
-    ).fetchall()
+    achievement_guides = (
+        Guide.query
+        .filter_by(platform_id=platform_id, title_id=title_id)
+        .filter(Guide.achievement_id.isnot(None))
+        .join(Guide.achievement)
+        .order_by(Achievement.achievement_name, Guide.id)
+        .all()
+    )
 
     achievement_groups: list[dict] = []
     current_key = None
-    for row in achievement_rows:
-        key = (row["achievement_id"], row["achievement_name"])
+    for guide in achievement_guides:
+        ach = guide.achievement
+        key = (ach.achievement_id, ach.achievement_name)
         if key != current_key:
             current_key = key
             achievement_groups.append({
-                "achievement_id": row["achievement_id"],
-                "achievement_name": row["achievement_name"],
-                "achievement_description": row["achievement_description"],
+                "achievement_id": ach.achievement_id,
+                "achievement_name": ach.achievement_name,
+                "achievement_description": ach.description,
                 "guides": [],
             })
-        achievement_groups[-1]["guides"].append(row)
+        achievement_groups[-1]["guides"].append(guide)
 
-    game_name_row = db.execute(
-        "SELECT game_name FROM achievement_summaries "
-        "WHERE platform_id = ? AND title_id = ? AND game_name IS NOT NULL LIMIT 1",
-        (platform_id, title_id),
-    ).fetchone()
-    game_name = game_name_row["game_name"] if game_name_row else f"Title ID: {title_id}"
+    # Look up the game name from the first matching achievement record.
+    ach_row = (
+        Achievement.query
+        .filter_by(platform_id=platform_id, title_id=str(title_id))
+        .filter(Achievement.game_name.isnot(None))
+        .first()
+    )
+    game_name = ach_row.game_name if ach_row else f"Title ID: {title_id}"
 
     return render_template(
         "public_game_guides.html",

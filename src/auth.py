@@ -1,9 +1,7 @@
 import os
-import sqlite3
 
 from flask import flash, redirect, render_template, request, url_for
 from flask_login import (
-    UserMixin,
     current_user,
     login_required,
     login_user,
@@ -12,7 +10,10 @@ from flask_login import (
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from . import app, login_manager
-from .db import get_db
+from .models import db
+from .models.user import User
+from .models.achievement import Achievement
+from .models.guide import Guide
 from .api.platform import PLATFORM_XBOX, PLATFORM_STEAM
 
 PLATFORM_ID_TO_SLUG = {
@@ -28,77 +29,18 @@ ALLOW_REGISTRATION = os.environ.get("ALLOW_REGISTRATION", "true").lower() not in
 
 
 # ---------------------------------------------------------------------------
-# User model
-# ---------------------------------------------------------------------------
-
-
-class User(UserMixin):
-    def __init__(
-        self,
-        id: int,
-        username: str,
-        email: str,
-        password_hash: str,
-        xuid: str,
-        steam_id: str | None,
-        psn_id: str | None,
-        bio: str | None = None,
-        display_gamertags: bool = False,
-    ):
-        self.id = id
-        self.username = username
-        self.email = email
-        self.password_hash = password_hash
-        self.xuid = xuid
-        self.steam_id = steam_id
-        self.psn_id = psn_id
-        self.bio = bio
-        self.display_gamertags = display_gamertags
-
-
-# ---------------------------------------------------------------------------
 # Flask-Login helpers
 # ---------------------------------------------------------------------------
 
 
 @login_manager.user_loader
 def load_user(user_id: int):
-    db: sqlite3.Connection = get_db()
-    row: sqlite3.Row | None = db.execute(
-        "SELECT * FROM users WHERE id = ?", (user_id,)
-    ).fetchone()
-    if row is None:
-        return None
-    return User(
-        id=row["id"],
-        username=row["username"],
-        email=row["email"],
-        password_hash=row["password_hash"],
-        xuid=row["xuid"],
-        steam_id=row["steam_id"],
-        psn_id=row["psn_id"],
-        bio=row["bio"],
-        display_gamertags=bool(row["display_gamertags"]),
-    )
+    return db.session.get(User, int(user_id))
 
 
 def get_user_by_username(username: str) -> User | None:
     """Look up a user by username. Returns a User or None."""
-    db = get_db()
-    row = db.execute("SELECT * FROM users WHERE username = ?", (username,)).fetchone()
-    if row is None:
-        return None
-    return User(
-        id=row["id"],
-        username=row["username"],
-        email=row["email"],
-        password_hash=row["password_hash"],
-        xuid=row["xuid"],
-        steam_id=row["steam_id"],
-        psn_id=row["psn_id"],
-        bio=row["bio"],
-        display_gamertags=bool(row["display_gamertags"]),
-    )
+    return User.query.filter_by(username=username).first()
 
 
 # ---------------------------------------------------------------------------
@@ -110,25 +52,20 @@ def index():
     if current_user.is_authenticated:
         return redirect(url_for("my_games"))
 
-    db = get_db()
-    recent_guides = db.execute(
-        "SELECT g.id, g.url, g.title, g.description, g.created_at, "
-        "       g.platform_id, g.title_id, "
-        "       a.game_name, a.achievement_name, "
-        "       u.username AS author "
-        "FROM guides g "
-        "LEFT JOIN users u ON g.user_id = u.id "
-        "LEFT JOIN achievement_summaries a ON g.achievement_id = a.id "
-        "ORDER BY g.created_at DESC "
-        "LIMIT 5"
-    ).fetchall()
+    recent_guides = (
+        Guide.query
+        .order_by(Guide.created_at.desc())
+        .limit(5)
+        .all()
+    )
 
-    top_achievers = db.execute(
-        "SELECT username, achievement_count FROM users "
-        "WHERE achievement_count > 0 "
-        "ORDER BY achievement_count DESC "
-        "LIMIT 5"
-    ).fetchall()
+    top_achievers = (
+        User.query
+        .filter(User.achievement_count > 0)
+        .order_by(User.achievement_count.desc())
+        .limit(5)
+        .all()
+    )
 
     return render_template(
         "index.html",
@@ -144,11 +81,13 @@ def user_search():
     q = request.args.get("q", "").strip()
     results = []
     if q:
-        db = get_db()
-        results = db.execute(
-            "SELECT id, username, bio FROM users WHERE username LIKE ? ORDER BY username LIMIT 20",
-            (f"%{q}%",),
-        ).fetchall()
+        results = (
+            User.query
+            .filter(User.username.ilike(f"%{q}%"))
+            .order_by(User.username)
+            .limit(20)
+            .all()
+        )
     return render_template("search_results.html", query=q, results=results)
 
 
@@ -195,23 +134,20 @@ def register():
             flash("Please fill in all fields.", "error")
             return redirect(url_for("register"))
 
-        db = get_db()
-
-        # Check for existing username or email
-        existing = db.execute(
-            "SELECT id FROM users WHERE username = ? OR email = ?",
-            (username, email),
-        ).fetchone()
+        existing = User.query.filter(
+            db.or_(User.username == username, User.email == email)
+        ).first()
         if existing:
             flash("Username or email is already taken.", "error")
             return redirect(url_for("register"))
 
-        password_hash = generate_password_hash(password)
-        db.execute(
-            "INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)",
-            (username, email, password_hash),
+        new_user = User(
+            username=username,
+            email=email,
+            password_hash=generate_password_hash(password),
         )
-        db.commit()
+        db.session.add(new_user)
+        db.session.commit()
 
         flash("Account created! Please log in.", "success")
         return redirect(url_for("login"))
