@@ -6,6 +6,8 @@ from .auth import get_user_by_username
 from .models import db
 from .models.showcase_game import ShowcaseGame
 from .models.showcase_achievement import ShowcaseAchievement
+from .models.achievement import Achievement
+from .models.user_achievement import UserAchievement
 from .api.platform import PLATFORM_XBOX, PLATFORM_STEAM
 from .api.xbox import XboxProfileAPI
 from .api.steam import SteamProfileAPI
@@ -52,6 +54,15 @@ def profile(username):
         .all()
     )
 
+    recent_achievements = (
+        UserAchievement.query
+        .join(Achievement, UserAchievement.achievement_id == Achievement.id)
+        .filter(UserAchievement.user_id == target_user.id)
+        .order_by(UserAchievement.time_unlocked.desc())
+        .limit(5)
+        .all()
+    )
+
     showcase_achievements = (
         ShowcaseAchievement.query
         .filter_by(user_id=target_user.id)
@@ -70,6 +81,7 @@ def profile(username):
         showcase_games=showcase_games,
         showcase_achievements=showcase_achievements,
         achievement_count=achievement_count,
+        recent_achievements=recent_achievements,
         platform_slugs=PLATFORM_ID_TO_SLUG,
     )
 

@@ -201,6 +201,11 @@
                 border-color: #6b2020;
                 color: #f5a0a0;
             }
+            .recent-achievement-time {
+                font-size: 0.75rem;
+                color: #6c6;
+                margin-top: 0.15rem;
+            }
         </style>
     </head>
     <body>
@@ -440,7 +445,56 @@
                         No linked accounts to display.
                     </div>
                 </div>
-                {% endif %} {% endif %} {% if is_own_profile %}
+                {% endif %} {% endif %} {% if recent_achievements %}
+                <h2 class="section-title">Recent Achievements</h2>
+                {% if is_own_profile %}
+                <p class="note">
+                    Note: Achievements may not be displayed if you have not
+                    visited the game's Overachiever page recently.
+                </p>
+                <br />
+                {% endif %}
+
+                <div class="card">
+                    {% for ua in recent_achievements %}
+                    <div class="showcase-achievement-row">
+                        {% if ua.achievement.image_url %}
+                        <img
+                            class="showcase-achievement-icon"
+                            src="{{ ua.achievement.image_url }}"
+                            alt=""
+                        />
+                        {% else %}
+                        <div class="showcase-achievement-icon"></div>
+                        {% endif %}
+                        <div class="showcase-achievement-info">
+                            <div class="showcase-achievement-name">
+                                {{ ua.achievement.achievement_name }}
+                            </div>
+                            {% if ua.achievement.description %}
+                            <div class="showcase-achievement-desc">
+                                {{ ua.achievement.description }}
+                            </div>
+                            {% endif %} {% if ua.achievement.game_name %}
+                            <div class="showcase-achievement-game">
+                                {{ ua.achievement.game_name }}
+                            </div>
+                            {% endif %} {% if ua.time_unlocked %}
+                            <div class="recent-achievement-time">
+                                Unlocked: {{ ua.time_unlocked[:10] }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% if ua.achievement.gamerscore is not none and
+                        ua.achievement.gamerscore %}
+                        <div class="showcase-achievement-score">
+                            {{ ua.achievement.gamerscore }}G
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %} {% if is_own_profile %}
                 <div class="edit-actions">
                     <button class="btn btn-outline" id="edit-btn" type="button">
                         Edit Profile
