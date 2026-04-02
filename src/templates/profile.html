@@ -278,7 +278,13 @@
                                 class="showcase-game-name"
                                 title="{{ game.game_name }}"
                             >
-                                {{ game.game_name }}
+                                {% if game.platform_id in platform_slugs %}
+                                <img
+                                    class="platform-icon"
+                                    src="{{ url_for('static', filename=platform_slugs[game.platform_id] + '.svg') }}"
+                                    alt="{{ platform_slugs[game.platform_id] }}"
+                                />
+                                {% endif %} {{ game.game_name }}
                             </div>
                             <div class="showcase-game-progress">
                                 {{ game.current_achievements }} / {{
@@ -348,7 +354,13 @@
                             </div>
                             {% endif %} {% if ach.game_name %}
                             <div class="showcase-achievement-game">
-                                {{ ach.game_name }}
+                                {% if ach.platform_id in platform_slugs %}
+                                <img
+                                    class="platform-icon"
+                                    src="{{ url_for('static', filename=platform_slugs[ach.platform_id] + '.svg') }}"
+                                    alt="{{ platform_slugs[ach.platform_id] }}"
+                                />
+                                {% endif %} {{ ach.game_name }}
                             </div>
                             {% endif %}
                         </div>
@@ -477,7 +489,14 @@
                             </div>
                             {% endif %} {% if ua.achievement.game_name %}
                             <div class="showcase-achievement-game">
-                                {{ ua.achievement.game_name }}
+                                {% if ua.achievement.platform_id in
+                                platform_slugs %}
+                                <img
+                                    class="platform-icon"
+                                    src="{{ url_for('static', filename=platform_slugs[ua.achievement.platform_id] + '.svg') }}"
+                                    alt="{{ platform_slugs[ua.achievement.platform_id] }}"
+                                />
+                                {% endif %} {{ ua.achievement.game_name }}
                             </div>
                             {% endif %} {% if ua.time_unlocked %}
                             <div class="recent-achievement-time">
