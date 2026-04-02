@@ -43,21 +43,22 @@ def init_db():
             display_gamertags BOOLEAN DEFAULT FALSE,
             achievement_count INTEGER DEFAULT 0
         );
-        CREATE TABLE IF NOT EXISTS achievement_summaries (
+        CREATE TABLE IF NOT EXISTS achievements (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             platform_id INTEGER NOT NULL,
             title_id INTEGER NOT NULL,
             achievement_id INTEGER NOT NULL,
-            game_name TEXT DEFAULT NULL,
-            achievement_name TEXT DEFAULT NULL,
-            achievement_description TEXT DEFAULT NULL
+            game_name TEXT NOT NULL,
+            achievement_name TEXT NOT NULL,
+            achievement_description TEXT DEFAULT NULL,
+            image_url TEXT DEFAULT NULL
         );
         CREATE TABLE IF NOT EXISTS pinned_achievements (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER NOT NULL,
-            achievement_summary_id INTEGER NOT NULL,
+            achievement_id INTEGER NOT NULL,
             FOREIGN KEY (user_id) REFERENCES users(id),
-            FOREIGN KEY (achievement_summary_id) REFERENCES achievement_summaries(id)
+            FOREIGN KEY (achievement_id) REFERENCES achievements(id)
         );
         CREATE TABLE IF NOT EXISTS guides (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -66,11 +67,11 @@ def init_db():
             description TEXT,
             platform_id INTEGER NOT NULL,
             title_id INTEGER NOT NULL,
-            achievement_summary_id INTEGER DEFAULT NULL,
+            achievement_id INTEGER DEFAULT NULL,
             user_id INTEGER DEFAULT NULL,
             created_at TEXT DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES users(id),
-            FOREIGN KEY (achievement_summary_id) REFERENCES achievement_summaries(id)
+            FOREIGN KEY (achievement_id) REFERENCES achievements(id)
         );
         CREATE TABLE IF NOT EXISTS guide_rating (
             id INTEGER PRIMARY KEY AUTOINCREMENT,

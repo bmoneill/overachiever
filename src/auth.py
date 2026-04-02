@@ -118,7 +118,7 @@ def index():
         "       u.username AS author "
         "FROM guides g "
         "LEFT JOIN users u ON g.user_id = u.id "
-        "LEFT JOIN achievement_summaries a ON g.achievement_summary_id = a.id "
+        "LEFT JOIN achievement_summaries a ON g.achievement_id = a.id "
         "ORDER BY g.created_at DESC "
         "LIMIT 5"
     ).fetchall()

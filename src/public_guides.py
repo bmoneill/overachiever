@@ -49,7 +49,7 @@ def public_game_guides(platform, title_id):
     game_guides = db.execute(
         "SELECT g.id, g.url, g.title, g.description, u.username AS author "
         "FROM guides g LEFT JOIN users u ON g.user_id = u.id "
-        "WHERE g.platform_id = ? AND g.title_id = ? AND g.achievement_summary_id IS NULL "
+        "WHERE g.platform_id = ? AND g.title_id = ? AND g.achievement_id IS NULL "
         "ORDER BY g.id",
         (platform_id, title_id),
     ).fetchall()
@@ -60,8 +60,8 @@ def public_game_guides(platform, title_id):
         "       u.username AS author "
         "FROM guides g "
         "LEFT JOIN users u ON g.user_id = u.id "
-        "JOIN achievement_summaries a ON g.achievement_summary_id = a.id "
-        "WHERE g.platform_id = ? AND g.title_id = ? AND g.achievement_summary_id IS NOT NULL "
+        "JOIN achievement_summaries a ON g.achievement_id = a.id "
+        "WHERE g.platform_id = ? AND g.title_id = ? AND g.achievement_id IS NOT NULL "
         "ORDER BY a.achievement_name, g.id",
         (platform_id, title_id),
     ).fetchall()
