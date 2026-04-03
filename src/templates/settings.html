@@ -140,15 +140,16 @@
                 <form
                     method="POST"
                     action="{{ url_for('steam_link') }}"
-                    style="display: flex; align-items: center; gap: 0.75rem"
+                    id="steam-link-form"
                 >
                     <input
                         type="text"
-                        name="vanity_url"
-                        placeholder="Enter Steam vanity username"
+                        name="steam_input"
+                        id="steam-input"
+                        placeholder="Enter Steam ID"
                         required
                         style="
-                            flex: 1;
+                            width: 100%;
                             padding: 0.6rem 0.75rem;
                             font-size: 0.9rem;
                             background: #0e0e0e;
@@ -156,10 +157,94 @@
                             border-radius: 6px;
                             color: #e0e0e0;
                             outline: none;
+                            margin-bottom: 0.75rem;
                         "
                     />
-                    <button type="submit" class="btn btn-green">Link</button>
+                    <input
+                        type="hidden"
+                        name="steam_input_type"
+                        id="steam-input-type"
+                        value="steam_id"
+                    />
+                    <div style="display: flex; gap: 0">
+                        <button
+                            type="button"
+                            id="btn-steam-id"
+                            onclick="setSteamMode('steam_id')"
+                            style="
+                                flex: 1;
+                                padding: 0.5rem 0.75rem;
+                                font-size: 0.85rem;
+                                font-weight: 600;
+                                border: 1px solid #107c10;
+                                border-radius: 6px 0 0 6px;
+                                cursor: pointer;
+                                background: #107c10;
+                                color: #fff;
+                                transition:
+                                    background 0.2s,
+                                    color 0.2s;
+                            "
+                        >
+                            Steam ID
+                        </button>
+                        <button
+                            type="button"
+                            id="btn-vanity-url"
+                            onclick="setSteamMode('vanity_url')"
+                            style="
+                                flex: 1;
+                                padding: 0.5rem 0.75rem;
+                                font-size: 0.85rem;
+                                font-weight: 600;
+                                border: 1px solid #107c10;
+                                border-left: none;
+                                border-radius: 0 6px 6px 0;
+                                cursor: pointer;
+                                background: transparent;
+                                color: #107c10;
+                                transition:
+                                    background 0.2s,
+                                    color 0.2s;
+                            "
+                        >
+                            Vanity URL
+                        </button>
+                    </div>
+                    <button
+                        type="submit"
+                        class="btn btn-green"
+                        style="width: 100%; margin-top: 0.75rem"
+                    >
+                        Link
+                    </button>
                 </form>
+                <script>
+                    function setSteamMode(mode) {
+                        var hiddenInput =
+                            document.getElementById("steam-input-type");
+                        var textInput = document.getElementById("steam-input");
+                        var btnSteamId =
+                            document.getElementById("btn-steam-id");
+                        var btnVanity =
+                            document.getElementById("btn-vanity-url");
+                        hiddenInput.value = mode;
+                        if (mode === "steam_id") {
+                            textInput.placeholder = "Enter Steam ID";
+                            btnSteamId.style.background = "#107c10";
+                            btnSteamId.style.color = "#fff";
+                            btnVanity.style.background = "transparent";
+                            btnVanity.style.color = "#107c10";
+                        } else {
+                            textInput.placeholder =
+                                "Enter Steam vanity username";
+                            btnVanity.style.background = "#107c10";
+                            btnVanity.style.color = "#fff";
+                            btnSteamId.style.background = "transparent";
+                            btnSteamId.style.color = "#107c10";
+                        }
+                    }
+                </script>
                 {% endif %}
             </div>
 

@@ -81,22 +81,30 @@ def xbox_unlink():
 @app.route("/settings/steam/link", methods=["POST"])
 @login_required
 def steam_link():
-    """Link a Steam account by resolving a vanity username to a Steam ID."""
-    vanity = request.form.get("vanity_url", "").strip()
-    if not vanity:
-        flash("Please enter a Steam vanity username.", "error")
+    """Link a Steam account by Steam ID or vanity URL."""
+    input_type = request.form.get("steam_input_type", "steam_id").strip()
+    steam_input = request.form.get("steam_input", "").strip()
+
+    if not steam_input:
+        flash("Please enter a Steam ID or vanity URL.", "error")
         return redirect(url_for("settings"))
 
     if current_user.steam_id:
         flash("Your Steam account is already linked.", "error")
         return redirect(url_for("settings"))
 
-    try:
-        api = SteamProfileAPI()
-        steam_id = api.resolve_vanity_url(vanity)
-    except ProfileAPIError as exc:
-        flash(f"Could not resolve Steam username: {exc}", "error")
-        return redirect(url_for("settings"))
+    if input_type == "steam_id":
+        if not steam_input.isdigit():
+            flash("Steam ID must be a numeric value.", "error")
+            return redirect(url_for("settings"))
+        steam_id = steam_input
+    else:
+        try:
+            api = SteamProfileAPI()
+            steam_id = api.resolve_vanity_url(steam_input)
+        except ProfileAPIError as exc:
+            flash(f"Could not resolve Steam username: {exc}", "error")
+            return redirect(url_for("settings"))
 
     existing = User.query.filter(
         User.steam_id == steam_id, User.id != current_user.id
