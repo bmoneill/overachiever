@@ -19,6 +19,6 @@ login_manager.login_message_category = "error"
 # Each module uses `from . import app` / `from . import login_manager`
 # to register route decorators and callbacks on the already-created
 # instances, avoiding circular-import issues.
-from . import db, auth, routes, settings, profile, public_guides, showcase  # noqa: E402, F401
+from . import db, routes, showcase  # noqa: E402, F401
 
 db.init_app(app)

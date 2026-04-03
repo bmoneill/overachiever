@@ -1,22 +1,16 @@
 from flask import flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
-from . import app
-from .auth import get_user_by_username
-from .models import db
-from .models.showcase_game import ShowcaseGame
-from .models.showcase_achievement import ShowcaseAchievement
-from .models.achievement import Achievement
-from .models.user_achievement import UserAchievement
-from .api.platform import PLATFORM_XBOX, PLATFORM_STEAM
-from .api.xbox import XboxProfileAPI
-from .api.steam import SteamProfileAPI
-from .api.profile import ProfileAPIError
-
-PLATFORM_ID_TO_SLUG = {
-    PLATFORM_XBOX: "xbox",
-    PLATFORM_STEAM: "steam",
-}
+from .. import app
+from ._helpers import get_user_by_username, PLATFORM_ID_TO_SLUG
+from ..models import db
+from ..models.showcase_game import ShowcaseGame
+from ..models.showcase_achievement import ShowcaseAchievement
+from ..models.achievement import Achievement
+from ..models.user_achievement import UserAchievement
+from ..api.xbox import XboxProfileAPI
+from ..api.steam import SteamProfileAPI
+from ..api.profile import ProfileAPIError
 
 
 @app.route("/profile/<username>")

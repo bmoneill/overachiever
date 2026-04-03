@@ -1,28 +1,23 @@
 import requests
 from datetime import datetime, timezone
+
 from bs4 import BeautifulSoup
 from flask import flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
-from . import app
-from .auth import get_user_by_username
-from .models import db
-from .models.achievement import Achievement as AchievementModel
-from .models.user_achievement import UserAchievement
-from .models.showcase_game import ShowcaseGame
-from .models.showcase_achievement import ShowcaseAchievement
-from .models.guide import Guide
-from .models.xbox360icon import Xbox360Icon
-from .api.achievement import Achievement as APIAchievement, AchievementAPIError
-from .api.platform import PLATFORM_XBOX, PLATFORM_STEAM
-from .api.xbox import XboxAchievementAPI, xbl_get
-from .api.steam import SteamAchievementAPI, steam_get
-
-
-PLATFORM_SLUG_TO_ID = {
-    "xbox": PLATFORM_XBOX,
-    "steam": PLATFORM_STEAM,
-}
+from .. import app
+from ._helpers import get_user_by_username, PLATFORM_SLUG_TO_ID
+from ..models import db
+from ..models.achievement import Achievement as AchievementModel
+from ..models.user_achievement import UserAchievement
+from ..models.showcase_game import ShowcaseGame
+from ..models.showcase_achievement import ShowcaseAchievement
+from ..models.guide import Guide
+from ..models.xbox360icon import Xbox360Icon
+from ..api.achievement import Achievement as APIAchievement, AchievementAPIError
+from ..api.platform import PLATFORM_XBOX, PLATFORM_STEAM
+from ..api.xbox import XboxAchievementAPI, xbl_get
+from ..api.steam import SteamAchievementAPI, steam_get
 
 
 # ---------------------------------------------------------------------------
@@ -92,7 +87,7 @@ def _fetch_steam_achievement_counts(
     """Batch-fetch achievement counts for Steam games.
 
     Calls ``GetTopAchievementsForGames`` in batches and returns a dict
-    mapping *appid* → ``(unlocked, total)``.
+    mapping *appid* -> ``(unlocked, total)``.
     """
     counts: dict[str, tuple[int, int]] = {}
     BATCH_SIZE = 100
@@ -162,7 +157,7 @@ def _normalize_steam_games(
 
 
 # ---------------------------------------------------------------------------
-# Achievement ↔ DB sync helpers
+# Achievement / DB sync helpers
 # ---------------------------------------------------------------------------
 
 def _sync_achievements_to_db(
@@ -236,7 +231,7 @@ def _sync_achievements_to_db(
                 if api_ach.time_unlocked:
                     user_ach.time_unlocked = api_ach.time_unlocked
         else:
-            # Achievement is locked — remove any stale unlock record
+            # Achievement is locked -- remove any stale unlock record
             if user_ach is not None:
                 db.session.delete(user_ach)
 
@@ -297,14 +292,6 @@ def _load_cached_achievements(
 # ---------------------------------------------------------------------------
 # Game / Achievement routes
 # ---------------------------------------------------------------------------
-
-
-@app.route("/my-games")
-@login_required
-def my_games():
-    """Redirect to the current user's games page."""
-    return redirect(url_for("games", username=current_user.username))
-
 
 @app.route("/games/<username>")
 def games(username):

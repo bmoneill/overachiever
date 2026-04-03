@@ -1,20 +1,10 @@
 from sqlalchemy import func
 from flask import abort, render_template
 
-from . import app
-from .models.achievement import Achievement
-from .models.guide import Guide
-from .api.platform import PLATFORM_XBOX, PLATFORM_STEAM
-
-PLATFORM_ID_TO_SLUG = {
-    PLATFORM_XBOX: "xbox",
-    PLATFORM_STEAM: "steam",
-}
-
-PLATFORM_SLUG_TO_ID = {
-    "xbox": PLATFORM_XBOX,
-    "steam": PLATFORM_STEAM,
-}
+from .. import app
+from ..models.achievement import Achievement
+from ..models.guide import Guide
+from ._helpers import PLATFORM_ID_TO_SLUG, PLATFORM_SLUG_TO_ID
 
 
 @app.route("/guides")
