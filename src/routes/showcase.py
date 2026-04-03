@@ -1,10 +1,10 @@
 from flask import flash, redirect, request, url_for
 from flask_login import current_user, login_required
 
-from . import app
-from .models import db
-from .models.showcase_game import ShowcaseGame
-from .models.showcase_achievement import ShowcaseAchievement
+from .. import app
+from ..models import db
+from ..models.showcase_game import ShowcaseGame
+from ..models.showcase_achievement import ShowcaseAchievement
 
 MAX_SHOWCASE_GAMES = 5
 MAX_SHOWCASE_ACHIEVEMENTS = 5
