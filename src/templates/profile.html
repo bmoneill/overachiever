@@ -393,16 +393,16 @@
                             </div>
                             <div class="showcase-game-progress">
                                 {{ game.current_achievements }} / {{
-                                game.total_achievements }} achievements {% if
-                                game.total_achievements > 0 %} ({{
+                                game.title.total_achievements }} achievements {%
+                                if game.title.total_achievements > 0 %} ({{
                                 (game.current_achievements * 100 /
-                                game.total_achievements) | round | int }}%) {%
-                                else %} (0%) {% endif %}
+                                game.title.total_achievements) | round | int
+                                }}%) {% else %} (0%) {% endif %}
                             </div>
                             <div class="progress-bar">
                                 <div
                                     class="progress-bar-fill"
-                                    style="width: {{ (game.current_achievements * 100 / game.total_achievements) | round | int if game.total_achievements > 0 else 0 }}%"
+                                    style="width: {{ (game.current_achievements * 100 / game.title.total_achievements) | round | int if game.title.total_achievements > 0 else 0 }}%"
                                 ></div>
                             </div>
                         </div>

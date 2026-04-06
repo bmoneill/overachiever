@@ -16,6 +16,10 @@ class UserTitle(db.Model):
     :class:`~src.models.title.Title` and stores user-specific data such
     as achievement progress and the last-played timestamp.
 
+    The total number of achievements for a title is stored on the
+    :class:`~src.models.title.Title` model itself and exposed here via
+    the :pyattr:`total_achievements` proxy property.
+
     Convenience properties proxy through to the related ``Title`` so
     that templates can access game metadata directly (e.g.
     ``user_title.name``, ``user_title.platform``).
@@ -26,8 +30,6 @@ class UserTitle(db.Model):
         title_id: Foreign key to ``titles.id``.
         current_achievements: Number of achievements the user has unlocked
             for this title.  ``None`` when achievement data is unavailable.
-        total_achievements: Total number of achievements defined for this
-            title.  ``None`` when achievement data is unavailable.
         progress_percentage: Completion percentage (0–100).  ``None`` when
             achievement data is unavailable.
         last_played: ISO-8601 timestamp of the user's last play session,
@@ -44,7 +46,6 @@ class UserTitle(db.Model):
         db.Integer, db.ForeignKey("titles.id"), nullable=False
     )
     current_achievements: int | None = db.Column(db.Integer, default=None)
-    total_achievements: int | None = db.Column(db.Integer, default=None)
     progress_percentage: int | None = db.Column(db.Integer, default=None)
     last_played: str | None = db.Column(db.String, default=None)
 
@@ -64,6 +65,11 @@ class UserTitle(db.Model):
     # ------------------------------------------------------------------
     # Template-compatible convenience properties
     # ------------------------------------------------------------------
+
+    @property
+    def total_achievements(self) -> int:
+        """Total achievement count, proxied from the related Title."""
+        return self.title.total_achievements
 
     @property
     def platform(self) -> str:

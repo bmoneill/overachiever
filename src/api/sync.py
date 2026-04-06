@@ -49,6 +49,7 @@ def _upsert_title(
     name: str,
     image_url: str | None = None,
     media_type: str | None = None,
+    total_achievements: int = 0,
 ) -> Title:
     """Find or create a :class:`Title` row, updating mutable fields.
 
@@ -67,6 +68,7 @@ def _upsert_title(
             platform_title_id=str(platform_title_id),
             image_url=image_url or None,
             media_type=media_type or None,
+            total_achievements=total_achievements,
         )
         db.session.add(db_title)
     else:
@@ -75,6 +77,8 @@ def _upsert_title(
             db_title.image_url = image_url
         if media_type:
             db_title.media_type = media_type
+        if total_achievements:
+            db_title.total_achievements = total_achievements
 
     db.session.flush()
     return db_title
@@ -84,11 +88,13 @@ def _upsert_user_title(
     user_id: int,
     title: Title,
     current_achievements: int | None = None,
-    total_achievements: int | None = None,
     progress_percentage: int | None = None,
     last_played: str | None = None,
 ) -> UserTitle:
     """Find or create a :class:`UserTitle` row.
+
+    The total achievement count for a title is stored on the
+    :class:`Title` model rather than here.
 
     Returns the (possibly new) ``UserTitle`` instance.  The caller is
     responsible for committing the session.
@@ -103,14 +109,12 @@ def _upsert_user_title(
             user_id=user_id,
             title_id=title.id,
             current_achievements=current_achievements,
-            total_achievements=total_achievements,
             progress_percentage=progress_percentage,
             last_played=last_played,
         )
         db.session.add(ut)
     else:
         ut.current_achievements = current_achievements
-        ut.total_achievements = total_achievements
         ut.progress_percentage = progress_percentage
         if last_played:
             ut.last_played = last_played
@@ -271,13 +275,13 @@ def _sync_xbox_games(user: User) -> None:
             name=title.get("name", "Unknown Title"),
             image_url=title.get("displayImage", ""),
             media_type=title.get("mediaItemType", ""),
+            total_achievements=ach_info.get("totalAchievements", 0),
         )
 
         _upsert_user_title(
             user_id=user.id,
             title=db_title,
             current_achievements=ach_info.get("currentAchievements", 0),
-            total_achievements=ach_info.get("totalAchievements", 0),
             progress_percentage=ach_info.get("progressPercentage", 0),
             last_played=hist.get("lastTimePlayed", ""),
         )
@@ -333,13 +337,13 @@ def _sync_steam_games(user: User) -> None:
             platform_title_id=appid,
             name=game.get("name", "Unknown Title"),
             image_url=img,
+            total_achievements=total or 0,
         )
 
         _upsert_user_title(
             user_id=user.id,
             title=db_title,
             current_achievements=current,
-            total_achievements=total,
             progress_percentage=progress,
             last_played=last_played,
         )
@@ -447,6 +451,7 @@ def sync_title_achievements(
         platform_title_id=platform_title_id,
         name=game_name or f"Title: {platform_title_id}",
         media_type=media_type or None,
+        total_achievements=len(achievements),
     )
 
     is_x360 = (

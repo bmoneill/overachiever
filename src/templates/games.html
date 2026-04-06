@@ -94,8 +94,9 @@
         </div>
 
         <div class="games-grid" id="games-grid">
-            {% for game in all_games %} {% if not (game.platform == "steam" and
-            game.total_achievements == 0) %}
+            {% for game in all_games %} {% set total =
+            game.title.total_achievements %} {% if not (game.platform == "steam"
+            and total == 0) %}
             <a
                 class="game-card"
                 href="{{ url_for('game_achievements', username=username, platform=game.platform, title_id=game.platform_title_id, media_type=game.media_type, game_name=game.name) }}"
@@ -128,16 +129,15 @@
                             {{ game.name or "Unknown Title" }}
                         </div>
                     </div>
-                    {% if game.current_achievements is not none and
-                    game.total_achievements is not none %}
+                    {% if game.current_achievements is not none and total %}
                     <div class="game-progress">
-                        {{ game.current_achievements }} / {{
-                        game.total_achievements }} achievements
+                        {{ game.current_achievements }} / {{ total }}
+                        achievements
                     </div>
                     <div class="progress-bar">
                         <div
                             class="progress-bar-fill"
-                            style="width: {{ game.progress_percentage or 0 }}%"
+                            style="width: {{ (game.current_achievements * 100 / total) | round | int if total > 0 else 0 }}%"
                         ></div>
                     </div>
                     {% else %}

@@ -59,14 +59,14 @@ def profile(username: str):
         .all()
     )
 
-    # Attach progress data from UserTitle so templates can use
-    # game.current_achievements / game.total_achievements directly.
+    # Attach current_achievements from UserTitle so templates can use
+    # game.current_achievements directly.  total_achievements lives on
+    # Title and is accessed via game.title.total_achievements.
     for pg in pinned_games:
         ut = UserTitle.query.filter_by(
             user_id=target_user.id, title_id=pg.title_id
         ).first()
         pg.current_achievements = ut.current_achievements if ut else 0
-        pg.total_achievements = ut.total_achievements if ut else 0
 
     recent_achievements = (
         UserAchievement.query

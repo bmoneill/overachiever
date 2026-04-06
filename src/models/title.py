@@ -17,6 +17,8 @@ class Title(db.Model):
         image_url: Optional URL to the title's cover or header image.
         media_type: Platform-specific media type string
             (e.g. ``"Xbox360Game"``).  ``None`` when unknown.
+        total_achievements: Total number of achievements defined for this
+            title.  Populated during achievement sync.
     """
 
     __tablename__ = "titles"
@@ -27,6 +29,7 @@ class Title(db.Model):
     platform_title_id: str = db.Column(db.String, nullable=False)
     image_url: str | None = db.Column(db.String, nullable=True)
     media_type: str | None = db.Column(db.String, default=None)
+    total_achievements: int = db.Column(db.Integer, default=0)
 
     achievements = db.relationship(
         "Achievement",
