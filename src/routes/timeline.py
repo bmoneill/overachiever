@@ -9,7 +9,7 @@ from ..models.user_follow import UserFollow
 from ..models.user_achievement import UserAchievement
 from ..models.achievement import Achievement
 from ..models.user import User
-from ._helpers import PLATFORM_ID_TO_SLUG
+from ._helpers import PLATFORM_ID_TO_SLUG, resolve_xbox_icon_fallbacks
 
 
 @app.route("/timeline")
@@ -39,6 +39,9 @@ def timeline():
         .limit(200)
         .all()
     )
+
+    # Fill in missing Xbox achievement icons using Steam equivalents.
+    resolve_xbox_icon_fallbacks([ua.achievement for ua in results])
 
     # Group by (user, day)
     grouped = OrderedDict()

@@ -7,7 +7,6 @@ from .achievement import AchievementAPI, AchievementAPIError
 from .platform import PLATFORM_STEAM
 from ..models.achievement import Achievement
 from .profile import Profile, ProfileAPI, ProfileAPIError
-from .platform import PLATFORM_STEAM as _PLATFORM_STEAM
 from .api_request import make_request
 
 STEAM_API_KEY = os.environ.get("STEAM_API_KEY")
@@ -35,7 +34,7 @@ def steam_get(path: str, params: dict | None = None) -> dict:
     try:
         resp = make_request(
             f"{STEAM_API_BASE_URL}{path}",
-            params=all_params,
+            params=all_params
         )
         resp.raise_for_status()
         data = resp.json()
@@ -148,18 +147,19 @@ class SteamAchievementAPI(AchievementAPI):
         achievements: list[Achievement] = []
         for raw in schema:
             hidden = raw.get("hidden", 0) in (1, True)
-            achievements.append(
-                Achievement(
-                    platform_id=PLATFORM_STEAM,
-                    achievement_id=raw.get("name", ""),
-                    title_id=int(title_id),
-                    name=raw.get("displayName", ""),
-                    description="" if hidden else raw.get("description", ""),
-                    image_url=raw.get("icon", ""),
-                    unlocked=False,
-                    locked_description="Hidden achievement." if hidden else "",
-                )
+            ach = Achievement(
+                platform_id=PLATFORM_STEAM,
+                achievement_id=raw.get("name", ""),
+                title_id=str(title_id),
+                game_name=self.game_name or "",
+                achievement_name=raw.get("displayName", ""),
+                description="" if hidden else raw.get("description", ""),
+                image_url=raw.get("icon", "") or None,
+                locked_description="Hidden achievement." if hidden else "",
             )
+            ach.unlocked = False
+            ach.time_unlocked = None
+            achievements.append(ach)
 
         self._cache[cache_key] = achievements
         return achievements
@@ -212,19 +212,19 @@ class SteamAchievementAPI(AchievementAPI):
                 description = raw.get("description", "")
                 locked_description = ""
 
-            achievements.append(
-                Achievement(
-                    platform_id=PLATFORM_STEAM,
-                    achievement_id=api_name,
-                    title_id=int(title_id),
-                    name=display_name,
-                    description=description,
-                    image_url=raw.get("icon", ""),
-                    unlocked=is_unlocked,
-                    locked_description=locked_description,
-                    time_unlocked=time_unlocked,
-                )
+            ach = Achievement(
+                platform_id=PLATFORM_STEAM,
+                achievement_id=api_name,
+                title_id=str(title_id),
+                game_name=self.game_name or "",
+                achievement_name=display_name,
+                description=description,
+                image_url=raw.get("icon", "") or None,
+                locked_description=locked_description,
             )
+            ach.unlocked = is_unlocked
+            ach.time_unlocked = time_unlocked
+            achievements.append(ach)
 
         self._cache[cache_key] = achievements
         return achievements
@@ -373,7 +373,7 @@ class SteamProfileAPI(ProfileAPI):
         avatar_url = player.get("avatarfull", "")
 
         return Profile(
-            platform_id=_PLATFORM_STEAM,
+            platform_id=PLATFORM_STEAM,
             name=persona_name,
             image_url=avatar_url,
         )

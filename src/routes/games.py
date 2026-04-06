@@ -6,7 +6,7 @@ from flask import flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from .. import app
-from ._helpers import get_user_by_username, PLATFORM_SLUG_TO_ID
+from ._helpers import get_user_by_username, PLATFORM_SLUG_TO_ID, resolve_xbox_icon_fallbacks
 from ..models import db
 from ..models.achievement import Achievement as AchievementModel
 from ..models.user_achievement import UserAchievement
@@ -14,7 +14,7 @@ from ..models.showcase_game import ShowcaseGame
 from ..models.showcase_achievement import ShowcaseAchievement
 from ..models.guide import Guide
 from ..models.xbox360icon import Xbox360Icon
-from ..api.achievement import Achievement as APIAchievement, AchievementAPIError
+from ..api.achievement import AchievementAPIError
 from ..api.platform import PLATFORM_XBOX, PLATFORM_STEAM
 from ..api.xbox import XboxAchievementAPI, xbl_get
 from ..api.steam import SteamAchievementAPI, steam_get
@@ -165,9 +165,9 @@ def _sync_achievements_to_db(
     platform_id: int,
     title_id: str,
     game_name: str,
-    api_achievements: list[APIAchievement],
+    achievements: list[AchievementModel],
 ) -> None:
-    """Persist API achievement data into the local database.
+    """Persist achievement data into the local database.
 
     For every achievement returned by the platform API:
     * Upsert an ``Achievement`` row (the canonical definition).
@@ -175,61 +175,64 @@ def _sync_achievements_to_db(
     * If the achievement is locked, delete any stale ``UserAchievement``
       row so the DB accurately mirrors the API state.
     """
-    for api_ach in api_achievements:
+    for ach in achievements:
         db_ach = AchievementModel.query.filter_by(
             platform_id=platform_id,
-            title_id=str(api_ach.title_id),
-            achievement_id=str(api_ach.achievement_id),
+            title_id=str(ach.title_id),
+            achievement_id=str(ach.achievement_id),
         ).first()
 
         if db_ach is None:
             db_ach = AchievementModel(
                 platform_id=platform_id,
-                title_id=str(api_ach.title_id),
-                achievement_id=str(api_ach.achievement_id),
+                title_id=str(ach.title_id),
+                achievement_id=str(ach.achievement_id),
                 game_name=game_name,
-                achievement_name=api_ach.name,
-                description=api_ach.description or None,
-                locked_description=api_ach.locked_description or None,
-                gamerscore=api_ach.gamerscore,
-                rarity=api_ach.rarity_percentage,
-                image_url=api_ach.image_url or None,
+                achievement_name=ach.achievement_name,
+                description=ach.description or None,
+                locked_description=ach.locked_description or None,
+                gamerscore=ach.gamerscore,
+                rarity=ach.rarity,
+                image_url=ach.image_url or None,
             )
             db.session.add(db_ach)
         else:
             # Update mutable fields
             db_ach.game_name = game_name
-            db_ach.achievement_name = api_ach.name
-            if api_ach.description:
-                db_ach.description = api_ach.description
-            if api_ach.locked_description:
-                db_ach.locked_description = api_ach.locked_description
-            if api_ach.gamerscore is not None:
-                db_ach.gamerscore = api_ach.gamerscore
-            if api_ach.rarity_percentage is not None:
-                db_ach.rarity = api_ach.rarity_percentage
-            if api_ach.image_url:
-                db_ach.image_url = api_ach.image_url
+            db_ach.achievement_name = ach.achievement_name
+            if ach.description:
+                db_ach.description = ach.description
+            if ach.locked_description:
+                db_ach.locked_description = ach.locked_description
+            if ach.gamerscore is not None:
+                db_ach.gamerscore = ach.gamerscore
+            if ach.rarity is not None:
+                db_ach.rarity = ach.rarity
+            if ach.image_url:
+                db_ach.image_url = ach.image_url
 
         # Flush so db_ach.id is available for the FK
         db.session.flush()
 
         # Upsert or remove UserAchievement
+        unlocked = getattr(ach, "unlocked", False)
+        time_unlocked = getattr(ach, "time_unlocked", None)
+
         user_ach = UserAchievement.query.filter_by(
             user_id=user_id, achievement_id=db_ach.id
         ).first()
 
-        if api_ach.unlocked:
+        if unlocked:
             if user_ach is None:
                 user_ach = UserAchievement(
                     user_id=user_id,
                     achievement_id=db_ach.id,
-                    time_unlocked=api_ach.time_unlocked,
+                    time_unlocked=time_unlocked,
                 )
                 db.session.add(user_ach)
             else:
-                if api_ach.time_unlocked:
-                    user_ach.time_unlocked = api_ach.time_unlocked
+                if time_unlocked:
+                    user_ach.time_unlocked = time_unlocked
         else:
             # Achievement is locked -- remove any stale unlock record
             if user_ach is not None:
@@ -240,20 +243,21 @@ def _sync_achievements_to_db(
 
 def _load_cached_achievements(
     user_id: int, platform_id: int, title_id: str
-) -> tuple[list[APIAchievement], list[APIAchievement], str | None]:
+) -> tuple[list[AchievementModel], list[AchievementModel], str | None]:
     """Load achievements from the local DB when the API is unavailable.
 
     Returns ``(unlocked, locked, game_name)`` as lists of
-    :class:`APIAchievement` instances so templates can render them
-    identically to live API data.
+    :class:`Achievement` model instances.  Each instance has ad-hoc
+    ``unlocked`` and ``time_unlocked`` attributes set so that templates
+    can render them identically to live API data.
     """
     db_achievements = AchievementModel.query.filter_by(
         platform_id=platform_id,
         title_id=str(title_id),
     ).all()
 
-    unlocked: list[APIAchievement] = []
-    locked: list[APIAchievement] = []
+    unlocked: list[AchievementModel] = []
+    locked: list[AchievementModel] = []
     game_name: str | None = None
 
     for db_ach in db_achievements:
@@ -265,26 +269,13 @@ def _load_cached_achievements(
         ).first()
 
         is_unlocked = user_ach is not None
-        time_unlocked = user_ach.time_unlocked if user_ach else None
-
-        api_ach = APIAchievement(
-            platform_id=db_ach.platform_id,
-            achievement_id=db_ach.achievement_id,
-            title_id=db_ach.title_id,
-            name=db_ach.achievement_name,
-            description=db_ach.description or "",
-            image_url=db_ach.image_url or "",
-            unlocked=is_unlocked,
-            locked_description=db_ach.locked_description or "",
-            time_unlocked=time_unlocked,
-            gamerscore=db_ach.gamerscore,
-            rarity_percentage=db_ach.rarity,
-        )
+        db_ach.unlocked = is_unlocked
+        db_ach.time_unlocked = user_ach.time_unlocked if user_ach else None
 
         if is_unlocked:
-            unlocked.append(api_ach)
+            unlocked.append(db_ach)
         else:
-            locked.append(api_ach)
+            locked.append(db_ach)
 
     return unlocked, locked, game_name
 
@@ -361,8 +352,8 @@ def game_achievements(username, platform, title_id):
     platform_id = PLATFORM_SLUG_TO_ID[platform]
     media_type = request.args.get("media_type", "")
     game_name = request.args.get("game_name", f"Title: {title_id}")
-    unlocked: list[APIAchievement] = []
-    locked: list[APIAchievement] = []
+    unlocked: list[AchievementModel] = []
+    locked: list[AchievementModel] = []
     api_succeeded = False
 
     try:
@@ -400,7 +391,7 @@ def game_achievements(username, platform, title_id):
             platform_id=platform_id,
             title_id=str(title_id),
             game_name=game_name,
-            api_achievements=unlocked + locked,
+            achievements=unlocked + locked,
         )
     elif not api_succeeded:
         # Fall back to locally-cached achievement data.
@@ -409,6 +400,10 @@ def game_achievements(username, platform, title_id):
             platform_id=platform_id,
             title_id=str(title_id),
         )
+
+    # Fall back to Steam icons for Xbox achievements missing an image.
+    if platform == "xbox":
+        resolve_xbox_icon_fallbacks(unlocked + locked)
 
     game_image_url = request.args.get("game_image_url", "")
     is_own_page = current_user.is_authenticated and current_user.id == target_user.id

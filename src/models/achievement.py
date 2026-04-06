@@ -22,3 +22,21 @@ class Achievement(db.Model):
             name="uq_achievement_identity",
         ),
     )
+
+    @property
+    def name(self) -> str:
+        """Alias for ``achievement_name``, used by templates."""
+        return self.achievement_name
+
+    @name.setter
+    def name(self, value: str) -> None:
+        self.achievement_name = value
+
+    @property
+    def rarity_percentage(self) -> float | None:
+        """Alias for ``rarity``, used by templates."""
+        return self.rarity
+
+    @rarity_percentage.setter
+    def rarity_percentage(self, value: float | None) -> None:
+        self.rarity = value

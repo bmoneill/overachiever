@@ -1,11 +1,10 @@
 from .achievement import (
-    PLATFORM_PSN,
-    PLATFORM_STEAM,
-    PLATFORM_XBOX,
     Achievement,
     AchievementAPI,
     AchievementAPIError,
 )
+
+from .platform import PLATFORM_PSN, PLATFORM_STEAM, PLATFORM_XBOX
 
 __all__ = [
     "Achievement",

@@ -2,7 +2,7 @@ from flask import flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from .. import app
-from ._helpers import get_user_by_username, PLATFORM_ID_TO_SLUG
+from ._helpers import get_user_by_username, PLATFORM_ID_TO_SLUG, resolve_xbox_icon_fallbacks
 from ..models import db
 from ..models.showcase_game import ShowcaseGame
 from ..models.showcase_achievement import ShowcaseAchievement
@@ -63,6 +63,9 @@ def profile(username):
         .limit(5)
         .all()
     )
+
+    # Fill in missing Xbox achievement icons using Steam equivalents.
+    resolve_xbox_icon_fallbacks([ua.achievement for ua in recent_achievements])
 
     showcase_achievements = (
         ShowcaseAchievement.query

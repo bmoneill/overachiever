@@ -7,6 +7,7 @@ from .platform import PLATFORM_XBOX
 from ..models.achievement import Achievement
 from .api_request import make_request
 
+
 OPENXBL_API_KEY = os.environ.get("OPENXBL_API_KEY")
 OPENXBL_BASE_URL = "https://api.xbl.io"
 
@@ -60,7 +61,7 @@ def xbl_get(path: str) -> dict:
     try:
         resp = make_request(
             f"{OPENXBL_BASE_URL}{path}",
-            headers=headers,
+            headers=headers
         )
         resp.raise_for_status()
         data = resp.json()
@@ -169,6 +170,12 @@ class XboxAchievementAPI(AchievementAPI):
                 self._parse_achievement(raw, int(title_id))
             )
 
+        # Fix up game_name for achievements parsed before it was discovered.
+        if self.game_name:
+            for a in achievements:
+                if not a.game_name:
+                    a.game_name = self.game_name
+
         self._cache[cache_key] = achievements
         return achievements
 
@@ -193,17 +200,19 @@ class XboxAchievementAPI(AchievementAPI):
 
         ach = Achievement(
             platform_id=PLATFORM_XBOX,
-            achievement_id=raw.get("id", ""),
-            title_id=title_id,
-            name=raw.get("name", ""),
-            description=raw.get("description", ""),
-            image_url=image_url,
-            unlocked=raw.get("progressState") == "Achieved",
-            locked_description=raw.get("lockedDescription", ""),
-            time_unlocked=time_unlocked,
+            achievement_id=str(raw.get("id", "")),
+            title_id=str(title_id),
+            game_name=self.game_name or "",
+            achievement_name=raw.get("name", ""),
+            description=raw.get("description", "") or None,
+            locked_description=raw.get("lockedDescription", "") or None,
             gamerscore=gamerscore,
-            rarity_percentage=rarity_pct,
+            rarity=rarity_pct,
+            image_url=image_url or None,
         )
+        ach.unlocked = raw.get("progressState") == "Achieved"
+        ach.time_unlocked = time_unlocked
+        return ach
 
     # -----------------------------------------------------------------
     # Public API  — AchievementAPI abstract interface
@@ -247,19 +256,24 @@ class XboxAchievementAPI(AchievementAPI):
         xuid = self._require_xuid()
         user_achievements = self._build_achievements(xuid, title_id)
 
-        return [
-            Achievement(
+        result: list[Achievement] = []
+        for a in user_achievements:
+            ach = Achievement(
                 platform_id=a.platform_id,
                 achievement_id=a.achievement_id,
                 title_id=a.title_id,
-                name=a.name,
+                game_name=a.game_name,
+                achievement_name=a.achievement_name,
                 description=a.description,
                 locked_description=a.locked_description,
                 gamerscore=a.gamerscore,
-                rarity_percentage=a.rarity_percentage,
+                rarity=a.rarity,
+                image_url=a.image_url,
             )
-            for a in user_achievements
-        ]
+            ach.unlocked = False
+            ach.time_unlocked = None
+            result.append(ach)
+        return result
 
     def get_user_achievements_for_title(
         self, user_id: str, title_id: str

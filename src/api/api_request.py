@@ -6,9 +6,7 @@ API_CACHE = {}
 TIMEOUT = 15
 
 def _build_cache_key(url: str, params: dict | None = None) -> str:
-    if params:
-        return f"{url} {params}"
-    return url
+    return f"{url}{params}"
 
 def make_request(url: str, method: str = "GET", headers: dict | None = None, params: dict | None = None) -> requests.Response:
     cache_key = _build_cache_key(url, params)
@@ -18,6 +16,8 @@ def make_request(url: str, method: str = "GET", headers: dict | None = None, par
         else:
             return API_CACHE[cache_key]["response"]
     response = requests.request(method, url, params=params, timeout=TIMEOUT)
-    API_CACHE[cache_key]["response"] = response
-    API_CACHE[cache_key]["time"] = time.time()
+    API_CACHE[cache_key] = {
+        "response": response,
+        "time": time.time(),
+    }
     return response
