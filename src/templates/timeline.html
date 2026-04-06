@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Timeline – Overachiever</title>
+        <link
+            rel="stylesheet"
+            href="{{ url_for('static', filename='base.css') }}"
+        />
+        <style>
+            .timeline-group {
+                background: #1e1e1e;
+                border: 1px solid #2a2a2a;
+                border-radius: 10px;
+                padding: 1rem 1.25rem;
+                margin-bottom: 1rem;
+            }
+            .timeline-group-header {
+                display: flex;
+                align-items: baseline;
+                gap: 0.5rem;
+                margin-bottom: 0.75rem;
+                flex-wrap: wrap;
+            }
+            .timeline-username {
+                font-size: 1rem;
+                font-weight: 700;
+                color: #107c10;
+                text-decoration: none;
+            }
+            .timeline-username:hover {
+                text-decoration: underline;
+            }
+            .timeline-date {
+                font-size: 0.85rem;
+                color: #888;
+            }
+            .timeline-achievement-row {
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+                padding: 0.5rem 0;
+            }
+            .timeline-achievement-row + .timeline-achievement-row {
+                border-top: 1px solid #2a2a2a;
+            }
+            .timeline-achievement-icon {
+                width: 40px;
+                height: 40px;
+                border-radius: 6px;
+                flex-shrink: 0;
+                object-fit: cover;
+                background: #222;
+            }
+            .timeline-achievement-info {
+                flex: 1;
+                min-width: 0;
+            }
+            .timeline-achievement-name {
+                font-weight: 600;
+                font-size: 0.9rem;
+                color: #e0e0e0;
+                margin-bottom: 0.1rem;
+            }
+            .timeline-achievement-game {
+                font-size: 0.75rem;
+                color: #888;
+            }
+            .timeline-achievement-score {
+                flex-shrink: 0;
+                min-width: 40px;
+                text-align: right;
+                font-size: 0.9rem;
+                font-weight: 700;
+                color: #107c10;
+            }
+            .timeline-empty {
+                text-align: center;
+                color: #666;
+                padding: 3rem 1rem;
+                font-size: 0.95rem;
+            }
+            .timeline-empty a {
+                color: #107c10;
+                text-decoration: none;
+            }
+            .timeline-empty a:hover {
+                text-decoration: underline;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            {% include '_navbar.html' %}
+
+            <p class="subtitle">Timeline</p>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+            <div class="{{ category }}">{{ message }}</div>
+            {% endfor %}
+            {% endwith %}
+
+            {% if grouped_timeline %}
+            {% for group in grouped_timeline %}
+            <div class="timeline-group">
+                <div class="timeline-group-header">
+                    <a
+                        class="timeline-username"
+                        href="{{ url_for('profile', username=group.user.username) }}"
+                    >{{ group.user.username }}</a>
+                    <span class="timeline-date">— {{ group.day }}</span>
+                </div>
+                {% for ua in group.achievements %}
+                <div class="timeline-achievement-row">
+                    {% if ua.achievement.image_url %}
+                    <img
+                        class="timeline-achievement-icon"
+                        src="{{ ua.achievement.image_url }}"
+                        alt=""
+                    />
+                    {% else %}
+                    <div class="timeline-achievement-icon"></div>
+                    {% endif %}
+                    <div class="timeline-achievement-info">
+                        <div class="timeline-achievement-name">
+                            {{ ua.achievement.achievement_name }}
+                        </div>
+                        <div class="timeline-achievement-game">
+                            {{ ua.achievement.game_name }}
+                        </div>
+                    </div>
+                    {% if ua.achievement.gamerscore %}
+                    <div class="timeline-achievement-score">
+                        {{ ua.achievement.gamerscore }}G
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="timeline-empty">
+                <p>Your timeline is empty.</p>
+                <p>
+                    <a href="{{ url_for('user_search') }}">Find users</a>
+                    to follow and see their achievements here.
+                </p>
+            </div>
+            {% endif %}
+
+            <a class="back-link" href="{{ url_for('my_games') }}"
+                >← Back to Games</a
+            >
+        </div>
+    </body>
+</html>

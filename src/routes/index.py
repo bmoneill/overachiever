@@ -10,7 +10,7 @@ from ._helpers import PLATFORM_ID_TO_SLUG
 @app.route("/")
 def index():
     if current_user.is_authenticated:
-        return redirect(url_for("my_games"))
+        return redirect(url_for("timeline"))
 
     recent_guides = (
         Guide.query

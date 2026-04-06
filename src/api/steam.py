@@ -45,7 +45,7 @@ def steam_get(path: str, params: dict | None = None) -> dict:
     except requests.exceptions.RequestException as exc:
         if hasattr(exc, "response") and exc.response is not None:
             raise AchievementAPIError(
-                f"Steam API returned status {exc.response.status_code}."
+                f"Steam API returned status {exc.response.status_code}. {path} {all_params}"
             ) from exc
         raise AchievementAPIError(f"Failed to reach Steam API: {exc}") from exc
 

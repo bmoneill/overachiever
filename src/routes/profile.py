@@ -11,6 +11,7 @@ from ..models.user_achievement import UserAchievement
 from ..api.xbox import XboxProfileAPI
 from ..api.steam import SteamProfileAPI
 from ..api.profile import ProfileAPIError
+from ..models.user_follow import UserFollow
 
 
 @app.route("/profile/<username>")
@@ -40,6 +41,12 @@ def profile(username):
                 pass
 
     is_own_profile = current_user.is_authenticated and current_user.id == target_user.id
+
+    follower_count = UserFollow.query.filter_by(followed_id=target_user.id).count()
+    following_count = UserFollow.query.filter_by(follower_id=target_user.id).count()
+    is_following = False
+    if current_user.is_authenticated and not is_own_profile:
+        is_following = UserFollow.query.filter_by(follower_id=current_user.id, followed_id=target_user.id).first() is not None
 
     showcase_games = (
         ShowcaseGame.query
@@ -77,6 +84,9 @@ def profile(username):
         achievement_count=achievement_count,
         recent_achievements=recent_achievements,
         platform_slugs=PLATFORM_ID_TO_SLUG,
+        follower_count=follower_count,
+        following_count=following_count,
+        is_following=is_following,
     )
 
 
@@ -108,3 +118,44 @@ def profile_edit(username):
         "profile_edit.html",
         target_user=target_user,
     )
+
+
+@app.route("/profile/<username>/follow", methods=["POST"])
+@login_required
+def follow_user(username):
+    target_user = get_user_by_username(username)
+    if target_user is None:
+        flash("User not found.", "error")
+        return redirect(url_for("my_games"))
+
+    if current_user.id == target_user.id:
+        flash("You cannot follow yourself.", "error")
+        return redirect(url_for("profile", username=username))
+
+    existing = UserFollow.query.filter_by(
+        follower_id=current_user.id, followed_id=target_user.id
+    ).first()
+    if not existing:
+        follow = UserFollow(follower_id=current_user.id, followed_id=target_user.id)
+        db.session.add(follow)
+        db.session.commit()
+
+    return redirect(url_for("profile", username=username))
+
+
+@app.route("/profile/<username>/unfollow", methods=["POST"])
+@login_required
+def unfollow_user(username):
+    target_user = get_user_by_username(username)
+    if target_user is None:
+        flash("User not found.", "error")
+        return redirect(url_for("my_games"))
+
+    existing = UserFollow.query.filter_by(
+        follower_id=current_user.id, followed_id=target_user.id
+    ).first()
+    if existing:
+        db.session.delete(existing)
+        db.session.commit()
+
+    return redirect(url_for("profile", username=username))

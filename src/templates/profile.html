@@ -206,6 +206,56 @@
                 color: #6c6;
                 margin-top: 0.15rem;
             }
+            .follow-stats {
+                display: flex;
+                gap: 1.25rem;
+                padding: 0.5rem 0 0.25rem;
+                font-size: 0.9rem;
+                color: #aaa;
+            }
+            .follow-stats strong {
+                color: #e0e0e0;
+                font-weight: 700;
+            }
+            .follow-btn-form {
+                margin-top: 0.5rem;
+            }
+            .btn-follow {
+                padding: 0.4rem 1.2rem;
+                font-size: 0.85rem;
+                font-weight: 600;
+                border-radius: 6px;
+                cursor: pointer;
+                border: 1px solid #107c10;
+                background: #107c10;
+                color: #fff;
+                transition:
+                    background 0.2s,
+                    border-color 0.2s;
+            }
+            .btn-follow:hover {
+                background: #0e6b0e;
+                border-color: #0e6b0e;
+            }
+            .btn-unfollow {
+                padding: 0.4rem 1.2rem;
+                font-size: 0.85rem;
+                font-weight: 600;
+                border-radius: 6px;
+                cursor: pointer;
+                border: 1px solid #444;
+                background: transparent;
+                color: #ccc;
+                transition:
+                    background 0.2s,
+                    border-color 0.2s,
+                    color 0.2s;
+            }
+            .btn-unfollow:hover {
+                background: #3b1010;
+                border-color: #6b2020;
+                color: #f5a0a0;
+            }
         </style>
     </head>
     <body>
@@ -238,11 +288,47 @@
                         unlocked
                     </div>
                     {% endif %}
+                    <div class="follow-stats">
+                        <span
+                            ><strong>{{ follower_count }}</strong> follower{{
+                            's' if follower_count != 1 else '' }}</span
+                        >
+                        <span
+                            ><strong>{{ following_count }}</strong>
+                            following</span
+                        >
+                    </div>
                     <a
                         class="games-link"
                         href="{{ url_for('games', username=target_user.username) }}"
                         >View Games →</a
                     >
+                    {% if not is_own_profile and current_user.is_authenticated
+                    %}
+                    <div class="follow-btn-form">
+                        {% if is_following %}
+                        <form
+                            method="POST"
+                            action="{{ url_for('unfollow_user', username=target_user.username) }}"
+                            style="display: inline"
+                        >
+                            <button type="submit" class="btn-unfollow">
+                                Unfollow
+                            </button>
+                        </form>
+                        {% else %}
+                        <form
+                            method="POST"
+                            action="{{ url_for('follow_user', username=target_user.username) }}"
+                            style="display: inline"
+                        >
+                            <button type="submit" class="btn-follow">
+                                Follow
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                    {% endif %}
                 </div>
 
                 <div class="card">
