@@ -19,7 +19,6 @@ def make_request(url: str, method: str = "GET", headers: dict | None = None, par
     if response.status_code != 200:
         return response
 
-    print(API_CACHE)
     API_CACHE[cache_key] = {
         "response": response,
         "time": time.time(),

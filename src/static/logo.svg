@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="150"
+   height="149.29999"
+   viewBox="0 0 150 149.29999"
+   version="1.1"
+   id="svg5"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs5" />
+  <!-- Trophy cup -->
+  <path
+     d="m 30.147274,13.370151 c 0,-17.826868 90.915436,-17.826868 90.915436,0 l -9.09157,71.307472 c 0,17.826877 -72.732323,17.826877 -72.732323,0 z"
+     fill="#d4af37"
+     id="path1"
+     style="stroke-width:1.12527" />
+  <!-- Rim -->
+  <ellipse
+     cx="75.604996"
+     cy="13.370152"
+     rx="45.457703"
+     ry="11.14179"
+     fill="#e6c65c"
+     id="ellipse1"
+     style="stroke-width:1.12527" />
+  <!-- Handles -->
+  <path
+     d="m 47.001001,32.376745 c -57.156468,0 -57.156468,44.134373 0,44.134373"
+     fill="none"
+     stroke="#d4af37"
+     stroke-width="8.2673"
+     id="path2" />
+  <path
+     d="m 102.99899,33.580333 c 57.15648,0 57.15648,44.134379 0,44.134379"
+     fill="none"
+     stroke="#d4af37"
+     stroke-width="8.2673"
+     id="path2-6" />
+  <!-- Stem -->
+  <rect
+     x="61.96767"
+     y="84.67762"
+     width="27.274628"
+     height="31.197021"
+     fill="#d4af37"
+     id="rect3"
+     style="stroke-width:1.12527" />
+  <!-- Base -->
+  <rect
+     x="39.238811"
+     y="115.87463"
+     width="72.73233"
+     height="22.283583"
+     rx="4.5457706"
+     fill="#8b6b2e"
+     id="rect4"
+     style="stroke-width:1.12527" />
+  <rect
+     x="48.330357"
+     y="138.1582"
+     width="54.549255"
+     height="11.14179"
+     rx="2.2728853"
+     fill="#d4af37"
+     id="rect5"
+     style="stroke-width:1.12527" />
+</svg>

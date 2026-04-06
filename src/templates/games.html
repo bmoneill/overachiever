@@ -62,7 +62,11 @@
     </head>
     <body>
         {% include '_navbar.html' %}
-        <p class="subtitle">{{ username }}'s Games</p>
+        <p class="subtitle">
+            <a href="{{ url_for('profile', username=username) }}"
+                >{{ username }}'s Games</a
+            >
+        </p>
 
         {% with messages = get_flashed_messages(with_categories=true) %} {% for
         category, message in messages %}

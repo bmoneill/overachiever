@@ -127,6 +127,13 @@
                 overflow: hidden;
                 text-overflow: ellipsis;
             }
+            .showcase-game-name a {
+                color: inherit;
+                text-decoration: none;
+            }
+            .showcase-game-name a:hover {
+                color: var(--oa-primary-light);
+            }
             .showcase-game-progress {
                 font-size: 0.8rem;
                 color: var(--oa-fg-muted);
@@ -168,6 +175,13 @@
             .showcase-achievement-game {
                 font-size: 0.75rem;
                 color: var(--oa-fg-faint);
+            }
+            .showcase-achievement-game a {
+                color: inherit;
+                text-decoration: none;
+            }
+            .showcase-achievement-game a:hover {
+                color: var(--oa-primary-light);
             }
             .showcase-achievement-score {
                 flex-shrink: 0;
@@ -365,12 +379,17 @@
                                 title="{{ game.game_name }}"
                             >
                                 {% if game.platform_id in platform_slugs %}
-                                <img
-                                    class="platform-icon"
-                                    src="{{ url_for('static', filename=platform_slugs[game.platform_id] + '.svg') }}"
-                                    alt="{{ platform_slugs[game.platform_id] }}"
-                                />
-                                {% endif %} {{ game.game_name }}
+                                <a
+                                    href="{{ url_for('game_achievements', username=target_user.username, platform=platform_slugs[game.platform_id], title_id=game.title_id, game_name=game.game_name) }}"
+                                >
+                                    <img
+                                        class="platform-icon"
+                                        src="{{ url_for('static', filename=platform_slugs[game.platform_id] + '.svg') }}"
+                                        alt="{{ platform_slugs[game.platform_id] }}"
+                                    />
+                                    {{ game.game_name }}
+                                </a>
+                                {% else %} {{ game.game_name }} {% endif %}
                             </div>
                             <div class="showcase-game-progress">
                                 {{ game.current_achievements }} / {{
@@ -441,12 +460,17 @@
                             {% endif %} {% if ach.game_name %}
                             <div class="showcase-achievement-game">
                                 {% if ach.platform_id in platform_slugs %}
-                                <img
-                                    class="platform-icon"
-                                    src="{{ url_for('static', filename=platform_slugs[ach.platform_id] + '.svg') }}"
-                                    alt="{{ platform_slugs[ach.platform_id] }}"
-                                />
-                                {% endif %} {{ ach.game_name }}
+                                <a
+                                    href="{{ url_for('game_achievements', username=target_user.username, platform=platform_slugs[ach.platform_id], title_id=ach.title_id, game_name=ach.game_name) }}"
+                                >
+                                    <img
+                                        class="platform-icon"
+                                        src="{{ url_for('static', filename=platform_slugs[ach.platform_id] + '.svg') }}"
+                                        alt="{{ platform_slugs[ach.platform_id] }}"
+                                    />
+                                    {{ ach.game_name }}
+                                </a>
+                                {% else %} {{ ach.game_name }} {% endif %}
                             </div>
                             {% endif %}
                         </div>

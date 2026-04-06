@@ -162,7 +162,11 @@
         <div class="container">
             {% include '_navbar.html' %}
             <h1>🏆 {{ game_name }}</h1>
-            <p class="subtitle">{{ username }}'s Achievements</p>
+            <p class="subtitle">
+                <a href="{{ url_for('profile', username=username) }}"
+                    >{{ username }}'s Achievements</a
+                >
+            </p>
             <a
                 class="back-link"
                 href="{{ url_for('games', username=username) }}"

@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Overachiever — Shared Base Styles
+   OverAchiever — Shared Base Styles
    ========================================================================== */
 
 /* ---------- Reset ---------- */
@@ -211,6 +211,19 @@ h1 {
 }
 
 /* ---------- Links ---------- */
+a {
+    color: var(--oa-primary);
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+a:visited {
+    color: var(--oa-primary);
+}
+
 .back-link {
     display: block;
     text-align: center;
