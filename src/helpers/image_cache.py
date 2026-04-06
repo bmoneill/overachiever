@@ -13,9 +13,6 @@ def get_image_path(image_url: str) -> str:
     """
 
     base = f"{request.host_url}/static/img"
-    dir = os.path.dirname(IMAGE_CACHE_DIR)
-    print(dir)
-
 
     if not os.path.exists(IMAGE_CACHE_DIR):
         os.makedirs(IMAGE_CACHE_DIR)
@@ -23,7 +20,7 @@ def get_image_path(image_url: str) -> str:
     url_hash = hash(image_url)
 
     if not os.path.exists(os.path.join(IMAGE_CACHE_DIR, f"{url_hash}")):
-        with open(f"{IMAGE_CACHE_DIR}/{url_hash}.{ext}", "wb") as f:
+        with open(f"{IMAGE_CACHE_DIR}/{url_hash}", "wb") as f:
             f.write(urllib.request.urlopen(image_url).read())
 
-    return f"{base}/{url_hash}.{ext}"
+    return f"{base}/{url_hash}"

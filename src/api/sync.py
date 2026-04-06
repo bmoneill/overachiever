@@ -21,6 +21,7 @@ from typing import TYPE_CHECKING
 
 from flask import url_for
 
+from ..helpers.image_cache import get_image_path
 from ..models import db
 from ..models.achievement import Achievement
 from ..models.title import Title
@@ -66,7 +67,7 @@ def _upsert_title(
             name=name,
             platform=platform,
             platform_title_id=str(platform_title_id),
-            image_url=image_url or None,
+            image_url=get_image_path(image_url) if image_url else None,
             media_type=media_type or None,
             total_achievements=total_achievements,
         )

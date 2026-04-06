@@ -13,4 +13,4 @@ build/
 *.db
 
 .zed
-static/img
+src/static/img
