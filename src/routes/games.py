@@ -364,7 +364,6 @@ def game_achievements(username, platform, title_id):
             api = XboxAchievementAPI(xuid=target_user.xuid, media_type=media_type)
             unlocked = api.get_unlocked_title_achievements(target_user.xuid, title_id)
             locked = api.get_locked_title_achievements(target_user.xuid, title_id)
-            game_name = api.game_name
 
             # Override with locally-cached Xbox 360 icons when available.
             if api.is_x360:
