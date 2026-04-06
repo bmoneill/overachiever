@@ -3,14 +3,12 @@ from datetime import datetime, timezone
 
 import requests
 
-from .achievement import (
-    PLATFORM_STEAM,
-    Achievement,
-    AchievementAPI,
-    AchievementAPIError,
-)
+from .achievement import AchievementAPI, AchievementAPIError
+from .platform import PLATFORM_STEAM
+from ..models.achievement import Achievement
 from .profile import Profile, ProfileAPI, ProfileAPIError
 from .platform import PLATFORM_STEAM as _PLATFORM_STEAM
+from .api_request import make_request
 
 STEAM_API_KEY = os.environ.get("STEAM_API_KEY")
 STEAM_API_BASE_URL = "https://api.steampowered.com"
@@ -35,10 +33,9 @@ def steam_get(path: str, params: dict | None = None) -> dict:
         all_params.update(params)
 
     try:
-        resp = requests.get(
+        resp = make_request(
             f"{STEAM_API_BASE_URL}{path}",
             params=all_params,
-            timeout=15,
         )
         resp.raise_for_status()
         data = resp.json()

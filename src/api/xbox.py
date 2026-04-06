@@ -2,12 +2,10 @@ import os
 
 import requests
 
-from .achievement import (
-    PLATFORM_XBOX,
-    Achievement,
-    AchievementAPI,
-    AchievementAPIError,
-)
+from .achievement import AchievementAPI, AchievementAPIError
+from .platform import PLATFORM_XBOX
+from ..models.achievement import Achievement
+from .api_request import make_request
 
 OPENXBL_API_KEY = os.environ.get("OPENXBL_API_KEY")
 OPENXBL_BASE_URL = "https://api.xbl.io"
@@ -60,10 +58,9 @@ def xbl_get(path: str) -> dict:
     }
 
     try:
-        resp = requests.get(
+        resp = make_request(
             f"{OPENXBL_BASE_URL}{path}",
             headers=headers,
-            timeout=15,
         )
         resp.raise_for_status()
         data = resp.json()
@@ -175,8 +172,7 @@ class XboxAchievementAPI(AchievementAPI):
         self._cache[cache_key] = achievements
         return achievements
 
-    @staticmethod
-    def _parse_achievement(raw: dict, title_id: int) -> Achievement:
+    def _parse_achievement(self, raw: dict, title_id: int) -> Achievement:
         """Convert a single raw achievement dict into an ``Achievement``."""
         media_assets = raw.get("mediaAssets") or []
         image_url = media_assets[0].get("url", "") if media_assets else ""
@@ -195,7 +191,7 @@ class XboxAchievementAPI(AchievementAPI):
         progression = raw.get("progression") or {}
         time_unlocked = progression.get("timeUnlocked")
 
-        return Achievement(
+        ach = Achievement(
             platform_id=PLATFORM_XBOX,
             achievement_id=raw.get("id", ""),
             title_id=title_id,
@@ -258,10 +254,7 @@ class XboxAchievementAPI(AchievementAPI):
                 title_id=a.title_id,
                 name=a.name,
                 description=a.description,
-                image_url=a.image_url,
-                unlocked=False,
                 locked_description=a.locked_description,
-                time_unlocked=None,
                 gamerscore=a.gamerscore,
                 rarity_percentage=a.rarity_percentage,
             )
