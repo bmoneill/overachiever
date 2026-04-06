@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>All Games — Overachiever</title>
+        <link
+            rel="stylesheet"
+            href="{{ url_for('static', filename='base.css') }}"
+        />
+        <style>
+            .controls {
+                max-width: 900px;
+                margin: 0 auto 1.5rem auto;
+                display: flex;
+                gap: 0.75rem;
+                align-items: center;
+                flex-wrap: wrap;
+            }
+            .search-input {
+                flex: 1;
+                min-width: 180px;
+                padding: 0.6rem 0.85rem;
+                font-size: 0.95rem;
+                background: var(--oa-surface);
+                border: 1px solid var(--oa-border);
+                border-radius: 6px;
+                color: var(--oa-fg);
+                outline: none;
+                transition: border-color 0.2s;
+            }
+            .search-input::placeholder {
+                color: var(--oa-fg-faint);
+            }
+            .search-input:focus {
+                border-color: var(--oa-primary);
+            }
+            .sort-select,
+            .platform-select {
+                padding: 0.6rem 0.85rem;
+                font-size: 0.95rem;
+                background: var(--oa-surface);
+                border: 1px solid var(--oa-border);
+                border-radius: 6px;
+                color: var(--oa-fg);
+                outline: none;
+                cursor: pointer;
+                transition: border-color 0.2s;
+                -webkit-appearance: none;
+                -moz-appearance: none;
+                appearance: none;
+                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+                background-repeat: no-repeat;
+                background-position: right 0.7rem center;
+                padding-right: 2rem;
+            }
+            .sort-select:focus,
+            .platform-select:focus {
+                border-color: var(--oa-primary);
+            }
+            .guide-badge {
+                font-size: 0.8rem;
+                color: var(--oa-primary-light);
+                margin-top: 0.15rem;
+            }
+        </style>
+    </head>
+    <body>
+        {% include '_navbar.html' %}
+        <p class="subtitle">All Games</p>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+        <div class="error">{{ message }}</div>
+        {% endfor %}
+        {% endwith %}
+
+        {% if all_games %}
+        <div class="controls">
+            <input
+                class="search-input"
+                id="game-search"
+                type="text"
+                placeholder="Search games…"
+                autocomplete="off"
+            />
+            <select class="platform-select" id="platform-filter">
+                <option value="all">All Platforms</option>
+                <option value="xbox">Xbox</option>
+                <option value="steam">Steam</option>
+            </select>
+            <select class="sort-select" id="game-sort">
+                <option value="az">A–Z</option>
+                <option value="achievements">Achievements</option>
+            </select>
+        </div>
+
+        <div class="games-grid" id="games-grid">
+            {% for game in all_games %}
+            {% if not (game.platform_slug == 'steam' and game.achievement_count == 0) %}
+            <a
+                class="game-card"
+                href="{{ url_for('all_game_achievements', title_id=game.id) }}"
+                data-name="{{ game.name | lower }}"
+                data-achievements="{{ game.achievement_count }}"
+                data-platform="{{ game.platform_slug }}"
+            >
+                {% if game.image_url %}
+                <img
+                    class="game-thumb"
+                    src="{{ game.image_url }}"
+                    alt="{{ game.name }}"
+                />
+                {% else %}
+                <img
+                    class="game-thumb"
+                    src="https://via.placeholder.com/64?text=?"
+                    alt="No image"
+                />
+                {% endif %}
+                <div class="game-info">
+                    <div class="game-name-row">
+                        <img
+                            class="platform-icon"
+                            src="{{ url_for('static', filename=game.platform_slug + '.svg') }}"
+                            alt="{{ game.platform_slug }}"
+                        />
+                        <div class="game-name" title="{{ game.name }}">
+                            {{ game.name or "Unknown Title" }}
+                        </div>
+                    </div>
+                    <div class="game-progress">{{ game.achievement_count }} achievements</div>
+                    {% if game.guide_count > 0 %}
+                    <div class="guide-badge">📖 {{ game.guide_count }} guide{{ 's' if game.guide_count != 1 else '' }}</div>
+                    {% endif %}
+                </div>
+            </a>
+            {% endif %}
+            {% endfor %}
+            <p class="no-results" id="no-results" style="display: none">
+                No games match your search.
+            </p>
+        </div>
+        {% else %}
+        <div class="games-grid">
+            <p class="no-results">No games found.</p>
+        </div>
+        {% endif %}
+
+        <script>
+            (function () {
+                var searchInput = document.getElementById("game-search");
+                var sortSelect = document.getElementById("game-sort");
+                var platformFilter = document.getElementById("platform-filter");
+                var grid = document.getElementById("games-grid");
+                if (!searchInput || !sortSelect || !platformFilter || !grid)
+                    return;
+
+                var cards = Array.prototype.slice.call(
+                    grid.querySelectorAll(".game-card"),
+                );
+                var noResults = document.getElementById("no-results");
+
+                function applyFilter() {
+                    var query = searchInput.value.toLowerCase().trim();
+                    var platform = platformFilter.value;
+                    var visibleCount = 0;
+                    for (var i = 0; i < cards.length; i++) {
+                        var name = cards[i].getAttribute("data-name") || "";
+                        var cardPlatform =
+                            cards[i].getAttribute("data-platform") || "";
+                        var matchSearch = !query || name.indexOf(query) !== -1;
+                        var matchPlatform =
+                            platform === "all" || cardPlatform === platform;
+                        var visible = matchSearch && matchPlatform;
+                        cards[i].classList.toggle("hidden", !visible);
+                        if (visible) visibleCount++;
+                    }
+                    if (noResults) {
+                        noResults.style.display =
+                            visibleCount === 0 ? "" : "none";
+                    }
+                }
+
+                function applySort() {
+                    var mode = sortSelect.value;
+                    cards.sort(function (a, b) {
+                        if (mode === "achievements") {
+                            var cA =
+                                parseInt(
+                                    a.getAttribute("data-achievements"),
+                                    10,
+                                ) || 0;
+                            var cB =
+                                parseInt(
+                                    b.getAttribute("data-achievements"),
+                                    10,
+                                ) || 0;
+                            return cB - cA;
+                        } else {
+                            var nA = a.getAttribute("data-name") || "";
+                            var nB = b.getAttribute("data-name") || "";
+                            return nA.localeCompare(nB);
+                        }
+                    });
+                    for (var i = 0; i < cards.length; i++) {
+                        grid.appendChild(cards[i]);
+                    }
+                    if (noResults) grid.appendChild(noResults);
+                }
+
+                searchInput.addEventListener("input", applyFilter);
+                platformFilter.addEventListener("change", function () {
+                    applyFilter();
+                });
+                sortSelect.addEventListener("change", function () {
+                    applySort();
+                    applyFilter();
+                });
+
+                applySort();
+            })();
+        </script>
+    </body>
+</html>
