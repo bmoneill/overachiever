@@ -18,8 +18,8 @@ You must be at least 18 years old to use the Service. By using the Service, you 
 
 You may be required to link third-party accounts (e.g., Steam, Xbox) to access certain features. You are responsible for:
 
-Maintaining the confidentiality of your account
-All activity under your account
+* Maintaining the confidentiality of your account
+* All activity under your account
 
 5. Third-Party Data and Services
 
