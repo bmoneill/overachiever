@@ -90,7 +90,8 @@
         </div>
 
         <div class="games-grid" id="games-grid">
-            {% for game in all_games %}
+            {% for game in all_games %} {% if not (game.platform == "steam" and
+            game.total_achievements == 0) %}
             <a
                 class="game-card"
                 href="{{ url_for('game_achievements', username=username, platform=game.platform, title_id=game.title_id, media_type=game.media_type, game_name=game.name, game_image_url=game.image_url) }}"
@@ -140,7 +141,7 @@
                     {% endif %}
                 </div>
             </a>
-            {% endfor %}
+            {% endif %} {% endfor %}
             <p class="no-results" id="no-results" style="display: none">
                 No games match your search.
             </p>
