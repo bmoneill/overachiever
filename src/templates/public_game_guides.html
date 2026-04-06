@@ -14,12 +14,12 @@
             }
             .achievement-header {
                 font-size: 1.05rem;
-                color: #e0e0e0;
+                color: var(--oa-fg);
                 margin-top: 1.5rem;
                 margin-bottom: 0.75rem;
             }
             .achievement-header .count {
-                color: #888;
+                color: var(--oa-fg-dim);
                 font-weight: normal;
                 font-size: 0.95rem;
             }
@@ -27,7 +27,7 @@
                 display: block;
                 text-align: center;
                 margin-top: 2.5rem;
-                color: #107c10;
+                color: var(--oa-primary);
                 text-decoration: none;
                 font-size: 0.95rem;
             }
@@ -88,14 +88,7 @@
                     <span class="count">({{ group.guides | length }})</span>
                 </h3>
                 {% if group.achievement_description %}
-                <p
-                    style="
-                        color: #888;
-                        font-size: 0.85rem;
-                        margin-bottom: 0.75rem;
-                        line-height: 1.4;
-                    "
-                >
+                <p class="achievement-description-text">
                     {{ group.achievement_description }}
                 </p>
                 {% endif %} {% for guide in group.guides %}
@@ -120,7 +113,7 @@
                     <div class="guide-author">
                         Submitted by {{ guide.author }} {% if guide.created_at
                         %}
-                        <span style="margin-left: 0.5rem; color: #666"
+                        <span class="guide-date"
                             >· {{ guide.created_at[:10] }}</span
                         >
                         {% endif %}

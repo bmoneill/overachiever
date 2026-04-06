@@ -15,19 +15,19 @@
             }
             .hero h1 {
                 font-size: 2.6rem;
-                color: #107c10;
+                color: var(--oa-primary);
                 margin-bottom: 0.5rem;
             }
             .hero .tagline {
                 font-size: 1.1rem;
-                color: #aaa;
+                color: var(--oa-fg-muted);
                 line-height: 1.6;
                 max-width: 540px;
                 margin: 0 auto 1.5rem;
             }
             .hero .description {
                 font-size: 0.95rem;
-                color: #888;
+                color: var(--oa-fg-dim);
                 line-height: 1.6;
                 max-width: 540px;
                 margin: 0 auto 2rem;
@@ -48,45 +48,45 @@
                 transition: background 0.2s;
             }
             .btn-primary {
-                background: #107c10;
-                color: #fff;
+                background: var(--oa-primary);
+                color: var(--oa-fg-on-primary);
             }
             .btn-primary:hover {
-                background: #0e6b0e;
+                background: var(--oa-primary-hover);
             }
             .btn-secondary {
-                background: #1a1a1a;
-                color: #e0e0e0;
-                border: 1px solid #333;
+                background: var(--oa-surface);
+                color: var(--oa-fg);
+                border: 1px solid var(--oa-border);
             }
             .btn-secondary:hover {
-                background: #252525;
-                border-color: #107c10;
+                background: var(--oa-surface-hover);
+                border-color: var(--oa-primary);
             }
             .browse-link {
                 display: block;
                 text-align: center;
                 margin-top: 0.75rem;
-                color: #4ea24e;
+                color: var(--oa-primary-light);
                 text-decoration: none;
                 font-size: 0.95rem;
             }
             .browse-link:hover {
                 text-decoration: underline;
-                color: #6fc46f;
+                color: var(--oa-primary-lighter);
             }
             .divider {
                 border: none;
-                border-top: 1px solid #2a2a2a;
+                border-top: 1px solid var(--oa-border);
                 margin: 2.5rem 0;
             }
             .guide-context {
                 font-size: 0.8rem;
-                color: #6c6;
+                color: var(--oa-primary-lighter);
                 margin-top: 0.35rem;
             }
             .guide-context a {
-                color: #6c6;
+                color: var(--oa-primary-lighter);
                 text-decoration: none;
             }
             .guide-context a:hover {
@@ -94,12 +94,12 @@
             }
             .guide-meta {
                 font-size: 0.8rem;
-                color: #888;
+                color: var(--oa-fg-dim);
                 margin-top: 0.35rem;
             }
             .guide-meta .date {
                 margin-left: 0.5rem;
-                color: #666;
+                color: var(--oa-fg-faint);
             }
         </style>
     </head>
@@ -187,7 +187,7 @@
                 style="display: flex; align-items: center; gap: 1rem"
             >
                 <div
-                    style="font-size: 1.4rem; font-weight: 700; color: {% if loop.index == 1 %}#ffd700{% elif loop.index == 2 %}#c0c0c0{% elif loop.index == 3 %}#cd7f32{% else %}#888{% endif %}; min-width: 2rem; text-align: center;"
+                    class="rank-badge {% if loop.index == 1 %}gold{% elif loop.index == 2 %}silver{% elif loop.index == 3 %}bronze{% else %}default{% endif %}"
                 >
                     #{{ loop.index }}
                 </div>

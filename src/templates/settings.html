@@ -18,7 +18,7 @@
                 width: 64px;
                 height: 64px;
                 border-radius: 50%;
-                border: 2px solid #107c10;
+                border: 2px solid var(--oa-primary);
                 object-fit: cover;
             }
             .profile-info {
@@ -27,15 +27,15 @@
             .profile-info .gamertag {
                 font-size: 1.15rem;
                 font-weight: 600;
-                color: #e0e0e0;
+                color: var(--oa-fg);
             }
             .profile-info .xuid-label {
                 font-size: 0.8rem;
-                color: #666;
+                color: var(--oa-fg-faint);
                 margin-top: 0.15rem;
             }
             .not-linked {
-                color: #666;
+                color: var(--oa-fg-faint);
                 font-size: 0.9rem;
             }
         </style>
@@ -90,16 +90,8 @@
                         name="xuid"
                         placeholder="Enter XUID"
                         required
-                        style="
-                            flex: 1;
-                            padding: 0.6rem 0.75rem;
-                            font-size: 0.9rem;
-                            background: #0e0e0e;
-                            border: 1px solid #444;
-                            border-radius: 6px;
-                            color: #e0e0e0;
-                            outline: none;
-                        "
+                        class="settings-input"
+                        style="flex: 1"
                     />
                     <button type="submit" class="btn btn-green">Link</button>
                 </form>
@@ -148,17 +140,8 @@
                         id="steam-input"
                         placeholder="Enter Steam ID"
                         required
-                        style="
-                            width: 100%;
-                            padding: 0.6rem 0.75rem;
-                            font-size: 0.9rem;
-                            background: #0e0e0e;
-                            border: 1px solid #444;
-                            border-radius: 6px;
-                            color: #e0e0e0;
-                            outline: none;
-                            margin-bottom: 0.75rem;
-                        "
+                        class="settings-input"
+                        style="margin-bottom: 0.75rem"
                     />
                     <input
                         type="hidden"
@@ -171,20 +154,7 @@
                             type="button"
                             id="btn-steam-id"
                             onclick="setSteamMode('steam_id')"
-                            style="
-                                flex: 1;
-                                padding: 0.5rem 0.75rem;
-                                font-size: 0.85rem;
-                                font-weight: 600;
-                                border: 1px solid #107c10;
-                                border-radius: 6px 0 0 6px;
-                                cursor: pointer;
-                                background: #107c10;
-                                color: #fff;
-                                transition:
-                                    background 0.2s,
-                                    color 0.2s;
-                            "
+                            class="toggle-btn active"
                         >
                             Steam ID
                         </button>
@@ -192,21 +162,7 @@
                             type="button"
                             id="btn-vanity-url"
                             onclick="setSteamMode('vanity_url')"
-                            style="
-                                flex: 1;
-                                padding: 0.5rem 0.75rem;
-                                font-size: 0.85rem;
-                                font-weight: 600;
-                                border: 1px solid #107c10;
-                                border-left: none;
-                                border-radius: 0 6px 6px 0;
-                                cursor: pointer;
-                                background: transparent;
-                                color: #107c10;
-                                transition:
-                                    background 0.2s,
-                                    color 0.2s;
-                            "
+                            class="toggle-btn"
                         >
                             Vanity URL
                         </button>
@@ -231,17 +187,13 @@
                         hiddenInput.value = mode;
                         if (mode === "steam_id") {
                             textInput.placeholder = "Enter Steam ID";
-                            btnSteamId.style.background = "#107c10";
-                            btnSteamId.style.color = "#fff";
-                            btnVanity.style.background = "transparent";
-                            btnVanity.style.color = "#107c10";
+                            btnSteamId.classList.add("active");
+                            btnVanity.classList.remove("active");
                         } else {
                             textInput.placeholder =
                                 "Enter Steam vanity username";
-                            btnVanity.style.background = "#107c10";
-                            btnVanity.style.color = "#fff";
-                            btnSteamId.style.background = "transparent";
-                            btnSteamId.style.color = "#107c10";
+                            btnVanity.classList.add("active");
+                            btnSteamId.classList.remove("active");
                         }
                     }
                 </script>

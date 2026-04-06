@@ -10,8 +10,8 @@
         />
         <style>
             .timeline-group {
-                background: #1e1e1e;
-                border: 1px solid #2a2a2a;
+                background: var(--oa-surface);
+                border: 1px solid var(--oa-border);
                 border-radius: 10px;
                 padding: 1rem 1.25rem;
                 margin-bottom: 1rem;
@@ -26,7 +26,7 @@
             .timeline-username {
                 font-size: 1rem;
                 font-weight: 700;
-                color: #107c10;
+                color: var(--oa-primary);
                 text-decoration: none;
             }
             .timeline-username:hover {
@@ -34,7 +34,7 @@
             }
             .timeline-date {
                 font-size: 0.85rem;
-                color: #888;
+                color: var(--oa-fg-dim);
             }
             .timeline-achievement-row {
                 display: flex;
@@ -43,7 +43,7 @@
                 padding: 0.5rem 0;
             }
             .timeline-achievement-row + .timeline-achievement-row {
-                border-top: 1px solid #2a2a2a;
+                border-top: 1px solid var(--oa-border);
             }
             .timeline-achievement-icon {
                 width: 40px;
@@ -51,7 +51,7 @@
                 border-radius: 6px;
                 flex-shrink: 0;
                 object-fit: cover;
-                background: #222;
+                background: var(--oa-surface-hover);
             }
             .timeline-achievement-info {
                 flex: 1;
@@ -60,12 +60,12 @@
             .timeline-achievement-name {
                 font-weight: 600;
                 font-size: 0.9rem;
-                color: #e0e0e0;
+                color: var(--oa-fg);
                 margin-bottom: 0.1rem;
             }
             .timeline-achievement-game {
                 font-size: 0.75rem;
-                color: #888;
+                color: var(--oa-fg-dim);
             }
             .timeline-achievement-score {
                 flex-shrink: 0;
@@ -73,16 +73,16 @@
                 text-align: right;
                 font-size: 0.9rem;
                 font-weight: 700;
-                color: #107c10;
+                color: var(--oa-primary);
             }
             .timeline-empty {
                 text-align: center;
-                color: #666;
+                color: var(--oa-fg-faint);
                 padding: 3rem 1rem;
                 font-size: 0.95rem;
             }
             .timeline-empty a {
-                color: #107c10;
+                color: var(--oa-primary);
                 text-decoration: none;
             }
             .timeline-empty a:hover {
@@ -96,20 +96,18 @@
 
             <p class="subtitle">Timeline</p>
 
-            {% with messages = get_flashed_messages(with_categories=true) %}
-            {% for category, message in messages %}
+            {% with messages = get_flashed_messages(with_categories=true) %} {%
+            for category, message in messages %}
             <div class="{{ category }}">{{ message }}</div>
-            {% endfor %}
-            {% endwith %}
-
-            {% if grouped_timeline %}
-            {% for group in grouped_timeline %}
+            {% endfor %} {% endwith %} {% if grouped_timeline %} {% for group in
+            grouped_timeline %}
             <div class="timeline-group">
                 <div class="timeline-group-header">
                     <a
                         class="timeline-username"
                         href="{{ url_for('profile', username=group.user.username) }}"
-                    >{{ group.user.username }}</a>
+                        >{{ group.user.username }}</a
+                    >
                     <span class="timeline-date">— {{ group.day }}</span>
                 </div>
                 {% for ua in group.achievements %}
@@ -139,8 +137,7 @@
                 </div>
                 {% endfor %}
             </div>
-            {% endfor %}
-            {% else %}
+            {% endfor %} {% else %}
             <div class="timeline-empty">
                 <p>Your timeline is empty.</p>
                 <p>

@@ -11,15 +11,15 @@
         <style>
             .submit-form {
                 margin-top: 2rem;
-                background: #1a1a1a;
-                border: 1px solid #2a2a2a;
+                background: var(--oa-surface);
+                border: 1px solid var(--oa-border);
                 border-radius: 10px;
                 padding: 1.5rem;
             }
             .submit-form h2 {
                 font-size: 1.1rem;
                 font-weight: 600;
-                color: #e0e0e0;
+                color: var(--oa-fg);
                 margin-bottom: 1rem;
             }
             .form-row {
@@ -31,15 +31,15 @@
                 flex: 1;
                 padding: 0.75rem 1rem;
                 font-size: 1rem;
-                border: 1px solid #333;
+                border: 1px solid var(--oa-border);
                 border-radius: 6px;
-                background: #0e0e0e;
-                color: #e0e0e0;
+                background: var(--oa-surface-inset);
+                color: var(--oa-fg);
                 outline: none;
                 transition: border-color 0.2s;
             }
             .form-row input:focus {
-                border-color: #107c10;
+                border-color: var(--oa-primary);
             }
             .form-row button {
                 padding: 0.75rem 1.5rem;
@@ -47,14 +47,14 @@
                 font-weight: 600;
                 border: none;
                 border-radius: 6px;
-                background: #107c10;
-                color: #fff;
+                background: var(--oa-primary);
+                color: var(--oa-fg-on-primary);
                 cursor: pointer;
                 transition: background 0.2s;
                 white-space: nowrap;
             }
             .form-row button:hover {
-                background: #0e6b0e;
+                background: var(--oa-primary-hover);
             }
         </style>
     </head>
@@ -100,7 +100,7 @@
                     <div class="guide-author">
                         Submitted by {{ guide.author }} {% if guide.created_at
                         %}
-                        <span style="margin-left: 0.5rem; color: #666"
+                        <span class="guide-date"
                             >{{ guide.created_at[:10] }}</span
                         >
                         {% endif %}

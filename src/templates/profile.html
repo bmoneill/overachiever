@@ -12,19 +12,19 @@
             .username-display {
                 font-size: 1.6rem;
                 font-weight: 700;
-                color: #e0e0e0;
+                color: var(--oa-fg);
                 margin-bottom: 0.25rem;
             }
             .bio-text {
                 font-size: 0.95rem;
-                color: #ccc;
+                color: var(--oa-fg-muted);
                 line-height: 1.5;
                 white-space: pre-wrap;
                 word-break: break-word;
             }
             .bio-empty {
                 font-size: 0.9rem;
-                color: #666;
+                color: var(--oa-fg-faint);
                 font-style: italic;
             }
             .gamertag-row {
@@ -34,7 +34,7 @@
                 padding: 0.5rem 0;
             }
             .gamertag-row + .gamertag-row {
-                border-top: 1px solid #2a2a2a;
+                border-top: 1px solid var(--oa-border);
             }
             .gamertag-row img.platform-icon {
                 width: 24px;
@@ -46,7 +46,7 @@
                 width: 40px;
                 height: 40px;
                 border-radius: 50%;
-                border: 2px solid #107c10;
+                border: 2px solid var(--oa-primary);
                 object-fit: cover;
                 flex-shrink: 0;
             }
@@ -57,14 +57,14 @@
             .gamertag-name {
                 font-size: 1rem;
                 font-weight: 600;
-                color: #e0e0e0;
+                color: var(--oa-fg);
             }
             .gamertag-label {
                 font-size: 0.75rem;
-                color: #666;
+                color: var(--oa-fg-faint);
             }
             .no-gamertags {
-                color: #666;
+                color: var(--oa-fg-faint);
                 font-size: 0.9rem;
                 font-style: italic;
             }
@@ -79,19 +79,19 @@
             }
             .achievement-count {
                 font-size: 1.05rem;
-                color: #aaa;
+                color: var(--oa-fg-muted);
                 padding: 0.6rem 1rem 0.2rem;
             }
             .achievement-count-number {
                 font-size: 1.3rem;
                 font-weight: 700;
-                color: #107c10;
+                color: var(--oa-primary);
             }
             .games-link {
                 display: inline-block;
                 margin-top: 0.25rem;
                 font-size: 0.9rem;
-                color: #107c10;
+                color: var(--oa-primary);
                 text-decoration: none;
             }
             .games-link:hover {
@@ -104,7 +104,7 @@
                 padding: 0.6rem 0;
             }
             .showcase-game-row + .showcase-game-row {
-                border-top: 1px solid #2a2a2a;
+                border-top: 1px solid var(--oa-border);
             }
             .showcase-game-thumb {
                 width: 64px;
@@ -112,7 +112,7 @@
                 border-radius: 8px;
                 flex-shrink: 0;
                 object-fit: cover;
-                background: #333;
+                background: var(--oa-bg);
             }
             .showcase-game-info {
                 flex: 1;
@@ -121,7 +121,7 @@
             .showcase-game-name {
                 font-weight: 600;
                 font-size: 0.95rem;
-                color: #e0e0e0;
+                color: var(--oa-fg);
                 margin-bottom: 0.2rem;
                 white-space: nowrap;
                 overflow: hidden;
@@ -129,7 +129,7 @@
             }
             .showcase-game-progress {
                 font-size: 0.8rem;
-                color: #aaa;
+                color: var(--oa-fg-muted);
                 margin-bottom: 0.3rem;
             }
             .showcase-achievement-row {
@@ -139,7 +139,7 @@
                 padding: 0.6rem 0;
             }
             .showcase-achievement-row + .showcase-achievement-row {
-                border-top: 1px solid #2a2a2a;
+                border-top: 1px solid var(--oa-border);
             }
             .showcase-achievement-icon {
                 width: 48px;
@@ -147,7 +147,7 @@
                 border-radius: 6px;
                 flex-shrink: 0;
                 object-fit: cover;
-                background: #222;
+                background: var(--oa-surface-hover);
             }
             .showcase-achievement-info {
                 flex: 1;
@@ -156,18 +156,18 @@
             .showcase-achievement-name {
                 font-weight: 600;
                 font-size: 0.95rem;
-                color: #e0e0e0;
+                color: var(--oa-fg);
                 margin-bottom: 0.15rem;
             }
             .showcase-achievement-desc {
                 font-size: 0.8rem;
-                color: #aaa;
+                color: var(--oa-fg-muted);
                 line-height: 1.4;
                 margin-bottom: 0.15rem;
             }
             .showcase-achievement-game {
                 font-size: 0.75rem;
-                color: #666;
+                color: var(--oa-fg-faint);
             }
             .showcase-achievement-score {
                 flex-shrink: 0;
@@ -175,14 +175,14 @@
                 text-align: right;
                 font-size: 0.95rem;
                 font-weight: 700;
-                color: #107c10;
+                color: var(--oa-primary);
                 padding-top: 0.1rem;
             }
             .remove-btn {
                 flex-shrink: 0;
                 background: transparent;
-                border: 1px solid #444;
-                color: #888;
+                border: 1px solid var(--oa-border-strong);
+                color: var(--oa-fg-dim);
                 border-radius: 4px;
                 width: 26px;
                 height: 26px;
@@ -197,13 +197,13 @@
                     border-color 0.2s;
             }
             .remove-btn:hover {
-                background: #3b1010;
-                border-color: #6b2020;
-                color: #f5a0a0;
+                background: var(--oa-danger-bg);
+                border-color: var(--oa-danger-border);
+                color: var(--oa-danger-fg);
             }
             .recent-achievement-time {
                 font-size: 0.75rem;
-                color: #6c6;
+                color: var(--oa-primary-lighter);
                 margin-top: 0.15rem;
             }
             .follow-stats {
@@ -211,10 +211,10 @@
                 gap: 1.25rem;
                 padding: 0.5rem 0 0.25rem;
                 font-size: 0.9rem;
-                color: #aaa;
+                color: var(--oa-fg-muted);
             }
             .follow-stats strong {
-                color: #e0e0e0;
+                color: var(--oa-fg);
                 font-weight: 700;
             }
             .follow-btn-form {
@@ -226,16 +226,16 @@
                 font-weight: 600;
                 border-radius: 6px;
                 cursor: pointer;
-                border: 1px solid #107c10;
-                background: #107c10;
-                color: #fff;
+                border: 1px solid var(--oa-primary);
+                background: var(--oa-primary);
+                color: var(--oa-fg-on-primary);
                 transition:
                     background 0.2s,
                     border-color 0.2s;
             }
             .btn-follow:hover {
-                background: #0e6b0e;
-                border-color: #0e6b0e;
+                background: var(--oa-primary-hover);
+                border-color: var(--oa-primary-hover);
             }
             .btn-unfollow {
                 padding: 0.4rem 1.2rem;
@@ -243,18 +243,18 @@
                 font-weight: 600;
                 border-radius: 6px;
                 cursor: pointer;
-                border: 1px solid #444;
+                border: 1px solid var(--oa-border-strong);
                 background: transparent;
-                color: #ccc;
+                color: var(--oa-fg-muted);
                 transition:
                     background 0.2s,
                     border-color 0.2s,
                     color 0.2s;
             }
             .btn-unfollow:hover {
-                background: #3b1010;
-                border-color: #6b2020;
-                color: #f5a0a0;
+                background: var(--oa-danger-bg);
+                border-color: var(--oa-danger-border);
+                color: var(--oa-danger-fg);
             }
         </style>
     </head>
