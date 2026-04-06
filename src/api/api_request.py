@@ -15,9 +15,14 @@ def make_request(url: str, method: str = "GET", headers: dict | None = None, par
             del API_CACHE[cache_key]
         else:
             return API_CACHE[cache_key]["response"]
-    response = requests.request(method, url, params=params, timeout=TIMEOUT)
+    response = requests.request(method, url, headers=headers, params=params, timeout=TIMEOUT)
+    if response.status_code != 200:
+        return response
+
+    print(API_CACHE)
     API_CACHE[cache_key] = {
         "response": response,
         "time": time.time(),
     }
+
     return response
