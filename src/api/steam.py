@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 import requests
 
 from .achievement_api import AchievementAPI, AchievementAPIError, AchievementData
-from ..platform import PLATFORM_STEAM
+from ..helpers.platform import PLATFORM_STEAM
 from .profile import Profile, ProfileAPI, ProfileAPIError
 from .api_request import make_request
 

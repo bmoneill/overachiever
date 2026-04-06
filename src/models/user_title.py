@@ -1,7 +1,7 @@
 """UserTitle model tracking per-user game title progress."""
 
 from . import db
-from ..platform import PLATFORM_XBOX, PLATFORM_STEAM
+from ..helpers.platform import PLATFORM_XBOX, PLATFORM_STEAM
 
 _PLATFORM_SLUGS: dict[int, str] = {
     PLATFORM_XBOX: "xbox",

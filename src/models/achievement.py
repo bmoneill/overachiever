@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from . import db
-from ..platform import PLATFORM_STEAM, PLATFORM_XBOX
+from ..helpers.platform import PLATFORM_STEAM, PLATFORM_XBOX
 
 _PLATFORM_SLUG_MAP: dict[int, str] = {
     PLATFORM_XBOX: "xbox",

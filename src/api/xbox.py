@@ -7,7 +7,7 @@ import os
 import requests
 
 from .achievement_api import AchievementAPI, AchievementAPIError, AchievementData
-from ..platform import PLATFORM_XBOX
+from ..helpers.platform import PLATFORM_XBOX
 from .api_request import make_request
 from .profile import Profile, ProfileAPI, ProfileAPIError
 
