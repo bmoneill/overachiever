@@ -1,5 +1,5 @@
 <div align="center">
-    <h1><b>[OverAchiever](https://overachiever.io): A multi-platform achievement manager</b></h1>
+    <h1><b><a href="https://overachiever.io">OverAchiever</a>: A multi-platform achievement manager</b></h1>
 </div>
 
 ## Table of contents
@@ -19,6 +19,10 @@ This is an achievement manager for Xbox and Steam users, utilizing
 [OpenXBL API](https://xbl.io/). It is substantially faster than
 the Xbox Android app.
 
+Using Overachiever, you can easily access and share your achievement statistics
+across your Xbox and Steam libraries, as well as access user-contributed guides
+for locked achievements.
+
 ## Features
 
 - [x] Fast, simple UI
@@ -29,19 +33,18 @@ the Xbox Android app.
 - [x] Easy deployment
 - [x] User-contributed achievement guides
 - [x] User showcase
+- [x] User stats
 - [ ] PlayStation support
 - [ ] Achievement guide ranking
-- [ ] User stats
 - [ ] SSO support
 
 ## Deploying
 
-```shell
-pip install -r requirements.txt
-cp .env.example .env
-# paste OpenXBL, Steam API keys into .env
-python -m src
-```
+You need API keys for the following external APIs:
+
+- [Steam Web API](https://steamcommunity.com/dev)
+- [OpenXBL](https://xbl.io)
+- [MailTrap](https://mailtrap.io)
 
 ### Docker
 
@@ -71,6 +74,9 @@ query:
 curl 'https://api.xbl.io/v2/achievements/x360/{target_user.xuid}/title/{title_id}' \
     --header 'X-Authorization: YOUR_API_KEY'
 ```
+
+Overachiever will attempt to use the Steam achievement icons for Xbox 360 achievements
+where possible.
 
 ## Bugs
 
