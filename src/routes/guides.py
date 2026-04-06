@@ -4,6 +4,7 @@ from flask import abort, render_template
 from .. import app
 from ..models.achievement import Achievement
 from ..models.guide import Guide
+from ..models.title import Title
 from ._helpers import PLATFORM_ID_TO_SLUG, PLATFORM_SLUG_TO_ID
 
 
@@ -19,17 +20,15 @@ def public_guides_index():
 
     games = []
     for row in guide_groups:
-        ach = (
-            Achievement.query
-            .filter_by(platform_id=row.platform_id, platform_title_id=str(row.title_id))
-            .filter(Achievement.game_name.isnot(None))
-            .first()
-        )
-        if ach:
+        title = Title.query.filter_by(
+            platform=row.platform_id,
+            platform_title_id=str(row.title_id),
+        ).first()
+        if title:
             games.append({
                 "platform_id": row.platform_id,
                 "title_id": row.title_id,
-                "game_name": ach.game_name,
+                "game_name": title.name,
                 "guide_count": row.guide_count,
             })
     games.sort(key=lambda g: g["game_name"])
@@ -80,14 +79,12 @@ def public_game_guides(platform, title_id):
             })
         achievement_groups[-1]["guides"].append(guide)
 
-    # Look up the game name from the first matching achievement record.
-    ach_row = (
-        Achievement.query
-        .filter_by(platform_id=platform_id, platform_title_id=str(title_id))
-        .filter(Achievement.game_name.isnot(None))
-        .first()
-    )
-    game_name = ach_row.game_name if ach_row else f"Title ID: {title_id}"
+    # Look up the game name from the Title model.
+    title_row = Title.query.filter_by(
+        platform=platform_id,
+        platform_title_id=str(title_id),
+    ).first()
+    game_name = title_row.name if title_row else f"Title ID: {title_id}"
 
     return render_template(
         "public_game_guides.html",

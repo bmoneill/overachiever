@@ -580,48 +580,53 @@
 
                 <div class="card">
                     {% for ua in recent_achievements %}
-                    <div class="showcase-achievement-row">
-                        {% if ua.achievement.image_url %}
-                        <img
-                            class="showcase-achievement-icon"
-                            src="{{ ua.achievement.image_url }}"
-                            alt=""
-                        />
-                        {% else %}
-                        <div class="showcase-achievement-icon"></div>
-                        {% endif %}
-                        <div class="showcase-achievement-info">
-                            <div class="showcase-achievement-name">
-                                {{ ua.achievement.achievement_name }}
+                    <a
+                        class="showcase-achievement-link"
+                        href="{{ url_for('game_achievements', username=target_user.username, platform=ua.achievement.platform, title_id=ua.achievement.platform_title_id) }}"
+                    >
+                        <div class="showcase-achievement-row">
+                            {% if ua.achievement.image_url %}
+                            <img
+                                class="showcase-achievement-icon"
+                                src="{{ ua.achievement.image_url }}"
+                                alt=""
+                            />
+                            {% else %}
+                            <div class="showcase-achievement-icon"></div>
+                            {% endif %}
+                            <div class="showcase-achievement-info">
+                                <div class="showcase-achievement-name">
+                                    {{ ua.achievement.achievement_name }}
+                                </div>
+                                {% if ua.achievement.description %}
+                                <div class="showcase-achievement-desc">
+                                    {{ ua.achievement.description }}
+                                </div>
+                                {% endif %} {% if ua.achievement.game_name %}
+                                <div class="showcase-achievement-game">
+                                    {% if ua.achievement.platform_id in
+                                    platform_slugs %}
+                                    <img
+                                        class="platform-icon"
+                                        src="{{ url_for('static', filename=platform_slugs[ua.achievement.platform_id] + '.svg') }}"
+                                        alt="{{ platform_slugs[ua.achievement.platform_id] }}"
+                                    />
+                                    {% endif %} {{ ua.achievement.game_name }}
+                                </div>
+                                {% endif %} {% if ua.time_unlocked %}
+                                <div class="recent-achievement-time">
+                                    Unlocked: {{ ua.time_unlocked[:10] }}
+                                </div>
+                                {% endif %}
                             </div>
-                            {% if ua.achievement.description %}
-                            <div class="showcase-achievement-desc">
-                                {{ ua.achievement.description }}
-                            </div>
-                            {% endif %} {% if ua.achievement.game_name %}
-                            <div class="showcase-achievement-game">
-                                {% if ua.achievement.platform_id in
-                                platform_slugs %}
-                                <img
-                                    class="platform-icon"
-                                    src="{{ url_for('static', filename=platform_slugs[ua.achievement.platform_id] + '.svg') }}"
-                                    alt="{{ platform_slugs[ua.achievement.platform_id] }}"
-                                />
-                                {% endif %} {{ ua.achievement.game_name }}
-                            </div>
-                            {% endif %} {% if ua.time_unlocked %}
-                            <div class="recent-achievement-time">
-                                Unlocked: {{ ua.time_unlocked[:10] }}
+                            {% if ua.achievement.gamerscore is not none and
+                            ua.achievement.gamerscore %}
+                            <div class="showcase-achievement-score">
+                                {{ ua.achievement.gamerscore }}G
                             </div>
                             {% endif %}
                         </div>
-                        {% if ua.achievement.gamerscore is not none and
-                        ua.achievement.gamerscore %}
-                        <div class="showcase-achievement-score">
-                            {{ ua.achievement.gamerscore }}G
-                        </div>
-                        {% endif %}
-                    </div>
+                    </a>
                     {% endfor %}
                 </div>
                 {% endif %} {% if is_own_profile %}

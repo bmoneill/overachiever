@@ -56,7 +56,7 @@ def all_games() -> str:
 
         achievement_count: int = (
             Achievement.query
-            .filter_by(platform_id=title.platform, platform_title_id=title.platform_title_id)
+            .filter_by(title_id=title.id)
             .count()
         )
 
@@ -113,10 +113,7 @@ def all_game_achievements(title_id: int) -> Union[str, Response]:
 
     achievements: list[Achievement] = (
         Achievement.query
-        .filter_by(
-            platform_id=title.platform,
-            platform_title_id=title.platform_title_id,
-        )
+        .filter_by(title_id=title.id)
         .all()
     )
 

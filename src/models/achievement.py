@@ -1,28 +1,33 @@
 """Achievement model storing canonical achievement definitions."""
 
+from __future__ import annotations
+
 from . import db
+from ..api.platform import PLATFORM_STEAM, PLATFORM_XBOX
+
+_PLATFORM_SLUG_MAP: dict[int, str] = {
+    PLATFORM_XBOX: "xbox",
+    PLATFORM_STEAM: "steam",
+}
 
 
 class Achievement(db.Model):
     """Canonical achievement definition synced from platform APIs.
 
     Each row represents a single achievement for a specific game on a
-    specific platform.  The ``platform_title_id`` column holds the
-    platform-native identifier (e.g. an Xbox title ID or a Steam app ID),
-    while ``title_id`` is a foreign key linking to the local
-    :class:`~src.models.title.Title` record.
+    specific platform.  Platform-specific metadata (platform ID, native
+    title ID, and game name) is accessed via the related
+    :class:`~src.models.title.Title` record rather than stored directly
+    on this model.
     """
 
     __tablename__ = "achievements"
 
     id: int = db.Column(db.Integer, primary_key=True)
-    platform_id: int = db.Column(db.Integer, nullable=False)
-    platform_title_id: str = db.Column(db.String, nullable=False)
     achievement_id: str = db.Column(db.String, nullable=False)
-    title_id: int | None = db.Column(
-        db.Integer, db.ForeignKey("titles.id"), nullable=True
+    title_id: int = db.Column(
+        db.Integer, db.ForeignKey("titles.id"), nullable=False
     )
-    game_name: str = db.Column(db.String, nullable=False)
     achievement_name: str = db.Column(db.String, nullable=False)
     description: str | None = db.Column(db.Text, default=None)
     locked_description: str | None = db.Column(db.Text, default=None)
@@ -34,12 +39,48 @@ class Achievement(db.Model):
 
     __table_args__ = (
         db.UniqueConstraint(
-            "platform_id",
-            "platform_title_id",
+            "title_id",
             "achievement_id",
             name="uq_achievement_identity",
         ),
     )
+
+    # ------------------------------------------------------------------
+    # Convenience properties proxying through the ``title`` relationship
+    # ------------------------------------------------------------------
+
+    @property
+    def platform_id(self) -> int | None:
+        """Return the platform integer from the related title."""
+        if self.title is None:
+            return None
+        return self.title.platform
+
+    @property
+    def platform_title_id(self) -> str | None:
+        """Return the platform-native title identifier from the related title."""
+        if self.title is None:
+            return None
+        return self.title.platform_title_id
+
+    @property
+    def game_name(self) -> str | None:
+        """Return the game name from the related title."""
+        if self.title is None:
+            return None
+        return self.title.name
+
+    @property
+    def platform(self) -> str:
+        """Return a human-readable platform slug (e.g. ``"xbox"``, ``"steam"``)."""
+        pid = self.platform_id
+        if pid is None:
+            return "unknown"
+        return _PLATFORM_SLUG_MAP.get(pid, "unknown")
+
+    # ------------------------------------------------------------------
+    # Template-friendly aliases
+    # ------------------------------------------------------------------
 
     @property
     def name(self) -> str:

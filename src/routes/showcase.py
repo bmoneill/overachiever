@@ -98,11 +98,16 @@ def showcase_add_achievement():
         flash("Missing achievement information.", "error")
         return redirect(redirect_url)
 
-    db_achievement = Achievement.query.filter_by(
-        platform_id=int(platform_id),
-        platform_title_id=str(title_id),
-        achievement_id=str(achievement_id),
-    ).first()
+    db_achievement = (
+        Achievement.query
+        .join(Title)
+        .filter(
+            Title.platform == int(platform_id),
+            Title.platform_title_id == str(title_id),
+            Achievement.achievement_id == str(achievement_id),
+        )
+        .first()
+    )
 
     if db_achievement is None:
         flash("Achievement not found in the database.", "error")

@@ -203,10 +203,7 @@ class XboxAchievementAPI(AchievementAPI):
         time_unlocked = progression.get("timeUnlocked")
 
         ach = Achievement(
-            platform_id=PLATFORM_XBOX,
             achievement_id=str(raw.get("id", "")),
-            platform_title_id=str(title_id),
-            game_name=self.game_name or "",
             achievement_name=raw.get("name", ""),
             description=raw.get("description", "") or None,
             locked_description=raw.get("lockedDescription", "") or None,
@@ -214,6 +211,9 @@ class XboxAchievementAPI(AchievementAPI):
             rarity=rarity_pct,
             image_url=image_url or None,
         )
+        ach.platform_id = PLATFORM_XBOX
+        ach.platform_title_id = str(title_id)
+        ach.game_name = self.game_name or ""
         ach.unlocked = raw.get("progressState") == "Achieved"
         ach.time_unlocked = time_unlocked
         return ach
@@ -263,10 +263,7 @@ class XboxAchievementAPI(AchievementAPI):
         result: list[Achievement] = []
         for a in user_achievements:
             ach = Achievement(
-                platform_id=a.platform_id,
                 achievement_id=a.achievement_id,
-                platform_title_id=a.platform_title_id,
-                game_name=a.game_name,
                 achievement_name=a.achievement_name,
                 description=a.description,
                 locked_description=a.locked_description,
@@ -274,6 +271,9 @@ class XboxAchievementAPI(AchievementAPI):
                 rarity=a.rarity,
                 image_url=a.image_url,
             )
+            ach.platform_id = a.platform_id
+            ach.platform_title_id = a.platform_title_id
+            ach.game_name = a.game_name
             ach.unlocked = False
             ach.time_unlocked = None
             result.append(ach)

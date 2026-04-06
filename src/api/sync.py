@@ -133,11 +133,16 @@ def _sync_single_achievement(
 
     The caller is responsible for committing the session.
     """
-    db_ach: Achievement | None = Achievement.query.filter_by(
-        platform_id=platform_id,
-        platform_title_id=str(ach.platform_title_id),
-        achievement_id=str(ach.achievement_id),
-    ).first()
+    db_ach: Achievement | None = (
+        Achievement.query
+        .join(Title)
+        .filter(
+            Title.platform == platform_id,
+            Title.platform_title_id == str(ach.platform_title_id),
+            Achievement.achievement_id == str(ach.achievement_id),
+        )
+        .first()
+    )
 
     # Determine image URL (prefer local Xbox 360 icon override).
     image_url: str | None = ach.image_url
@@ -156,11 +161,8 @@ def _sync_single_achievement(
 
     if db_ach is None:
         db_ach = Achievement(
-            platform_id=platform_id,
-            platform_title_id=str(ach.platform_title_id),
             achievement_id=str(ach.achievement_id),
             title_id=db_title.id,
-            game_name=db_title.name,
             achievement_name=ach.achievement_name,
             description=ach.description or None,
             locked_description=ach.locked_description or None,
@@ -171,7 +173,6 @@ def _sync_single_achievement(
         db.session.add(db_ach)
     else:
         db_ach.title_id = db_title.id
-        db_ach.game_name = db_title.name
         db_ach.achievement_name = ach.achievement_name
         if ach.description:
             db_ach.description = ach.description
@@ -490,10 +491,15 @@ def load_title_achievements(
     Xbox achievements that are missing an icon will have the Steam
     icon-fallback logic applied automatically.
     """
-    db_achievements: list[Achievement] = Achievement.query.filter_by(
-        platform_id=platform_id,
-        platform_title_id=str(platform_title_id),
-    ).all()
+    db_achievements: list[Achievement] = (
+        Achievement.query
+        .join(Title)
+        .filter(
+            Title.platform == platform_id,
+            Title.platform_title_id == str(platform_title_id),
+        )
+        .all()
+    )
 
     unlocked: list[Achievement] = []
     locked: list[Achievement] = []
@@ -544,7 +550,8 @@ def _build_steam_icon_lookup() -> dict[str, str]:
     """
     steam_achievements = (
         Achievement.query
-        .filter_by(platform_id=PLATFORM_STEAM)
+        .join(Title)
+        .filter(Title.platform == PLATFORM_STEAM)
         .filter(Achievement.image_url.isnot(None))
         .filter(Achievement.image_url != "")
         .order_by(Achievement.id)

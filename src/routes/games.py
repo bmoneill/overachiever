@@ -187,10 +187,11 @@ def game_achievements(username: str, platform: str, title_id: str):
                 AchievementModel,
                 PinnedAchievement.achievement_id == AchievementModel.id,
             )
+            .join(Title, AchievementModel.title_id == Title.id)
             .filter(
                 PinnedAchievement.user_id == current_user.id,
-                AchievementModel.platform_id == platform_id,
-                AchievementModel.platform_title_id == str(title_id),
+                Title.platform == platform_id,
+                Title.platform_title_id == str(title_id),
             )
             .all()
         )
@@ -331,11 +332,16 @@ def achievement_guides(
     achievement_description = request.args.get("achievement_description", "")
 
     # Use DB achievement data for better names when available
-    db_ach_existing = AchievementModel.query.filter_by(
-        platform_id=platform_id,
-        platform_title_id=str(title_id),
-        achievement_id=str(achievement_id),
-    ).first()
+    db_ach_existing = (
+        AchievementModel.query
+        .join(Title)
+        .filter(
+            Title.platform == platform_id,
+            Title.platform_title_id == str(title_id),
+            AchievementModel.achievement_id == str(achievement_id),
+        )
+        .first()
+    )
     if db_ach_existing:
         achievement_name = (
             db_ach_existing.achievement_name or achievement_name
@@ -352,11 +358,16 @@ def achievement_guides(
             title, description = fetch_url_metadata(url)
 
             # Ensure an Achievement record exists
-            db_ach = AchievementModel.query.filter_by(
-                platform_id=platform_id,
-                platform_title_id=str(title_id),
-                achievement_id=str(achievement_id),
-            ).first()
+            db_ach = (
+                AchievementModel.query
+                .join(Title)
+                .filter(
+                    Title.platform == platform_id,
+                    Title.platform_title_id == str(title_id),
+                    AchievementModel.achievement_id == str(achievement_id),
+                )
+                .first()
+            )
 
             if db_ach is None:
                 # Ensure a Title row exists
@@ -370,11 +381,8 @@ def achievement_guides(
                     db.session.flush()
 
                 db_ach = AchievementModel(
-                    platform_id=platform_id,
-                    platform_title_id=str(title_id),
                     achievement_id=str(achievement_id),
                     title_id=db_title.id,
-                    game_name=game_name,
                     achievement_name=achievement_name,
                     description=achievement_description or None,
                 )
@@ -422,11 +430,16 @@ def achievement_guides(
         )
 
     # Look up the Achievement record to find linked guides
-    db_ach = AchievementModel.query.filter_by(
-        platform_id=platform_id,
-        platform_title_id=str(title_id),
-        achievement_id=str(achievement_id),
-    ).first()
+    db_ach = (
+        AchievementModel.query
+        .join(Title)
+        .filter(
+            Title.platform == platform_id,
+            Title.platform_title_id == str(title_id),
+            AchievementModel.achievement_id == str(achievement_id),
+        )
+        .first()
+    )
 
     guides = (
         Guide.query.filter_by(achievement_id=db_ach.id).all()

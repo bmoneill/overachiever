@@ -152,15 +152,15 @@ class SteamAchievementAPI(AchievementAPI):
         for raw in schema:
             hidden = raw.get("hidden", 0) in (1, True)
             ach = Achievement(
-                platform_id=PLATFORM_STEAM,
                 achievement_id=raw.get("name", ""),
-                platform_title_id=str(title_id),
-                game_name=self.game_name or "",
                 achievement_name=raw.get("displayName", ""),
                 description="" if hidden else raw.get("description", ""),
                 image_url=raw.get("icon", "") or None,
                 locked_description="Hidden achievement." if hidden else "",
             )
+            ach.platform_id = PLATFORM_STEAM
+            ach.platform_title_id = str(title_id)
+            ach.game_name = self.game_name or ""
             ach.unlocked = False
             ach.time_unlocked = None
             achievements.append(ach)
@@ -217,15 +217,15 @@ class SteamAchievementAPI(AchievementAPI):
                 locked_description = ""
 
             ach = Achievement(
-                platform_id=PLATFORM_STEAM,
                 achievement_id=api_name,
-                platform_title_id=str(title_id),
-                game_name=self.game_name or "",
                 achievement_name=display_name,
                 description=description,
                 image_url=raw.get("icon", "") or None,
                 locked_description=locked_description,
             )
+            ach.platform_id = PLATFORM_STEAM
+            ach.platform_title_id = str(title_id)
+            ach.game_name = self.game_name or ""
             ach.unlocked = is_unlocked
             ach.time_unlocked = time_unlocked
             achievements.append(ach)
