@@ -8,57 +8,6 @@
             rel="stylesheet"
             href="{{ url_for('static', filename='base.css') }}"
         />
-        <style>
-            .controls {
-                max-width: 900px;
-                margin: 0 auto 1.5rem auto;
-                display: flex;
-                gap: 0.75rem;
-                align-items: center;
-                flex-wrap: wrap;
-            }
-            .search-input {
-                flex: 1;
-                min-width: 180px;
-                padding: 0.6rem 0.85rem;
-                font-size: 0.95rem;
-                background: var(--oa-surface);
-                border: 1px solid var(--oa-border);
-                border-radius: 6px;
-                color: var(--oa-fg);
-                outline: none;
-                transition: border-color 0.2s;
-            }
-            .search-input::placeholder {
-                color: var(--oa-fg-faint);
-            }
-            .search-input:focus {
-                border-color: var(--oa-primary);
-            }
-            .sort-select,
-            .platform-select {
-                padding: 0.6rem 0.85rem;
-                font-size: 0.95rem;
-                background: var(--oa-surface);
-                border: 1px solid var(--oa-border);
-                border-radius: 6px;
-                color: var(--oa-fg);
-                outline: none;
-                cursor: pointer;
-                transition: border-color 0.2s;
-                -webkit-appearance: none;
-                -moz-appearance: none;
-                appearance: none;
-                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
-                background-repeat: no-repeat;
-                background-position: right 0.7rem center;
-                padding-right: 2rem;
-            }
-            .sort-select:focus,
-            .platform-select:focus {
-                border-color: var(--oa-primary);
-            }
-        </style>
     </head>
     <body>
         {% include '_navbar.html' %}
@@ -68,11 +17,13 @@
             >
         </p>
 
-        {% with messages = get_flashed_messages(with_categories=true) %} {% for
-        category, message in messages %}
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
         <div class="error">{{ message }}</div>
-        {% endfor %} {% endwith %} {% if all_games %}
+        {% endfor %}
+        {% endwith %}
 
+        {% if all_games %}
         <div class="controls">
             <input
                 class="search-input"
@@ -94,9 +45,9 @@
         </div>
 
         <div class="games-grid" id="games-grid">
-            {% for game in all_games %} {% set total =
-            game.title.total_achievements %} {% if not (game.platform == "steam"
-            and total == 0) %}
+            {% for game in all_games %}
+            {% set total = game.title.total_achievements %}
+            {% if not (game.platform == "steam" and total == 0) %}
             <a
                 class="game-card"
                 href="{{ url_for('game_achievements', username=username, platform=game.platform, title_id=game.platform_title_id, media_type=game.media_type, game_name=game.name) }}"
@@ -108,13 +59,13 @@
                 {% if game.image_url %}
                 <img
                     class="game-thumb"
-                    src="{{ game.image_url }}"
+                    data-src="{{ game.image_url }}"
                     alt="{{ game.name }}"
                 />
                 {% else %}
                 <img
                     class="game-thumb"
-                    src="https://via.placeholder.com/64?text=?"
+                    data-src="https://via.placeholder.com/64?text=?"
                     alt="No image"
                 />
                 {% endif %}
@@ -145,11 +96,13 @@
                     {% endif %}
                 </div>
             </a>
-            {% endif %} {% endfor %}
+            {% endif %}
+            {% endfor %}
             <p class="no-results" id="no-results" style="display: none">
                 No games match your search.
             </p>
         </div>
+        {% include '_pagination.html' %}
         {% else %}
         <div class="games-grid">
             <p class="no-results">
@@ -162,83 +115,29 @@
         </div>
         {% endif %}
 
+        <script src="{{ url_for('static', filename='pagination.js') }}"></script>
         <script>
-            (function () {
-                var searchInput = document.getElementById("game-search");
-                var sortSelect = document.getElementById("game-sort");
-                var platformFilter = document.getElementById("platform-filter");
-                var grid = document.getElementById("games-grid");
-                if (!searchInput || !sortSelect || !platformFilter || !grid)
-                    return;
-
-                var cards = Array.prototype.slice.call(
-                    grid.querySelectorAll(".game-card"),
-                );
-                var noResults = document.getElementById("no-results");
-
-                function applyFilter() {
-                    var query = searchInput.value.toLowerCase().trim();
-                    var platform = platformFilter.value;
-                    var visibleCount = 0;
-                    for (var i = 0; i < cards.length; i++) {
-                        var name = cards[i].getAttribute("data-name") || "";
-                        var cardPlatform =
-                            cards[i].getAttribute("data-platform") || "";
-                        var matchSearch = !query || name.indexOf(query) !== -1;
-                        var matchPlatform =
-                            platform === "all" || cardPlatform === platform;
-                        var visible = matchSearch && matchPlatform;
-                        cards[i].classList.toggle("hidden", !visible);
-                        if (visible) visibleCount++;
-                    }
-                    if (noResults) {
-                        noResults.style.display =
-                            visibleCount === 0 ? "" : "none";
-                    }
-                }
-
-                function applySort() {
-                    var mode = sortSelect.value;
-                    cards.sort(function (a, b) {
-                        if (mode === "last-played") {
-                            var tA = a.getAttribute("data-last-played") || "";
-                            var tB = b.getAttribute("data-last-played") || "";
-                            return tB.localeCompare(tA);
-                        } else if (mode === "achievements") {
-                            var cA =
-                                parseInt(
-                                    a.getAttribute("data-achievements"),
-                                    10,
-                                ) || 0;
-                            var cB =
-                                parseInt(
-                                    b.getAttribute("data-achievements"),
-                                    10,
-                                ) || 0;
-                            return cB - cA;
-                        } else {
-                            var nA = a.getAttribute("data-name") || "";
-                            var nB = b.getAttribute("data-name") || "";
-                            return nA.localeCompare(nB);
-                        }
-                    });
-                    for (var i = 0; i < cards.length; i++) {
-                        grid.appendChild(cards[i]);
-                    }
-                    if (noResults) grid.appendChild(noResults);
-                }
-
-                searchInput.addEventListener("input", applyFilter);
-                platformFilter.addEventListener("change", function () {
-                    applyFilter();
-                });
-                sortSelect.addEventListener("change", function () {
-                    applySort();
-                    applyFilter();
-                });
-
-                applySort();
-            })();
+            OAPagination({
+                containerId: "games-grid",
+                cardSelector: ".game-card",
+                pageSize: 50,
+                searchInputId: "game-search",
+                searchAttrs: ["data-name"],
+                sortSelectId: "game-sort",
+                sortModes: {
+                    az: { attr: "data-name", dir: "asc" },
+                    "last-played": { attr: "data-last-played", dir: "desc" },
+                    achievements: {
+                        attr: "data-achievements",
+                        type: "number",
+                        dir: "desc",
+                    },
+                },
+                platformFilterId: "platform-filter",
+                platformAttr: "data-platform",
+                hiddenClass: "hidden",
+                noResultsId: "no-results",
+            });
         </script>
     </body>
 </html>

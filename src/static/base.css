@@ -588,3 +588,292 @@ a:visited {
     margin-bottom: 0.75rem;
     line-height: 1.4;
 }
+
+/* ---------- Controls (search / sort / filter bar) ---------- */
+.controls {
+    max-width: 900px;
+    margin: 0 auto 1.5rem auto;
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.search-input {
+    flex: 1;
+    min-width: 180px;
+    padding: 0.6rem 0.85rem;
+    font-size: 0.95rem;
+    background: var(--oa-surface);
+    border: 1px solid var(--oa-border);
+    border-radius: 6px;
+    color: var(--oa-fg);
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.search-input::placeholder {
+    color: var(--oa-fg-faint);
+}
+
+.search-input:focus {
+    border-color: var(--oa-primary);
+}
+
+.sort-select,
+.platform-select {
+    padding: 0.6rem 0.85rem;
+    font-size: 0.95rem;
+    background: var(--oa-surface);
+    border: 1px solid var(--oa-border);
+    border-radius: 6px;
+    color: var(--oa-fg);
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.2s;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.7rem center;
+    padding-right: 2rem;
+}
+
+.sort-select:focus,
+.platform-select:focus {
+    border-color: var(--oa-primary);
+}
+
+/* ---------- Guides Links ---------- */
+.guides-link {
+    display: block;
+    text-align: center;
+    margin-bottom: 2rem;
+    color: var(--oa-primary-light);
+    text-decoration: none;
+    font-size: 0.95rem;
+}
+
+.guides-link:hover {
+    text-decoration: underline;
+    color: var(--oa-primary-lighter);
+}
+
+.achievement-guides-link {
+    font-size: 0.8rem;
+    color: var(--oa-primary-light);
+    text-decoration: none;
+    margin-top: 0.35rem;
+    display: inline-block;
+}
+
+.achievement-guides-link:hover {
+    text-decoration: underline;
+    color: var(--oa-primary-lighter);
+}
+
+.guide-badge {
+    font-size: 0.8rem;
+    color: var(--oa-primary-light);
+    margin-top: 0.15rem;
+}
+
+/* ---------- Showcase Buttons ---------- */
+.showcase-btn-form {
+    display: inline-block;
+    margin-left: 0.75rem;
+}
+
+.showcase-btn {
+    font-size: 0.8rem;
+    color: var(--oa-accent);
+    background: transparent;
+    border: 1px solid var(--oa-accent);
+    border-radius: 4px;
+    padding: 0.15rem 0.5rem;
+    cursor: pointer;
+    transition:
+        background 0.2s,
+        color 0.2s;
+}
+
+.showcase-btn:hover {
+    background: var(--oa-accent);
+    color: var(--oa-surface-inset);
+}
+
+.showcase-btn.in-showcase {
+    border-color: var(--oa-fg-faint);
+    color: var(--oa-fg-faint);
+    cursor: default;
+}
+
+.showcase-btn.in-showcase:hover {
+    background: transparent;
+    color: var(--oa-fg-faint);
+}
+
+.showcase-game-form {
+    display: block;
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.showcase-game-btn {
+    font-size: 0.95rem;
+    padding: 0.5rem 1.25rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition:
+        background 0.2s,
+        color 0.2s;
+}
+
+.showcase-game-btn.add {
+    color: var(--oa-accent);
+    background: transparent;
+    border: 1px solid var(--oa-accent);
+}
+
+.showcase-game-btn.add:hover {
+    background: var(--oa-accent);
+    color: var(--oa-surface-inset);
+}
+
+.showcase-game-btn.added {
+    color: var(--oa-fg-faint);
+    background: transparent;
+    border: 1px solid var(--oa-border-strong);
+    cursor: default;
+}
+
+/* ---------- Section Header Variants ---------- */
+.section-header.unlocked {
+    color: var(--oa-primary-light);
+}
+
+.section-header.locked {
+    color: var(--oa-fg-dim);
+}
+
+/* ---------- Achievement Cards ---------- */
+.achievement {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    background: var(--oa-surface);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 0.5rem;
+    border-left: 4px solid var(--oa-primary-light);
+}
+
+.achievement.locked {
+    border-left-color: var(--oa-border-strong);
+    opacity: 0.65;
+}
+
+.achievement-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 6px;
+    flex-shrink: 0;
+    object-fit: cover;
+    background: var(--oa-surface-hover);
+}
+
+.achievement-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.achievement-name {
+    font-weight: 600;
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+    color: var(--oa-fg);
+}
+
+.achievement-desc {
+    font-size: 0.85rem;
+    color: var(--oa-fg-muted);
+    line-height: 1.4;
+}
+
+.achievement-meta {
+    font-size: 0.75rem;
+    color: var(--oa-primary-lighter);
+    margin-top: 0.35rem;
+}
+
+.achievement-score {
+    flex-shrink: 0;
+    min-width: 50px;
+    text-align: right;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--oa-primary);
+    padding-top: 0.15rem;
+}
+
+.achievement.locked .achievement-score {
+    color: var(--oa-fg-faint);
+}
+
+.achievement-rarity {
+    font-size: 0.75rem;
+    color: var(--oa-fg-dim);
+    margin-top: 0.25rem;
+}
+
+.achievement-count {
+    text-align: center;
+    color: var(--oa-fg-muted);
+    font-size: 0.95rem;
+    margin-bottom: 1.5rem;
+}
+
+/* ---------- Pagination ---------- */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    margin: 2rem auto;
+    max-width: 900px;
+    padding: 0 1rem;
+}
+
+.pagination-btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    background: var(--oa-surface);
+    border: 1px solid var(--oa-border);
+    border-radius: 6px;
+    color: var(--oa-primary);
+    cursor: pointer;
+    transition:
+        background 0.2s,
+        border-color 0.2s,
+        color 0.2s;
+}
+
+.pagination-btn:hover:not(:disabled) {
+    background: var(--oa-surface-hover);
+    border-color: var(--oa-primary);
+}
+
+.pagination-btn:disabled {
+    color: var(--oa-fg-faint);
+    border-color: var(--oa-border);
+    cursor: not-allowed;
+}
+
+.pagination-info {
+    font-size: 0.9rem;
+    color: var(--oa-fg-muted);
+    white-space: nowrap;
+}

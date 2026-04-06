@@ -8,155 +8,6 @@
             rel="stylesheet"
             href="{{ url_for('static', filename='base.css') }}"
         />
-        <style>
-            .guides-link {
-                display: block;
-                text-align: center;
-                margin-bottom: 2rem;
-                color: var(--oa-primary-light);
-                text-decoration: none;
-                font-size: 0.95rem;
-            }
-            .guides-link:hover {
-                text-decoration: underline;
-                color: var(--oa-primary-lighter);
-            }
-            .achievement-guides-link {
-                font-size: 0.8rem;
-                color: var(--oa-primary-light);
-                text-decoration: none;
-                margin-top: 0.35rem;
-                display: inline-block;
-            }
-            .achievement-guides-link:hover {
-                text-decoration: underline;
-                color: var(--oa-primary-lighter);
-            }
-            .showcase-btn-form {
-                display: inline-block;
-                margin-left: 0.75rem;
-            }
-            .showcase-btn {
-                font-size: 0.8rem;
-                color: var(--oa-accent);
-                background: transparent;
-                border: 1px solid var(--oa-accent);
-                border-radius: 4px;
-                padding: 0.15rem 0.5rem;
-                cursor: pointer;
-                transition:
-                    background 0.2s,
-                    color 0.2s;
-            }
-            .showcase-btn:hover {
-                background: var(--oa-accent);
-                color: var(--oa-surface-inset);
-            }
-            .showcase-btn.in-showcase {
-                border-color: var(--oa-fg-faint);
-                color: var(--oa-fg-faint);
-                cursor: default;
-            }
-            .showcase-btn.in-showcase:hover {
-                background: transparent;
-                color: var(--oa-fg-faint);
-            }
-            .showcase-game-form {
-                display: block;
-                text-align: center;
-                margin-bottom: 2rem;
-            }
-            .showcase-game-btn {
-                font-size: 0.95rem;
-                padding: 0.5rem 1.25rem;
-                border-radius: 6px;
-                cursor: pointer;
-                font-weight: 600;
-                transition:
-                    background 0.2s,
-                    color 0.2s;
-            }
-            .showcase-game-btn.add {
-                color: var(--oa-accent);
-                background: transparent;
-                border: 1px solid var(--oa-accent);
-            }
-            .showcase-game-btn.add:hover {
-                background: var(--oa-accent);
-                color: var(--oa-surface-inset);
-            }
-            .showcase-game-btn.added {
-                color: var(--oa-fg-faint);
-                background: transparent;
-                border: 1px solid var(--oa-border-strong);
-                cursor: default;
-            }
-            .section-header.unlocked {
-                color: var(--oa-primary-light);
-            }
-            .section-header.locked {
-                color: var(--oa-fg-dim);
-            }
-            .achievement {
-                display: flex;
-                align-items: flex-start;
-                gap: 1rem;
-                background: var(--oa-surface);
-                border-radius: 8px;
-                padding: 1rem;
-                margin-bottom: 0.5rem;
-                border-left: 4px solid var(--oa-primary-light);
-            }
-            .achievement.locked {
-                border-left-color: var(--oa-border-strong);
-                opacity: 0.65;
-            }
-            .achievement-icon {
-                width: 48px;
-                height: 48px;
-                border-radius: 6px;
-                flex-shrink: 0;
-                object-fit: cover;
-                background: var(--oa-surface-hover);
-            }
-            .achievement-info {
-                flex: 1;
-                min-width: 0;
-            }
-            .achievement-name {
-                font-weight: 600;
-                font-size: 1rem;
-                margin-bottom: 0.25rem;
-                color: var(--oa-fg);
-            }
-            .achievement-desc {
-                font-size: 0.85rem;
-                color: var(--oa-fg-muted);
-                line-height: 1.4;
-            }
-            .achievement-meta {
-                font-size: 0.75rem;
-                color: var(--oa-primary-lighter);
-                margin-top: 0.35rem;
-            }
-            .achievement-score {
-                flex-shrink: 0;
-                min-width: 50px;
-                text-align: right;
-                font-size: 1rem;
-                font-weight: 700;
-                color: var(--oa-primary);
-                padding-top: 0.15rem;
-            }
-            .achievement.locked .achievement-score {
-                color: var(--oa-fg-faint);
-            }
-            .achievement-rarity {
-                font-size: 0.75rem;
-                color: var(--oa-fg-dim);
-                margin-top: 0.25rem;
-            }
-        </style>
     </head>
     <body>
         <div class="container">
@@ -215,123 +66,250 @@
                 </form>
                 {% endif %}
             </div>
-            {% endif %} {% with messages =
-            get_flashed_messages(with_categories=true) %} {% for category,
-            message in messages %}
+            {% endif %}
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
             <div class="error">{{ message }}</div>
-            {% endfor %} {% endwith %} {% if unlocked %}
-            <div class="section-header unlocked">
-                &#x2714; Unlocked
-                <span class="count">({{ unlocked | length }})</span>
+            {% endfor %}
+            {% endwith %}
+
+            {% if unlocked or locked %}
+            <div class="controls">
+                <input
+                    class="search-input"
+                    id="achievement-search"
+                    type="text"
+                    placeholder="Search achievements…"
+                    autocomplete="off"
+                />
+                <select class="sort-select" id="achievement-sort">
+                    <option value="date-unlocked">Date Unlocked</option>
+                    <option value="az">A–Z</option>
+                    <option value="gamerscore">Gamerscore</option>
+                    <option value="rarity">Rarity</option>
+                </select>
             </div>
-            {% for a in unlocked %}
-            <div class="achievement">
-                {% if a.image_url %}
-                <img class="achievement-icon" src="{{ a.image_url }}" alt="" />
-                {% else %}
-                <div class="achievement-icon"></div>
-                {% endif %}
-                <div class="achievement-info">
-                    <div class="achievement-name">{{ a.name }}</div>
-                    <div class="achievement-desc">
-                        {{ a.description or "Secret achievement" }}
-                    </div>
-                    {% if a.time_unlocked %}
-                    <div class="achievement-meta">
-                        Unlocked: {{ a.time_unlocked[:10] }}
-                    </div>
-                    {% endif %} {% if a.rarity_percentage is not none %}
-                    <div class="achievement-rarity">
-                        {{ a.rarity_percentage }}% of players unlocked this
-                    </div>
+            {% endif %}
+
+            <div id="achievements-container">
+                <div
+                    class="section-header unlocked"
+                    id="unlocked-header"
+                    {% if not unlocked %}style="display:none"{% endif %}
+                >
+                    &#x2714; Unlocked
+                    <span class="count" id="unlocked-count"
+                        >({{ unlocked | length }})</span
+                    >
+                </div>
+                {% for a in unlocked %}
+                <div
+                    class="achievement"
+                    data-name="{{ a.name | lower }}"
+                    data-desc="{{ (a.description or '') | lower }}"
+                    data-unlocked="1"
+                    data-date="{{ a.time_unlocked or '' }}"
+                    data-gamerscore="{{ a.gamerscore if a.gamerscore is not none else 0 }}"
+                    data-rarity="{{ a.rarity_percentage if a.rarity_percentage is not none else 100 }}"
+                >
+                    {% if a.image_url %}
+                    <img
+                        class="achievement-icon"
+                        data-src="{{ a.image_url }}"
+                        alt=""
+                    />
+                    {% else %}
+                    <div class="achievement-icon"></div>
                     {% endif %}
-                    <a
-                        class="achievement-guides-link"
-                        href="{{ url_for('achievement_guides', username=username, platform=platform, title_id=title_id, achievement_id=a.achievement_id, game_name=game_name, achievement_name=a.name, achievement_description=a.description, media_type=media_type) }}"
-                        >📖 Guides</a
-                    >
-                    {% if is_own_page %} {% if a.achievement_id|string in
-                    pinned_achievement_ids %}
-                    <span class="showcase-btn-form">
-                        <button class="showcase-btn in-showcase" disabled>
-                            ✓ Showcased
-                        </button>
-                    </span>
-                    {% elif pinned_achievement_count < 5 %}
-                    <form
-                        class="showcase-btn-form"
-                        method="POST"
-                        action="{{ url_for('showcase_add_achievement') }}"
-                    >
-                        <input
-                            type="hidden"
-                            name="platform_id"
-                            value="{{ platform_id }}"
-                        />
-                        <input
-                            type="hidden"
-                            name="title_id"
-                            value="{{ title_id }}"
-                        />
-                        <input
-                            type="hidden"
-                            name="achievement_id"
-                            value="{{ a.achievement_id }}"
-                        />
-                        <input
-                            type="hidden"
-                            name="redirect_url"
-                            value="{{ request.url }}"
-                        />
-                        <button type="submit" class="showcase-btn">
-                            ⭐ Showcase
-                        </button>
-                    </form>
-                    {% endif %} {% endif %}
-                </div>
-                {% if a.gamerscore is not none %}
-                <div class="achievement-score">{{ a.gamerscore }}G</div>
-                {% endif %}
-            </div>
-            {% endfor %} {% endif %} {% if locked %}
-            <div class="section-header locked">
-                &#x1F512; Locked
-                <span class="count">({{ locked | length }})</span>
-            </div>
-            {% for a in locked %}
-            <div class="achievement locked">
-                {% if a.image_url %}
-                <img class="achievement-icon" src="{{ a.image_url }}" alt="" />
-                {% else %}
-                <div class="achievement-icon"></div>
-                {% endif %}
-                <div class="achievement-info">
-                    <div class="achievement-name">{{ a.name }}</div>
-                    <div class="achievement-desc">
-                        {{ a.description or a.locked_description or "Secret
-                        achievement" }}
+                    <div class="achievement-info">
+                        <div class="achievement-name">{{ a.name }}</div>
+                        <div class="achievement-desc">
+                            {{ a.description or "Secret achievement" }}
+                        </div>
+                        {% if a.time_unlocked %}
+                        <div class="achievement-meta">
+                            Unlocked: {{ a.time_unlocked[:10] }}
+                        </div>
+                        {% endif %}
+                        {% if a.rarity_percentage is not none %}
+                        <div class="achievement-rarity">
+                            {{ a.rarity_percentage }}% of players unlocked this
+                        </div>
+                        {% endif %}
+                        <a
+                            class="achievement-guides-link"
+                            href="{{ url_for('achievement_guides', username=username, platform=platform, title_id=title_id, achievement_id=a.achievement_id, game_name=game_name, achievement_name=a.name, achievement_description=a.description, media_type=media_type) }}"
+                            >📖 Guides</a
+                        >
+                        {% if is_own_page %}
+                        {% if a.achievement_id|string in pinned_achievement_ids %}
+                        <span class="showcase-btn-form">
+                            <button class="showcase-btn in-showcase" disabled>
+                                ✓ Showcased
+                            </button>
+                        </span>
+                        {% elif pinned_achievement_count < 5 %}
+                        <form
+                            class="showcase-btn-form"
+                            method="POST"
+                            action="{{ url_for('showcase_add_achievement') }}"
+                        >
+                            <input
+                                type="hidden"
+                                name="platform_id"
+                                value="{{ platform_id }}"
+                            />
+                            <input
+                                type="hidden"
+                                name="title_id"
+                                value="{{ title_id }}"
+                            />
+                            <input
+                                type="hidden"
+                                name="achievement_id"
+                                value="{{ a.achievement_id }}"
+                            />
+                            <input
+                                type="hidden"
+                                name="redirect_url"
+                                value="{{ request.url }}"
+                            />
+                            <button type="submit" class="showcase-btn">
+                                ⭐ Showcase
+                            </button>
+                        </form>
+                        {% endif %}
+                        {% endif %}
                     </div>
-                    {% if a.rarity_percentage is not none %}
-                    <div class="achievement-rarity">
-                        {{ a.rarity_percentage }}% of players unlocked this
-                    </div>
+                    {% if a.gamerscore is not none %}
+                    <div class="achievement-score">{{ a.gamerscore }}G</div>
                     {% endif %}
-                    <a
-                        class="achievement-guides-link"
-                        href="{{ url_for('achievement_guides', username=username, platform=platform, title_id=title_id, achievement_id=a.achievement_id, game_name=game_name, achievement_name=a.name, achievement_description=a.description, media_type=media_type) }}"
-                        >📖 Guides</a
+                </div>
+                {% endfor %}
+
+                <div
+                    class="section-header locked"
+                    id="locked-header"
+                    {% if not locked %}style="display:none"{% endif %}
+                >
+                    &#x1F512; Locked
+                    <span class="count" id="locked-count"
+                        >({{ locked | length }})</span
                     >
                 </div>
-                <div class="achievement-score">
-                    {% if a.gamerscore is not none %} {{ a.gamerscore }}G {%
-                    else %} &mdash; {% endif %}
+                {% for a in locked %}
+                <div
+                    class="achievement locked"
+                    data-name="{{ a.name | lower }}"
+                    data-desc="{{ (a.description or a.locked_description or '') | lower }}"
+                    data-unlocked="0"
+                    data-date=""
+                    data-gamerscore="{{ a.gamerscore if a.gamerscore is not none else 0 }}"
+                    data-rarity="{{ a.rarity_percentage if a.rarity_percentage is not none else 100 }}"
+                >
+                    {% if a.image_url %}
+                    <img
+                        class="achievement-icon"
+                        data-src="{{ a.image_url }}"
+                        alt=""
+                    />
+                    {% else %}
+                    <div class="achievement-icon"></div>
+                    {% endif %}
+                    <div class="achievement-info">
+                        <div class="achievement-name">{{ a.name }}</div>
+                        <div class="achievement-desc">
+                            {{ a.description or a.locked_description or "Secret achievement" }}
+                        </div>
+                        {% if a.rarity_percentage is not none %}
+                        <div class="achievement-rarity">
+                            {{ a.rarity_percentage }}% of players unlocked this
+                        </div>
+                        {% endif %}
+                        <a
+                            class="achievement-guides-link"
+                            href="{{ url_for('achievement_guides', username=username, platform=platform, title_id=title_id, achievement_id=a.achievement_id, game_name=game_name, achievement_name=a.name, achievement_description=a.description, media_type=media_type) }}"
+                            >📖 Guides</a
+                        >
+                    </div>
+                    <div class="achievement-score">
+                        {% if a.gamerscore is not none %} {{ a.gamerscore }}G
+                        {% else %} &mdash; {% endif %}
+                    </div>
                 </div>
+                {% endfor %}
+
+                <p class="no-results" id="no-results" style="display: none">
+                    No achievements match your search.
+                </p>
             </div>
-            {% endfor %} {% endif %} {% if not unlocked and not locked %}
+
+            {% if not unlocked and not locked %}
             <p class="no-results">
                 No achievement data available for this title.
             </p>
             {% endif %}
+
+            {% include '_pagination.html' %}
         </div>
+
+        <script src="{{ url_for('static', filename='pagination.js') }}"></script>
+        <script>
+            OAPagination({
+                containerId: "achievements-container",
+                cardSelector: ".achievement",
+                pageSize: 50,
+                searchInputId: "achievement-search",
+                searchAttrs: ["data-name", "data-desc"],
+                sortSelectId: "achievement-sort",
+                sortModes: {
+                    "date-unlocked": function (a, b) {
+                        var ua = parseInt(a.getAttribute("data-unlocked"), 10);
+                        var ub = parseInt(b.getAttribute("data-unlocked"), 10);
+                        if (ua !== ub) return ub - ua;
+                        if (ua === 1) {
+                            var da = a.getAttribute("data-date") || "";
+                            var db = b.getAttribute("data-date") || "";
+                            if (da && db) return db.localeCompare(da);
+                            if (da) return -1;
+                            if (db) return 1;
+                            return 0;
+                        }
+                        var na = a.getAttribute("data-name") || "";
+                        var nb = b.getAttribute("data-name") || "";
+                        return na.localeCompare(nb);
+                    },
+                    az: { attr: "data-name", dir: "asc" },
+                    gamerscore: {
+                        attr: "data-gamerscore",
+                        type: "number",
+                        dir: "desc",
+                    },
+                    rarity: {
+                        attr: "data-rarity",
+                        type: "number",
+                        dir: "asc",
+                        defaultVal: 100,
+                    },
+                },
+                noResultsId: "no-results",
+                sections: {
+                    attr: "data-unlocked",
+                    groupSortMode: "date-unlocked",
+                    order: ["1", "0"],
+                    headers: {
+                        "1": {
+                            headerId: "unlocked-header",
+                            countId: "unlocked-count",
+                        },
+                        "0": {
+                            headerId: "locked-header",
+                            countId: "locked-count",
+                        },
+                    },
+                },
+            });
+        </script>
     </body>
 </html>

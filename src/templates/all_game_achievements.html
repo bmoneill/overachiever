@@ -1,130 +1,134 @@
 <!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{{ game_name }} — Overachiever</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='base.css') }}" />
-    <style>
-        .guides-link {
-            display: block;
-            text-align: center;
-            margin-bottom: 2rem;
-            color: var(--oa-primary-light);
-            text-decoration: none;
-            font-size: 0.95rem;
-        }
-        .guides-link:hover {
-            text-decoration: underline;
-            color: var(--oa-primary-lighter);
-        }
-        .achievement-guides-link {
-            font-size: 0.8rem;
-            color: var(--oa-primary-light);
-            text-decoration: none;
-            margin-top: 0.35rem;
-            display: inline-block;
-        }
-        .achievement-guides-link:hover {
-            text-decoration: underline;
-            color: var(--oa-primary-lighter);
-        }
-        .achievement {
-            display: flex;
-            align-items: flex-start;
-            gap: 1rem;
-            background: var(--oa-surface);
-            border-radius: 8px;
-            padding: 1rem;
-            margin-bottom: 0.5rem;
-            border-left: 4px solid var(--oa-primary-light);
-        }
-        .achievement-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 6px;
-            flex-shrink: 0;
-            object-fit: cover;
-            background: var(--oa-surface-hover);
-        }
-        .achievement-info {
-            flex: 1;
-            min-width: 0;
-        }
-        .achievement-name {
-            font-weight: 600;
-            font-size: 1rem;
-            margin-bottom: 0.25rem;
-            color: var(--oa-fg);
-        }
-        .achievement-desc {
-            font-size: 0.85rem;
-            color: var(--oa-fg-muted);
-            line-height: 1.4;
-        }
-        .achievement-score {
-            flex-shrink: 0;
-            min-width: 50px;
-            text-align: right;
-            font-size: 1rem;
-            font-weight: 700;
-            color: var(--oa-primary);
-            padding-top: 0.15rem;
-        }
-        .achievement-rarity {
-            font-size: 0.75rem;
-            color: var(--oa-fg-dim);
-            margin-top: 0.25rem;
-        }
-        .achievement-count {
-            text-align: center;
-            color: var(--oa-fg-muted);
-            font-size: 0.95rem;
-            margin-bottom: 1.5rem;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        {% include '_navbar.html' %}
-        <h1>🏆 {{ game_name }}</h1>
-        <p class="subtitle">All Achievements</p>
-        <a class="back-link" href="{{ url_for('all_games') }}">&larr; Back to all games</a>
-        <a class="guides-link"
-           href="{{ url_for('public_game_guides', platform=platform, title_id=platform_title_id) }}">📖 Game Guides</a>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>{{ game_name }} — Overachiever</title>
+        <link
+            rel="stylesheet"
+            href="{{ url_for('static', filename='base.css') }}"
+        />
+    </head>
+    <body>
+        <div class="container">
+            {% include '_navbar.html' %}
+            <h1>🏆 {{ game_name }}</h1>
+            <p class="subtitle">All Achievements</p>
+            <a class="back-link" href="{{ url_for('all_games') }}"
+                >&larr; Back to all games</a
+            >
+            <a
+                class="guides-link"
+                href="{{ url_for('public_game_guides', platform=platform, title_id=platform_title_id) }}"
+                >📖 Game Guides</a
+            >
 
-        {% with messages = get_flashed_messages(with_categories=true) %}
-        {% for category, message in messages %}
-        <div class="error">{{ message }}</div>
-        {% endfor %}
-        {% endwith %}
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+            <div class="error">{{ message }}</div>
+            {% endfor %}
+            {% endwith %}
 
-        {% if achievements %}
-        <div class="achievement-count">{{ achievements | length }} achievement{{ 's' if achievements | length != 1 else '' }}</div>
-        {% for a in achievements %}
-        <div class="achievement">
-            {% if a.image_url %}
-            <img class="achievement-icon" src="{{ a.image_url }}" alt="" />
-            {% else %}
-            <div class="achievement-icon"></div>
-            {% endif %}
-            <div class="achievement-info">
-                <div class="achievement-name">{{ a.name }}</div>
-                <div class="achievement-desc">{{ a.description or "Secret achievement" }}</div>
-                {% if a.rarity_percentage is not none %}
-                <div class="achievement-rarity">{{ a.rarity_percentage }}% of players unlocked this</div>
-                {% endif %}
-                <a class="achievement-guides-link"
-                   href="{{ url_for('public_game_guides', platform=platform, title_id=platform_title_id) }}">📖 Guides{% if a.guide_count %} ({{ a.guide_count }}){% endif %}</a>
+            {% if achievements %}
+            <div class="controls">
+                <input
+                    class="search-input"
+                    id="achievement-search"
+                    type="text"
+                    placeholder="Search achievements…"
+                    autocomplete="off"
+                />
+                <select class="sort-select" id="achievement-sort">
+                    <option value="az">A–Z</option>
+                    <option value="gamerscore">Gamerscore</option>
+                    <option value="rarity">Rarity</option>
+                </select>
             </div>
-            {% if a.gamerscore is not none %}
-            <div class="achievement-score">{{ a.gamerscore }}G</div>
+
+            <div class="achievement-count" id="achievement-count">
+                {{ achievements | length }} achievement{{ 's' if achievements | length != 1 else '' }}
+            </div>
+
+            <div id="achievements-container">
+                {% for a in achievements %}
+                <div
+                    class="achievement"
+                    data-name="{{ a.name | lower }}"
+                    data-desc="{{ (a.description or '') | lower }}"
+                    data-gamerscore="{{ a.gamerscore if a.gamerscore is not none else 0 }}"
+                    data-rarity="{{ a.rarity_percentage if a.rarity_percentage is not none else 100 }}"
+                >
+                    {% if a.image_url %}
+                    <img
+                        class="achievement-icon"
+                        data-src="{{ a.image_url }}"
+                        alt=""
+                    />
+                    {% else %}
+                    <div class="achievement-icon"></div>
+                    {% endif %}
+                    <div class="achievement-info">
+                        <div class="achievement-name">{{ a.name }}</div>
+                        <div class="achievement-desc">
+                            {{ a.description or "Secret achievement" }}
+                        </div>
+                        {% if a.rarity_percentage is not none %}
+                        <div class="achievement-rarity">
+                            {{ a.rarity_percentage }}% of players unlocked this
+                        </div>
+                        {% endif %}
+                        <a
+                            class="achievement-guides-link"
+                            href="{{ url_for('public_game_guides', platform=platform, title_id=platform_title_id) }}"
+                            >📖 Guides{% if a.guide_count %} ({{ a.guide_count }}){% endif %}</a
+                        >
+                    </div>
+                    {% if a.gamerscore is not none %}
+                    <div class="achievement-score">{{ a.gamerscore }}G</div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+
+                <p class="no-results" id="no-results" style="display: none">
+                    No achievements match your search.
+                </p>
+            </div>
+
+            {% include '_pagination.html' %}
+            {% else %}
+            <p class="no-results">
+                No achievement data available for this title.
+            </p>
             {% endif %}
         </div>
-        {% endfor %}
-        {% else %}
-        <p class="no-results">No achievement data available for this title.</p>
-        {% endif %}
-    </div>
-</body>
+
+        <script src="{{ url_for('static', filename='pagination.js') }}"></script>
+        <script>
+            OAPagination({
+                containerId: "achievements-container",
+                cardSelector: ".achievement",
+                pageSize: 50,
+                searchInputId: "achievement-search",
+                searchAttrs: ["data-name", "data-desc"],
+                sortSelectId: "achievement-sort",
+                sortModes: {
+                    az: { attr: "data-name", dir: "asc" },
+                    gamerscore: {
+                        attr: "data-gamerscore",
+                        type: "number",
+                        dir: "desc",
+                    },
+                    rarity: {
+                        attr: "data-rarity",
+                        type: "number",
+                        dir: "asc",
+                        defaultVal: 100,
+                    },
+                },
+                noResultsId: "no-results",
+                countId: "achievement-count",
+                countSuffix: "achievement",
+            });
+        </script>
+    </body>
 </html>
