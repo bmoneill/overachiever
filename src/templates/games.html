@@ -98,7 +98,7 @@
             game.total_achievements == 0) %}
             <a
                 class="game-card"
-                href="{{ url_for('game_achievements', username=username, platform=game.platform, title_id=game.title_id, media_type=game.media_type, game_name=game.name) }}"
+                href="{{ url_for('game_achievements', username=username, platform=game.platform, title_id=game.platform_title_id, media_type=game.media_type, game_name=game.name) }}"
                 data-name="{{ game.name | lower }}"
                 data-achievements="{{ game.current_achievements if game.current_achievements is not none else 0 }}"
                 data-last-played="{{ game.last_played }}"

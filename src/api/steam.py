@@ -150,7 +150,7 @@ class SteamAchievementAPI(AchievementAPI):
             ach = Achievement(
                 platform_id=PLATFORM_STEAM,
                 achievement_id=raw.get("name", ""),
-                title_id=str(title_id),
+                platform_title_id=str(title_id),
                 game_name=self.game_name or "",
                 achievement_name=raw.get("displayName", ""),
                 description="" if hidden else raw.get("description", ""),
@@ -215,7 +215,7 @@ class SteamAchievementAPI(AchievementAPI):
             ach = Achievement(
                 platform_id=PLATFORM_STEAM,
                 achievement_id=api_name,
-                title_id=str(title_id),
+                platform_title_id=str(title_id),
                 game_name=self.game_name or "",
                 achievement_name=display_name,
                 description=description,

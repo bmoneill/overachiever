@@ -9,7 +9,8 @@ from ..models.user_follow import UserFollow
 from ..models.user_achievement import UserAchievement
 from ..models.achievement import Achievement
 from ..models.user import User
-from ._helpers import PLATFORM_ID_TO_SLUG, resolve_xbox_icon_fallbacks
+from ._helpers import PLATFORM_ID_TO_SLUG
+from ..api.sync import resolve_xbox_icon_fallbacks
 
 
 @app.route("/timeline")

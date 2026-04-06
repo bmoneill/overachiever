@@ -21,7 +21,7 @@ def public_guides_index():
     for row in guide_groups:
         ach = (
             Achievement.query
-            .filter_by(platform_id=row.platform_id, title_id=str(row.title_id))
+            .filter_by(platform_id=row.platform_id, platform_title_id=str(row.title_id))
             .filter(Achievement.game_name.isnot(None))
             .first()
         )
@@ -83,7 +83,7 @@ def public_game_guides(platform, title_id):
     # Look up the game name from the first matching achievement record.
     ach_row = (
         Achievement.query
-        .filter_by(platform_id=platform_id, title_id=str(title_id))
+        .filter_by(platform_id=platform_id, platform_title_id=str(title_id))
         .filter(Achievement.game_name.isnot(None))
         .first()
     )

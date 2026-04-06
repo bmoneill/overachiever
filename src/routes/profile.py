@@ -2,7 +2,8 @@ from flask import flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from .. import app
-from ._helpers import get_user_by_username, PLATFORM_ID_TO_SLUG, resolve_xbox_icon_fallbacks
+from ._helpers import get_user_by_username, PLATFORM_ID_TO_SLUG
+from ..api.sync import resolve_xbox_icon_fallbacks
 from ..models import db
 from ..models.showcase_game import ShowcaseGame
 from ..models.showcase_achievement import ShowcaseAchievement

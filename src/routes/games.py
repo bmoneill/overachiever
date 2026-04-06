@@ -1,35 +1,49 @@
+"""Game and achievement routes.
+
+Every route follows a **sync-then-query** pattern:
+
+1. Call a function in :mod:`src.api.sync` to pull fresh data from the
+   external platform API and persist it to the local database.
+2. Query the database for the data the template needs.
+
+No raw API response dicts are touched inside this module.
+"""
+
 import requests
-from datetime import datetime, timezone
 
 from bs4 import BeautifulSoup
 from flask import flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from .. import app
-from ._helpers import get_user_by_username, PLATFORM_SLUG_TO_ID, resolve_xbox_icon_fallbacks
+from ._helpers import get_user_by_username, PLATFORM_SLUG_TO_ID
 from ..models import db
 from ..models.achievement import Achievement as AchievementModel
-from ..models.user_achievement import UserAchievement
+from ..models.title import Title
+from ..models.user_title import UserTitle
 from ..models.showcase_game import ShowcaseGame
 from ..models.showcase_achievement import ShowcaseAchievement
 from ..models.guide import Guide
-from ..models.xbox360icon import Xbox360Icon
 from ..api.achievement import AchievementAPIError
-from ..api.platform import PLATFORM_XBOX, PLATFORM_STEAM
-from ..api.xbox import XboxAchievementAPI, xbl_get
-from ..api.steam import SteamAchievementAPI, steam_get
+from ..api.sync import (
+    sync_user_games,
+    sync_title_achievements,
+    load_title_achievements,
+)
 
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 
-def fetch_url_metadata(url):
+def fetch_url_metadata(url: str) -> tuple[str | None, str | None]:
     """Fetch the title and description from a URL's HTML meta tags."""
     title = None
     description = None
     try:
-        resp = requests.get(url, timeout=10, headers={"User-Agent": "Overachiever/1.0"})
+        resp = requests.get(
+            url, timeout=10, headers={"User-Agent": "Overachiever/1.0"}
+        )
         resp.raise_for_status()
         soup = BeautifulSoup(resp.text, "html.parser")
 
@@ -53,292 +67,55 @@ def fetch_url_metadata(url):
     return title, description
 
 
-def _get_icon_url(achievement_id: int | str, title_id: int) -> str | None:
-    """Look up a locally-cached Xbox 360 icon from the database."""
-    icon = Xbox360Icon.query.filter_by(
-        achievement_id=achievement_id, title_id=title_id
-    ).first()
-    return url_for("static", filename=icon.url) if icon else None
-
-
-def _normalize_xbox_titles(titles: list[dict]) -> list[dict]:
-    """Normalize Xbox titles into common game-card dicts."""
-    result = []
-    for title in titles:
-        ach = title.get("achievement") or {}
-        hist = title.get("titleHistory") or {}
-        result.append({
-            "platform": "xbox",
-            "title_id": str(title.get("titleId", "")),
-            "name": title.get("name", "Unknown Title"),
-            "image_url": title.get("displayImage", ""),
-            "current_achievements": ach.get("currentAchievements", 0),
-            "total_achievements": ach.get("totalAchievements", 0),
-            "progress_percentage": ach.get("progressPercentage", 0),
-            "last_played": hist.get("lastTimePlayed", ""),
-            "media_type": title.get("mediaItemType", ""),
-        })
-    return result
-
-
-def _fetch_steam_achievement_counts(
-    steam_id: str, appids: list[str],
-) -> dict[str, tuple[int, int]]:
-    """Batch-fetch achievement counts for Steam games.
-
-    Calls ``GetTopAchievementsForGames`` in batches and returns a dict
-    mapping *appid* -> ``(unlocked, total)``.
-    """
-    counts: dict[str, tuple[int, int]] = {}
-    BATCH_SIZE = 100
-    for start in range(0, len(appids), BATCH_SIZE):
-        batch = appids[start : start + BATCH_SIZE]
-        params: dict[str, str] = {
-            "steamid": steam_id,
-            "max_achievements": "10000",
-        }
-        for i, appid in enumerate(batch):
-            params[f"appids[{i}]"] = appid
-        try:
-            data = steam_get(
-                "/IPlayerService/GetTopAchievementsForGames/v1",
-                params=params,
-            )
-            for game in data.get("games", []):
-                aid = str(game.get("appid", ""))
-                total = game.get("total_achievements", 0)
-                unlocked = len(game.get("achievements", []))
-                counts[aid] = (unlocked, total)
-        except AchievementAPIError:
-            continue
-    return counts
-
-
-def _normalize_steam_games(
-    games: list[dict],
-    ach_counts: dict[str, tuple[int, int]] | None = None,
-) -> list[dict]:
-    """Normalize Steam owned-games into common game-card dicts."""
-    result = []
-    for game in games:
-        appid = game.get("appid", "")
-        appid_str = str(appid)
-        rtime = game.get("rtime_last_played", 0)
-        last_played = ""
-        if rtime:
-            last_played = datetime.fromtimestamp(rtime, tz=timezone.utc).isoformat()
-
-        current_achievements = None
-        total_achievements = None
-        progress_percentage = None
-        if ach_counts and appid_str in ach_counts:
-            current_achievements, total_achievements = ach_counts[appid_str]
-            progress_percentage = (
-                round(current_achievements / total_achievements * 100)
-                if total_achievements > 0
-                else 0
-            )
-
-        result.append({
-            "platform": "steam",
-            "title_id": appid_str,
-            "name": game.get("name", "Unknown Title"),
-            "image_url": (
-                f"https://cdn.cloudflare.steamstatic.com/steam/apps/{appid}/header.jpg"
-                if appid else ""
-            ),
-            "current_achievements": current_achievements,
-            "total_achievements": total_achievements,
-            "progress_percentage": progress_percentage,
-            "last_played": last_played,
-            "media_type": "",
-        })
-    return result
-
-
-# ---------------------------------------------------------------------------
-# Achievement / DB sync helpers
-# ---------------------------------------------------------------------------
-
-def _sync_achievements_to_db(
-    user_id: int,
+def _get_title_or_fallback(
     platform_id: int,
-    title_id: str,
-    game_name: str,
-    achievements: list[AchievementModel],
-) -> None:
-    """Persist achievement data into the local database.
-
-    For every achievement returned by the platform API:
-    * Upsert an ``Achievement`` row (the canonical definition).
-    * If the achievement is unlocked, upsert a ``UserAchievement`` row.
-    * If the achievement is locked, delete any stale ``UserAchievement``
-      row so the DB accurately mirrors the API state.
-    """
-    for ach in achievements:
-        db_ach = AchievementModel.query.filter_by(
-            platform_id=platform_id,
-            title_id=str(ach.title_id),
-            achievement_id=str(ach.achievement_id),
-        ).first()
-
-        if db_ach is None:
-            db_ach = AchievementModel(
-                platform_id=platform_id,
-                title_id=str(ach.title_id),
-                achievement_id=str(ach.achievement_id),
-                game_name=game_name,
-                achievement_name=ach.achievement_name,
-                description=ach.description or None,
-                locked_description=ach.locked_description or None,
-                gamerscore=ach.gamerscore,
-                rarity=ach.rarity,
-                image_url=ach.image_url or None,
-            )
-            db.session.add(db_ach)
-        else:
-            # Update mutable fields
-            db_ach.game_name = game_name
-            db_ach.achievement_name = ach.achievement_name
-            if ach.description:
-                db_ach.description = ach.description
-            if ach.locked_description:
-                db_ach.locked_description = ach.locked_description
-            if ach.gamerscore is not None:
-                db_ach.gamerscore = ach.gamerscore
-            if ach.rarity is not None:
-                db_ach.rarity = ach.rarity
-            if ach.image_url:
-                db_ach.image_url = ach.image_url
-
-        # Flush so db_ach.id is available for the FK
-        db.session.flush()
-
-        # Upsert or remove UserAchievement
-        unlocked = getattr(ach, "unlocked", False)
-        time_unlocked = getattr(ach, "time_unlocked", None)
-
-        user_ach = UserAchievement.query.filter_by(
-            user_id=user_id, achievement_id=db_ach.id
-        ).first()
-
-        if unlocked:
-            if user_ach is None:
-                user_ach = UserAchievement(
-                    user_id=user_id,
-                    achievement_id=db_ach.id,
-                    time_unlocked=time_unlocked,
-                )
-                db.session.add(user_ach)
-            else:
-                if time_unlocked:
-                    user_ach.time_unlocked = time_unlocked
-        else:
-            # Achievement is locked -- remove any stale unlock record
-            if user_ach is not None:
-                db.session.delete(user_ach)
-
-    db.session.commit()
-
-
-def _load_cached_achievements(
-    user_id: int, platform_id: int, title_id: str
-) -> tuple[list[AchievementModel], list[AchievementModel], str | None]:
-    """Load achievements from the local DB when the API is unavailable.
-
-    Returns ``(unlocked, locked, game_name)`` as lists of
-    :class:`Achievement` model instances.  Each instance has ad-hoc
-    ``unlocked`` and ``time_unlocked`` attributes set so that templates
-    can render them identically to live API data.
-    """
-    db_achievements = AchievementModel.query.filter_by(
-        platform_id=platform_id,
-        title_id=str(title_id),
-    ).all()
-
-    unlocked: list[AchievementModel] = []
-    locked: list[AchievementModel] = []
-    game_name: str | None = None
-
-    for db_ach in db_achievements:
-        if game_name is None:
-            game_name = db_ach.game_name
-
-        user_ach = UserAchievement.query.filter_by(
-            user_id=user_id, achievement_id=db_ach.id
-        ).first()
-
-        is_unlocked = user_ach is not None
-        db_ach.unlocked = is_unlocked
-        db_ach.time_unlocked = user_ach.time_unlocked if user_ach else None
-
-        if is_unlocked:
-            unlocked.append(db_ach)
-        else:
-            locked.append(db_ach)
-
-    return unlocked, locked, game_name
+    platform_title_id: str,
+) -> Title | None:
+    """Look up a :class:`Title` by platform and platform-specific ID."""
+    return Title.query.filter_by(
+        platform=platform_id,
+        platform_title_id=str(platform_title_id),
+    ).first()
 
 
 # ---------------------------------------------------------------------------
-# Game / Achievement routes
+# Game list route
 # ---------------------------------------------------------------------------
 
 @app.route("/games/<username>")
-def games(username):
+def games(username: str):
     """Show the list of games a player owns across all linked platforms."""
     target_user = get_user_by_username(username)
     if target_user is None:
         flash("User not found.", "error")
         return redirect(url_for("my_games"))
 
-    all_games: list[dict] = []
+    # 1. Sync from external APIs → DB
+    errors = sync_user_games(target_user)
+    for error in errors:
+        flash(error, "error")
 
-    # Fetch Xbox games
-    if target_user.xuid:
-        try:
-            content = xbl_get(f"/v2/titles/{target_user.xuid}")
-            titles = content.get("titles", []) if isinstance(content, dict) else []
-            all_games.extend(_normalize_xbox_titles(titles))
-        except AchievementAPIError as e:
-            flash(f"Xbox: {e}", "error")
-
-    # Fetch Steam games
-    if target_user.steam_id:
-        try:
-            data = steam_get(
-                "/IPlayerService/GetOwnedGames/v1",
-                params={
-                    "steamid": target_user.steam_id,
-                    "include_played_free_games": "1",
-                    "include_appinfo": "1",
-                },
-            )
-            steam_games = data.get("games", [])
-            appids = [str(g["appid"]) for g in steam_games if g.get("appid")]
-            ach_counts = _fetch_steam_achievement_counts(
-                target_user.steam_id, appids,
-            )
-            all_games.extend(_normalize_steam_games(steam_games, ach_counts))
-        except AchievementAPIError as e:
-            flash(f"Steam: {e}", "error")
-
-    # Compute total achievement count across all platforms and persist it
-    total_achievement_count = sum(
-        g.get("current_achievements") or 0 for g in all_games
+    # 2. Query DB
+    user_titles = (
+        UserTitle.query
+        .filter_by(user_id=target_user.id)
+        .join(Title)
+        .all()
     )
-    target_user.achievement_count = total_achievement_count
-    db.session.commit()
 
     return render_template(
         "games.html",
-        all_games=all_games,
+        all_games=user_titles,
         username=target_user.username,
     )
 
 
+# ---------------------------------------------------------------------------
+# Achievement routes
+# ---------------------------------------------------------------------------
+
 @app.route("/games/<username>/<platform>/<title_id>")
-def game_achievements(username, platform, title_id):
+def game_achievements(username: str, platform: str, title_id: str):
     """Show unlocked and locked achievements for a specific game."""
     target_user = get_user_by_username(username)
     if target_user is None:
@@ -351,61 +128,35 @@ def game_achievements(username, platform, title_id):
 
     platform_id = PLATFORM_SLUG_TO_ID[platform]
     media_type = request.args.get("media_type", "")
-    game_name = request.args.get("game_name", f"Title: {title_id}")
-    unlocked: list[AchievementModel] = []
-    locked: list[AchievementModel] = []
-    api_succeeded = False
 
+    # 1. Sync from API → DB (errors are non-fatal; we fall back to cache)
     try:
-        if platform == "xbox":
-            if not target_user.xuid:
-                flash("This user has no linked Xbox account.", "error")
-                return redirect(url_for("games", username=username))
-            api = XboxAchievementAPI(xuid=target_user.xuid, media_type=media_type)
-            unlocked = api.get_unlocked_title_achievements(target_user.xuid, title_id)
-            locked = api.get_locked_title_achievements(target_user.xuid, title_id)
-
-            # Override with locally-cached Xbox 360 icons when available.
-            if api.is_x360:
-                for a in unlocked + locked:
-                    icon = _get_icon_url(a.achievement_id, a.title_id)
-                    if icon:
-                        a.image_url = icon
-        else:
-            if not target_user.steam_id:
-                flash("This user has no linked Steam account.", "error")
-                return redirect(url_for("games", username=username))
-            api = SteamAchievementAPI(steam_id=target_user.steam_id)
-            unlocked = api.get_unlocked_title_achievements(target_user.steam_id, title_id)
-            locked = api.get_locked_title_achievements(target_user.steam_id, title_id)
-
-        api_succeeded = True
-    except AchievementAPIError as e:
-        flash(f"API unavailable ({e}). Showing cached data.", "error")
-
-    if api_succeeded and (unlocked or locked):
-        # Persist achievement data to the local DB for offline use.
-        _sync_achievements_to_db(
-            user_id=target_user.id,
-            platform_id=platform_id,
-            title_id=str(title_id),
-            game_name=game_name,
-            achievements=unlocked + locked,
+        sync_title_achievements(
+            target_user, platform_id, title_id, media_type=media_type,
         )
-    elif not api_succeeded:
-        # Fall back to locally-cached achievement data.
-        unlocked, locked, game_name = _load_cached_achievements(
-            user_id=target_user.id,
-            platform_id=platform_id,
-            title_id=str(title_id),
-        )
+    except AchievementAPIError as exc:
+        flash(f"API unavailable ({exc}). Showing cached data.", "error")
 
-    # Fall back to Steam icons for Xbox achievements missing an image.
-    if platform == "xbox":
-        resolve_xbox_icon_fallbacks(unlocked + locked)
+    # 2. Query DB
+    unlocked, locked = load_title_achievements(
+        target_user.id, platform_id, title_id,
+    )
 
-    game_image_url = request.args.get("game_image_url", "")
-    is_own_page = current_user.is_authenticated and current_user.id == target_user.id
+    db_title = _get_title_or_fallback(platform_id, title_id)
+    game_name = (
+        db_title.name
+        if db_title
+        else request.args.get("game_name", f"Title: {title_id}")
+    )
+    game_image_url = (
+        (db_title.image_url if db_title else None)
+        or request.args.get("game_image_url", "")
+    )
+
+    # Showcase helpers (all DB queries)
+    is_own_page = (
+        current_user.is_authenticated and current_user.id == target_user.id
+    )
 
     game_in_showcase = False
     showcase_game_count = 0
@@ -414,21 +165,30 @@ def game_achievements(username, platform, title_id):
 
     if is_own_page:
         showcase_game_count = ShowcaseGame.query.filter_by(
-            user_id=current_user.id
+            user_id=current_user.id,
         ).count()
 
-        game_in_showcase = ShowcaseGame.query.filter_by(
-            user_id=current_user.id, platform_id=platform_id, title_id=title_id
-        ).first() is not None
+        game_in_showcase = (
+            ShowcaseGame.query.filter_by(
+                user_id=current_user.id,
+                platform_id=platform_id,
+                title_id=title_id,
+            ).first()
+            is not None
+        )
 
         showcase_achievement_count = ShowcaseAchievement.query.filter_by(
-            user_id=current_user.id
+            user_id=current_user.id,
         ).count()
 
         showcased_rows = ShowcaseAchievement.query.filter_by(
-            user_id=current_user.id, platform_id=platform_id, title_id=title_id
+            user_id=current_user.id,
+            platform_id=platform_id,
+            title_id=title_id,
         ).all()
-        showcase_achievement_ids = {str(row.achievement_id) for row in showcased_rows}
+        showcase_achievement_ids = {
+            str(row.achievement_id) for row in showcased_rows
+        }
 
     return render_template(
         "game_achievements.html",
@@ -449,8 +209,15 @@ def game_achievements(username, platform, title_id):
     )
 
 
-@app.route("/games/<username>/<platform>/<title_id>/guides", methods=["GET", "POST"])
-def game_guides(username, platform, title_id):
+# ---------------------------------------------------------------------------
+# Guide routes
+# ---------------------------------------------------------------------------
+
+@app.route(
+    "/games/<username>/<platform>/<title_id>/guides",
+    methods=["GET", "POST"],
+)
+def game_guides(username: str, platform: str, title_id: str):
     """Show and submit guides for a game (not tied to a specific achievement)."""
     target_user = get_user_by_username(username)
     if target_user is None:
@@ -462,8 +229,15 @@ def game_guides(username, platform, title_id):
         return redirect(url_for("games", username=username))
 
     platform_id = PLATFORM_SLUG_TO_ID[platform]
-    game_name = request.args.get("game_name", f"Title ID: {title_id}")
     media_type = request.args.get("media_type", "")
+
+    # Resolve game name from DB, fall back to query param
+    db_title = _get_title_or_fallback(platform_id, title_id)
+    game_name = (
+        db_title.name
+        if db_title
+        else request.args.get("game_name", f"Title ID: {title_id}")
+    )
 
     if request.method == "POST":
         url = request.form.get("url", "").strip()
@@ -516,7 +290,12 @@ def game_guides(username, platform, title_id):
     "/games/<username>/<platform>/<title_id>/achievement/<achievement_id>/guides",
     methods=["GET", "POST"],
 )
-def achievement_guides(username, platform, title_id, achievement_id):
+def achievement_guides(
+    username: str,
+    platform: str,
+    title_id: str,
+    achievement_id: str,
+):
     """Show and submit guides for a specific achievement."""
     target_user = get_user_by_username(username)
     if target_user is None:
@@ -528,12 +307,34 @@ def achievement_guides(username, platform, title_id, achievement_id):
         return redirect(url_for("games", username=username))
 
     platform_id = PLATFORM_SLUG_TO_ID[platform]
-    game_name = request.args.get("game_name", f"Title ID: {title_id}")
     media_type = request.args.get("media_type", "")
+
+    # Resolve names from DB, falling back to query params
+    db_title = _get_title_or_fallback(platform_id, title_id)
+    game_name = (
+        db_title.name
+        if db_title
+        else request.args.get("game_name", f"Title ID: {title_id}")
+    )
+
     achievement_name = request.args.get(
         "achievement_name", f"Achievement ID: {achievement_id}"
     )
     achievement_description = request.args.get("achievement_description", "")
+
+    # Use DB achievement data for better names when available
+    db_ach_existing = AchievementModel.query.filter_by(
+        platform_id=platform_id,
+        platform_title_id=str(title_id),
+        achievement_id=str(achievement_id),
+    ).first()
+    if db_ach_existing:
+        achievement_name = (
+            db_ach_existing.achievement_name or achievement_name
+        )
+        achievement_description = (
+            db_ach_existing.description or achievement_description
+        )
 
     if request.method == "POST":
         url = request.form.get("url", "").strip()
@@ -542,18 +343,29 @@ def achievement_guides(username, platform, title_id, achievement_id):
         else:
             title, description = fetch_url_metadata(url)
 
-            # Ensure an Achievement record exists for this achievement
+            # Ensure an Achievement record exists
             db_ach = AchievementModel.query.filter_by(
                 platform_id=platform_id,
-                title_id=str(title_id),
+                platform_title_id=str(title_id),
                 achievement_id=str(achievement_id),
             ).first()
 
             if db_ach is None:
+                # Ensure a Title row exists
+                if db_title is None:
+                    db_title = Title(
+                        name=game_name,
+                        platform=platform_id,
+                        platform_title_id=str(title_id),
+                    )
+                    db.session.add(db_title)
+                    db.session.flush()
+
                 db_ach = AchievementModel(
                     platform_id=platform_id,
-                    title_id=str(title_id),
+                    platform_title_id=str(title_id),
                     achievement_id=str(achievement_id),
+                    title_id=db_title.id,
                     game_name=game_name,
                     achievement_name=achievement_name,
                     description=achievement_description or None,
@@ -568,7 +380,11 @@ def achievement_guides(username, platform, title_id, achievement_id):
             ).first()
 
             if existing:
-                flash("A guide with that URL has already been submitted for this achievement.", "error")
+                flash(
+                    "A guide with that URL has already been submitted "
+                    "for this achievement.",
+                    "error",
+                )
             else:
                 guide = Guide(
                     url=url,
@@ -582,6 +398,7 @@ def achievement_guides(username, platform, title_id, achievement_id):
                 db.session.add(guide)
                 db.session.commit()
                 flash("Guide submitted!", "success")
+
         return redirect(
             url_for(
                 "achievement_guides",
@@ -599,18 +416,15 @@ def achievement_guides(username, platform, title_id, achievement_id):
     # Look up the Achievement record to find linked guides
     db_ach = AchievementModel.query.filter_by(
         platform_id=platform_id,
-        title_id=str(title_id),
+        platform_title_id=str(title_id),
         achievement_id=str(achievement_id),
     ).first()
 
-    if db_ach:
-        guides = (
-            Guide.query
-            .filter_by(achievement_id=db_ach.id)
-            .all()
-        )
-    else:
-        guides = []
+    guides = (
+        Guide.query.filter_by(achievement_id=db_ach.id).all()
+        if db_ach
+        else []
+    )
 
     return render_template(
         "achievement_guides.html",

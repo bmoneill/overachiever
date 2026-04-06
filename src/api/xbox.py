@@ -201,7 +201,7 @@ class XboxAchievementAPI(AchievementAPI):
         ach = Achievement(
             platform_id=PLATFORM_XBOX,
             achievement_id=str(raw.get("id", "")),
-            title_id=str(title_id),
+            platform_title_id=str(title_id),
             game_name=self.game_name or "",
             achievement_name=raw.get("name", ""),
             description=raw.get("description", "") or None,
@@ -261,7 +261,7 @@ class XboxAchievementAPI(AchievementAPI):
             ach = Achievement(
                 platform_id=a.platform_id,
                 achievement_id=a.achievement_id,
-                title_id=a.title_id,
+                platform_title_id=a.platform_title_id,
                 game_name=a.game_name,
                 achievement_name=a.achievement_name,
                 description=a.description,
