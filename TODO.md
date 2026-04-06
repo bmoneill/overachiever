@@ -11,6 +11,8 @@
 - [ ] Steam: Detect if vanity URL is just username or entire profile URL and act
 -     accordingly
 - [ ] Linking accounts: error message if failed
+- [ ] Square icon view for games, achievements
+- [ ] Remove emojis
 
 ## Data
 
@@ -19,7 +21,6 @@
 
 ## Miscellaneous
 
-- [ ] Unified color scheme
 - [ ] Rate limiting, security look-over
 - [ ] Terms of service, privacy policy
 - [ ] Google Ads with option to disable
