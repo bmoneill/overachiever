@@ -1,5 +1,5 @@
 <div align="center">
-    <h1><b>Overachiever: A Xbox achievement manager</b></h1>
+    <h1><b>Overachiever: A multi-platform achievement manager</b></h1>
     <img width="40%" src="https://oneill.sh/img/overachiever-home.png" alt="Home Page">
     <img width="40%" src="https://oneill.sh/img/overachiever-game.png" alt="Game page">
     <img width="40%" src="https://oneill.sh/img/overachiever-guides.png" alt="Guides page">
@@ -18,24 +18,33 @@
 
 ## Overview
 
-This is an achievement manager for Xbox users, utilizing
-[Flask](https://flask.palletsprojects.com/en/stable/) and the
+This is an achievement manager for Xbox and Steam users, utilizing
+[Flask](https://flask.palletsprojects.com/en/stable/), the
+[Steam Web API](https://steamcommunity.com/dev), and the
 [OpenXBL API](https://xbl.io/). It is substantially faster than
 the Xbox Android app.
 
 ## Features
 
 - [x] Fast, simple UI
+- [x] Steam support
+- [x] Xbox support
 - [x] Search bar, filtering
+- [x] Comprehensive user profiles with linked accounts, etc
 - [x] Easy deployment
 - [x] User-contributed achievement guides
+- [x] User showcase
+- [ ] PlayStation support
+- [ ] Achievement guide ranking
+- [ ] User stats
+- [ ] SSO support
 
 ## Deploying
 
 ```shell
 pip install -r requirements.txt
 cp .env.example .env
-# paste OpenXBL API key into .env
+# paste OpenXBL, Steam API keys into .env
 python -m src
 ```
 
