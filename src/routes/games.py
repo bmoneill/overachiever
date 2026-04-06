@@ -360,7 +360,7 @@ def game_achievements(username, platform, title_id):
 
     platform_id = PLATFORM_SLUG_TO_ID[platform]
     media_type = request.args.get("media_type", "")
-    game_name = None
+    game_name = request.args.get("game_name", f"Title: {title_id}")
     unlocked: list[APIAchievement] = []
     locked: list[APIAchievement] = []
     api_succeeded = False
@@ -388,7 +388,6 @@ def game_achievements(username, platform, title_id):
             api = SteamAchievementAPI(steam_id=target_user.steam_id)
             unlocked = api.get_unlocked_title_achievements(target_user.steam_id, title_id)
             locked = api.get_locked_title_achievements(target_user.steam_id, title_id)
-            game_name = api.game_name
 
         api_succeeded = True
     except AchievementAPIError as e:
@@ -396,12 +395,11 @@ def game_achievements(username, platform, title_id):
 
     if api_succeeded and (unlocked or locked):
         # Persist achievement data to the local DB for offline use.
-        resolved_game_name = game_name or request.args.get("game_name", f"Title ID: {title_id}")
         _sync_achievements_to_db(
             user_id=target_user.id,
             platform_id=platform_id,
             title_id=str(title_id),
-            game_name=resolved_game_name,
+            game_name=game_name,
             api_achievements=unlocked + locked,
         )
     elif not api_succeeded:
@@ -411,9 +409,6 @@ def game_achievements(username, platform, title_id):
             platform_id=platform_id,
             title_id=str(title_id),
         )
-
-    if game_name is None:
-        game_name = request.args.get("game_name", f"Title ID: {title_id}")
 
     game_image_url = request.args.get("game_image_url", "")
     is_own_page = current_user.is_authenticated and current_user.id == target_user.id
