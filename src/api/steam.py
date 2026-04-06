@@ -12,6 +12,8 @@ from ..helpers.platform import PLATFORM_STEAM
 from .profile import Profile, ProfileAPI, ProfileAPIError
 from .api_request import make_request
 
+from ..helpers.image_cache import get_image_path
+
 STEAM_API_KEY = os.environ.get("STEAM_API_KEY")
 STEAM_API_BASE_URL = "https://api.steampowered.com"
 
@@ -164,6 +166,8 @@ class SteamAchievementAPI(AchievementAPI):
                 unlocked=False,
                 time_unlocked=None,
             )
+            if ach.image_url:
+                ach.image_url = get_image_path(ach.image_url)
             achievements.append(ach)
 
         self._cache[cache_key] = achievements
@@ -229,6 +233,8 @@ class SteamAchievementAPI(AchievementAPI):
                 unlocked=is_unlocked,
                 time_unlocked=time_unlocked,
             )
+            if ach.image_url:
+                ach.image_url = get_image_path(ach.image_url)
             achievements.append(ach)
 
         self._cache[cache_key] = achievements
@@ -378,6 +384,8 @@ class SteamProfileAPI(ProfileAPI):
         player = players[0]
         persona_name = player.get("personaname", "")
         avatar_url = player.get("avatarfull", "")
+        if avatar_url:
+            avatar_url = get_image_path(avatar_url)
 
         return Profile(
             platform_id=PLATFORM_STEAM,

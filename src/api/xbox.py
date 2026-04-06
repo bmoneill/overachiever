@@ -8,6 +8,7 @@ import requests
 
 from .achievement_api import AchievementAPI, AchievementAPIError, AchievementData
 from ..helpers.platform import PLATFORM_XBOX
+from ..helpers.image_cache import get_image_path
 from .api_request import make_request
 from .profile import Profile, ProfileAPI, ProfileAPIError
 
@@ -30,7 +31,7 @@ def _normalize_x360_achievement(a: dict) -> dict:
         "description": a.get("description", ""),
         "lockedDescription": a.get("lockedDescription", ""),
         "progressState": "Achieved" if a.get("unlocked") else "NotStarted",
-        "mediaAssets": [{"url": image_url}] if image_url else [],
+        "mediaAssets": [{"url": get_image_path(image_url)}] if image_url else [],
         "rewards": ([{"value": str(gamerscore)}] if gamerscore is not None else []),
         "progression": {},
         "unlocked": a.get("unlocked", False),
@@ -186,6 +187,8 @@ class XboxAchievementAPI(AchievementAPI):
         """Convert a single raw achievement dict into an ``AchievementData``."""
         media_assets = raw.get("mediaAssets") or []
         image_url = media_assets[0].get("url", "") if media_assets else ""
+        if image_url:
+            image_url = get_image_path(image_url)
 
         rewards = raw.get("rewards") or []
         try:
@@ -211,7 +214,7 @@ class XboxAchievementAPI(AchievementAPI):
             locked_description=raw.get("lockedDescription", "") or None,
             gamerscore=gamerscore,
             rarity=rarity_pct,
-            image_url=image_url or None,
+            image_url=get_image_path(image_url) if image_url else None,
             unlocked=raw.get("progressState") == "Achieved",
             time_unlocked=time_unlocked,
         )
@@ -271,7 +274,7 @@ class XboxAchievementAPI(AchievementAPI):
                 locked_description=a.locked_description,
                 gamerscore=a.gamerscore,
                 rarity=a.rarity,
-                image_url=a.image_url,
+                image_url=get_image_path(a.image_url) if a.image_url else None,
                 unlocked=False,
                 time_unlocked=None,
             )
@@ -351,5 +354,5 @@ class XboxProfileAPI(ProfileAPI):
         return Profile(
             platform_id=PLATFORM_XBOX,
             name=gamertag,
-            image_url=avatar_url,
+            image_url=get_image_path(avatar_url) if avatar_url else "",
         )
