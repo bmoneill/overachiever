@@ -29,7 +29,8 @@ def get_image_path(image_url: str) -> str:
                     f.write(block)
         with Image.open(target_path) as img:
             rgb_img = img.convert("RGB")
-            resized_img = rgb_img.resize((128, 128))
+            ratio = img.width / img.height
+            resized_img = rgb_img.resize((int(128 * ratio), 128))
             resized_img.save(target_path, "JPEG", optimize=True, quality=70)
 
 
