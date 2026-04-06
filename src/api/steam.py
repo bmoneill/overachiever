@@ -7,9 +7,8 @@ from datetime import datetime, timezone
 
 import requests
 
-from .achievement_api import AchievementAPI, AchievementAPIError
-from .platform import PLATFORM_STEAM
-from ..models.achievement import Achievement
+from .achievement_api import AchievementAPI, AchievementAPIError, AchievementData
+from ..platform import PLATFORM_STEAM
 from .profile import Profile, ProfileAPI, ProfileAPIError
 from .api_request import make_request
 
@@ -68,7 +67,7 @@ class SteamAchievementAPI(AchievementAPI):
     def __init__(self, steam_id: str | None = None):
         self.steam_id = steam_id
         self._schema_cache: dict[str, list[dict]] = {}
-        self._cache: dict[str, list[Achievement]] = {}
+        self._cache: dict[str, list[AchievementData]] = {}
         self.game_name: str | None = None
 
     # -----------------------------------------------------------------
@@ -135,7 +134,9 @@ class SteamAchievementAPI(AchievementAPI):
                 result[apiname] = ach
         return result
 
-    def _build_title_achievements(self, title_id: str) -> list[Achievement]:
+    def _build_title_achievements(
+        self, title_id: str
+    ) -> list[AchievementData]:
         """Fetch and cache all achievement definitions for a title.
 
         Every achievement is returned with ``unlocked=False`` since
@@ -148,21 +149,21 @@ class SteamAchievementAPI(AchievementAPI):
 
         schema = self._fetch_title_schema(title_id)
 
-        achievements: list[Achievement] = []
+        achievements: list[AchievementData] = []
         for raw in schema:
             hidden = raw.get("hidden", 0) in (1, True)
-            ach = Achievement(
+            ach = AchievementData(
+                platform_id=PLATFORM_STEAM,
+                platform_title_id=str(title_id),
                 achievement_id=raw.get("name", ""),
+                game_name=self.game_name or "",
                 achievement_name=raw.get("displayName", ""),
                 description="" if hidden else raw.get("description", ""),
                 image_url=raw.get("icon", "") or None,
                 locked_description="Hidden achievement." if hidden else "",
+                unlocked=False,
+                time_unlocked=None,
             )
-            ach.platform_id = PLATFORM_STEAM
-            ach.platform_title_id = str(title_id)
-            ach.game_name = self.game_name or ""
-            ach.unlocked = False
-            ach.time_unlocked = None
             achievements.append(ach)
 
         self._cache[cache_key] = achievements
@@ -170,7 +171,7 @@ class SteamAchievementAPI(AchievementAPI):
 
     def _build_user_achievements_for_title(
         self, user_id: str, title_id: str
-    ) -> list[Achievement]:
+    ) -> list[AchievementData]:
         """Merge title schema with user unlock data and cache the result.
 
         Uses ``ISteamUserStats/GetPlayerAchievements`` to obtain unlock
@@ -187,7 +188,7 @@ class SteamAchievementAPI(AchievementAPI):
         schema = self._fetch_title_schema(title_id)
         user_map = self._fetch_user_player_achievements(user_id, title_id)
 
-        achievements: list[Achievement] = []
+        achievements: list[AchievementData] = []
         for raw in schema:
             api_name = raw.get("name", "")
             display_name = raw.get("displayName", "")
@@ -216,18 +217,18 @@ class SteamAchievementAPI(AchievementAPI):
                 description = raw.get("description", "")
                 locked_description = ""
 
-            ach = Achievement(
+            ach = AchievementData(
+                platform_id=PLATFORM_STEAM,
+                platform_title_id=str(title_id),
                 achievement_id=api_name,
+                game_name=self.game_name or "",
                 achievement_name=display_name,
                 description=description,
                 image_url=raw.get("icon", "") or None,
                 locked_description=locked_description,
+                unlocked=is_unlocked,
+                time_unlocked=time_unlocked,
             )
-            ach.platform_id = PLATFORM_STEAM
-            ach.platform_title_id = str(title_id)
-            ach.game_name = self.game_name or ""
-            ach.unlocked = is_unlocked
-            ach.time_unlocked = time_unlocked
             achievements.append(ach)
 
         self._cache[cache_key] = achievements
@@ -237,7 +238,7 @@ class SteamAchievementAPI(AchievementAPI):
     # Public API — AchievementAPI abstract interface
     # -----------------------------------------------------------------
 
-    def get_user_achievements(self, user_id: str) -> list[Achievement]:
+    def get_user_achievements(self, user_id: str) -> list[AchievementData]:
         """Return every achievement across all of the user's titles.
 
         .. note::
@@ -257,7 +258,7 @@ class SteamAchievementAPI(AchievementAPI):
 
         games = data.get("games", [])
 
-        all_achievements: list[Achievement] = []
+        all_achievements: list[AchievementData] = []
         for game in games:
             appid = str(game.get("appid", ""))
             if not appid:
@@ -272,7 +273,9 @@ class SteamAchievementAPI(AchievementAPI):
 
         return all_achievements
 
-    def get_title_achievements(self, title_id: str) -> list[Achievement]:
+    def get_title_achievements(
+        self, title_id: str
+    ) -> list[AchievementData]:
         """Return every achievement defined for *title_id*.
 
         No user context is needed — all achievements are returned with
@@ -282,7 +285,7 @@ class SteamAchievementAPI(AchievementAPI):
 
     def get_user_achievements_for_title(
         self, user_id: str, title_id: str
-    ) -> list[Achievement]:
+    ) -> list[AchievementData]:
         """Return all achievements for *title_id* merged with the user's
         unlock progress.
         """
@@ -290,7 +293,7 @@ class SteamAchievementAPI(AchievementAPI):
 
     def get_achievement(
         self, title_id: str, achievement_id: str
-    ) -> Achievement:
+    ) -> AchievementData:
         """Return a single achievement definition by title and achievement ID.
 
         Raises :class:`AchievementAPIError` if not found.
@@ -304,7 +307,7 @@ class SteamAchievementAPI(AchievementAPI):
 
     def get_user_achievement(
         self, user_id: str, title_id: str, achievement_id: str
-    ) -> Achievement:
+    ) -> AchievementData:
         """Return a single user achievement (with progress).
 
         Raises :class:`AchievementAPIError` if not found.

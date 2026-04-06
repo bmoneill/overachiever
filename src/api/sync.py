@@ -27,8 +27,8 @@ from ..models.title import Title
 from ..models.user_achievement import UserAchievement
 from ..models.user_title import UserTitle
 from ..models.xbox360icon import Xbox360Icon
-from .achievement_api import AchievementAPIError
-from .platform import PLATFORM_STEAM, PLATFORM_XBOX
+from .achievement_api import AchievementAPIError, AchievementData
+from ..platform import PLATFORM_STEAM, PLATFORM_XBOX
 from .xbox import XboxAchievementAPI, xbl_get
 from .steam import SteamAchievementAPI, steam_get
 
@@ -125,7 +125,7 @@ def _upsert_user_title(
 def _sync_single_achievement(
     db_title: Title,
     platform_id: int,
-    ach: Achievement,
+    ach: AchievementData,
     user_id: int,
     is_x360: bool = False,
 ) -> None:
@@ -415,7 +415,7 @@ def sync_title_achievements(
             media_type = existing.media_type
 
     # Fetch achievements from the platform API.
-    achievements: list[Achievement]
+    achievements: list[AchievementData]
     if platform_id == PLATFORM_XBOX:
         if not user.xuid:
             raise AchievementAPIError(

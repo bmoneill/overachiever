@@ -6,9 +6,8 @@ import os
 
 import requests
 
-from .achievement_api import AchievementAPI, AchievementAPIError
-from .platform import PLATFORM_XBOX
-from ..models.achievement import Achievement
+from .achievement_api import AchievementAPI, AchievementAPIError, AchievementData
+from ..platform import PLATFORM_XBOX
 from .api_request import make_request
 from .profile import Profile, ProfileAPI, ProfileAPIError
 
@@ -104,7 +103,7 @@ class XboxAchievementAPI(AchievementAPI):
         self.xuid = xuid
         self.media_type = media_type
         self.is_x360 = media_type in X360_MEDIA_TYPES
-        self._cache: dict[str, list[Achievement]] = {}
+        self._cache: dict[str, list[AchievementData]] = {}
         self.game_name: str | None = None
 
     # -----------------------------------------------------------------
@@ -154,7 +153,7 @@ class XboxAchievementAPI(AchievementAPI):
 
     def _build_achievements(
         self, xuid: str, title_id: str
-    ) -> list[Achievement]:
+    ) -> list[AchievementData]:
         """Fetch, parse, and cache achievements for a *user + title* pair."""
         cache_key = f"{xuid}:{title_id}"
         if cache_key in self._cache:
@@ -162,7 +161,7 @@ class XboxAchievementAPI(AchievementAPI):
 
         raw_list = self._fetch_raw_achievements(xuid, title_id)
 
-        achievements: list[Achievement] = []
+        achievements: list[AchievementData] = []
         for raw in raw_list:
             # Grab the game name from the first achievement that has one.
             if self.game_name is None:
@@ -183,8 +182,8 @@ class XboxAchievementAPI(AchievementAPI):
         self._cache[cache_key] = achievements
         return achievements
 
-    def _parse_achievement(self, raw: dict, title_id: int) -> Achievement:
-        """Convert a single raw achievement dict into an ``Achievement``."""
+    def _parse_achievement(self, raw: dict, title_id: int) -> AchievementData:
+        """Convert a single raw achievement dict into an ``AchievementData``."""
         media_assets = raw.get("mediaAssets") or []
         image_url = media_assets[0].get("url", "") if media_assets else ""
 
@@ -202,27 +201,27 @@ class XboxAchievementAPI(AchievementAPI):
         progression = raw.get("progression") or {}
         time_unlocked = progression.get("timeUnlocked")
 
-        ach = Achievement(
+        ach = AchievementData(
+            platform_id=PLATFORM_XBOX,
+            platform_title_id=str(title_id),
             achievement_id=str(raw.get("id", "")),
+            game_name=self.game_name or "",
             achievement_name=raw.get("name", ""),
             description=raw.get("description", "") or None,
             locked_description=raw.get("lockedDescription", "") or None,
             gamerscore=gamerscore,
             rarity=rarity_pct,
             image_url=image_url or None,
+            unlocked=raw.get("progressState") == "Achieved",
+            time_unlocked=time_unlocked,
         )
-        ach.platform_id = PLATFORM_XBOX
-        ach.platform_title_id = str(title_id)
-        ach.game_name = self.game_name or ""
-        ach.unlocked = raw.get("progressState") == "Achieved"
-        ach.time_unlocked = time_unlocked
         return ach
 
     # -----------------------------------------------------------------
     # Public API  — AchievementAPI abstract interface
     # -----------------------------------------------------------------
 
-    def get_user_achievements(self, user_id: str) -> list[Achievement]:
+    def get_user_achievements(self, user_id: str) -> list[AchievementData]:
         """Return every achievement across all of the user's titles.
 
         .. note::
@@ -235,7 +234,7 @@ class XboxAchievementAPI(AchievementAPI):
         content = xbl_get(f"/v2/titles/{user_id}")
         titles = content.get("titles", []) if isinstance(content, dict) else []
 
-        all_achievements: list[Achievement] = []
+        all_achievements: list[AchievementData] = []
         for title in titles:
             tid = str(title.get("titleId", ""))
             if not tid:
@@ -248,7 +247,7 @@ class XboxAchievementAPI(AchievementAPI):
 
         return all_achievements
 
-    def get_title_achievements(self, title_id: str) -> list[Achievement]:
+    def get_title_achievements(self, title_id: str) -> list[AchievementData]:
         """Return every achievement defined for *title_id*.
 
         The OpenXBL API always requires a user context, so the default
@@ -260,34 +259,34 @@ class XboxAchievementAPI(AchievementAPI):
         xuid = self._require_xuid()
         user_achievements = self._build_achievements(xuid, title_id)
 
-        result: list[Achievement] = []
+        result: list[AchievementData] = []
         for a in user_achievements:
-            ach = Achievement(
+            ach = AchievementData(
+                platform_id=a.platform_id,
+                platform_title_id=a.platform_title_id,
                 achievement_id=a.achievement_id,
+                game_name=a.game_name,
                 achievement_name=a.achievement_name,
                 description=a.description,
                 locked_description=a.locked_description,
                 gamerscore=a.gamerscore,
                 rarity=a.rarity,
                 image_url=a.image_url,
+                unlocked=False,
+                time_unlocked=None,
             )
-            ach.platform_id = a.platform_id
-            ach.platform_title_id = a.platform_title_id
-            ach.game_name = a.game_name
-            ach.unlocked = False
-            ach.time_unlocked = None
             result.append(ach)
         return result
 
     def get_user_achievements_for_title(
         self, user_id: str, title_id: str
-    ) -> list[Achievement]:
+    ) -> list[AchievementData]:
         """Return user achievements for *title_id* (including progress)."""
         return self._build_achievements(user_id, title_id)
 
     def get_achievement(
         self, title_id: str, achievement_id: str
-    ) -> Achievement:
+    ) -> AchievementData:
         """Return a single achievement definition by title and achievement ID.
 
         Raises :class:`AchievementAPIError` if not found.
@@ -301,7 +300,7 @@ class XboxAchievementAPI(AchievementAPI):
 
     def get_user_achievement(
         self, user_id: str, title_id: str, achievement_id: str
-    ) -> Achievement:
+    ) -> AchievementData:
         """Return a single user achievement (with progress).
 
         Raises :class:`AchievementAPIError` if not found.

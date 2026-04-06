@@ -15,7 +15,7 @@ from werkzeug.wrappers import Response
 
 from .. import app
 from ._helpers import PLATFORM_ID_TO_SLUG
-from ..api.platform import PLATFORM_XBOX
+from ..platform import PLATFORM_XBOX
 from ..api.sync import resolve_xbox_icon_fallbacks
 from ..models.achievement import Achievement
 from ..models.guide import Guide

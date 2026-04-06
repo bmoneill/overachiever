@@ -5,7 +5,7 @@ import os
 from .. import login_manager
 from ..models import db
 from ..models.user import User
-from ..api.platform import PLATFORM_XBOX, PLATFORM_STEAM
+from ..platform import PLATFORM_XBOX, PLATFORM_STEAM
 
 PLATFORM_ID_TO_SLUG = {
     PLATFORM_XBOX: "xbox",
