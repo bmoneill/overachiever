@@ -9,6 +9,7 @@ from . import (  # noqa: F401
     my_games,
     games,
     settings,
+    showcase,
     profile,
     guides,
 )
