@@ -354,21 +354,21 @@
                     {% endif %}
                 </div>
 
-                {% if showcase_games or showcase_achievements %}
+                {% if pinned_games or pinned_achievements %}
                 <h2 class="section-title">Showcase</h2>
 
-                {% if showcase_games %}
+                {% if pinned_games %}
                 <div class="card">
                     <div class="card-header">
-                        🎮 Games ({{ showcase_games | length }}/5)
+                        🎮 Games ({{ pinned_games | length }}/5)
                     </div>
-                    {% for game in showcase_games %}
+                    {% for game in pinned_games %}
                     <div class="showcase-game-row">
-                        {% if game.image_url %}
+                        {% if game.title.image_url %}
                         <img
                             class="showcase-game-thumb"
-                            src="{{ game.image_url }}"
-                            alt="{{ game.game_name }}"
+                            src="{{ game.title.image_url }}"
+                            alt="{{ game.title.name }}"
                         />
                         {% else %}
                         <div class="showcase-game-thumb"></div>
@@ -376,20 +376,20 @@
                         <div class="showcase-game-info">
                             <div
                                 class="showcase-game-name"
-                                title="{{ game.game_name }}"
+                                title="{{ game.title.name }}"
                             >
-                                {% if game.platform_id in platform_slugs %}
+                                {% if game.title.platform in platform_slugs %}
                                 <a
-                                    href="{{ url_for('game_achievements', username=target_user.username, platform=platform_slugs[game.platform_id], title_id=game.title_id, game_name=game.game_name) }}"
+                                    href="{{ url_for('game_achievements', username=target_user.username, platform=platform_slugs[game.title.platform], title_id=game.title.platform_title_id, game_name=game.title.name) }}"
                                 >
                                     <img
                                         class="platform-icon"
-                                        src="{{ url_for('static', filename=platform_slugs[game.platform_id] + '.svg') }}"
-                                        alt="{{ platform_slugs[game.platform_id] }}"
+                                        src="{{ url_for('static', filename=platform_slugs[game.title.platform] + '.svg') }}"
+                                        alt="{{ platform_slugs[game.title.platform] }}"
                                     />
-                                    {{ game.game_name }}
+                                    {{ game.title.name }}
                                 </a>
-                                {% else %} {{ game.game_name }} {% endif %}
+                                {% else %} {{ game.title.name }} {% endif %}
                             </div>
                             <div class="showcase-game-progress">
                                 {{ game.current_achievements }} / {{
@@ -413,7 +413,7 @@
                         >
                             <input
                                 type="hidden"
-                                name="showcase_game_id"
+                                name="pinned_game_id"
                                 value="{{ game.id }}"
                             />
                             <input
@@ -433,17 +433,17 @@
                     </div>
                     {% endfor %}
                 </div>
-                {% endif %} {% if showcase_achievements %}
+                {% endif %} {% if pinned_achievements %}
                 <div class="card">
                     <div class="card-header">
-                        🏅 Achievements ({{ showcase_achievements | length }}/5)
+                        🏅 Achievements ({{ pinned_achievements | length }}/5)
                     </div>
-                    {% for ach in showcase_achievements %}
+                    {% for ach in pinned_achievements %}
                     <div class="showcase-achievement-row">
-                        {% if ach.image_url %}
+                        {% if ach.achievement.image_url %}
                         <img
                             class="showcase-achievement-icon"
-                            src="{{ ach.image_url }}"
+                            src="{{ ach.achievement.image_url }}"
                             alt=""
                         />
                         {% else %}
@@ -451,32 +451,35 @@
                         {% endif %}
                         <div class="showcase-achievement-info">
                             <div class="showcase-achievement-name">
-                                {{ ach.achievement_name }}
+                                {{ ach.achievement.achievement_name }}
                             </div>
-                            {% if ach.achievement_description %}
+                            {% if ach.achievement.description %}
                             <div class="showcase-achievement-desc">
-                                {{ ach.achievement_description }}
+                                {{ ach.achievement.description }}
                             </div>
-                            {% endif %} {% if ach.game_name %}
+                            {% endif %} {% if ach.achievement.game_name %}
                             <div class="showcase-achievement-game">
-                                {% if ach.platform_id in platform_slugs %}
+                                {% if ach.achievement.platform_id in
+                                platform_slugs %}
                                 <a
-                                    href="{{ url_for('game_achievements', username=target_user.username, platform=platform_slugs[ach.platform_id], title_id=ach.title_id, game_name=ach.game_name) }}"
+                                    href="{{ url_for('game_achievements', username=target_user.username, platform=platform_slugs[ach.achievement.platform_id], title_id=ach.achievement.platform_title_id, game_name=ach.achievement.game_name) }}"
                                 >
                                     <img
                                         class="platform-icon"
-                                        src="{{ url_for('static', filename=platform_slugs[ach.platform_id] + '.svg') }}"
-                                        alt="{{ platform_slugs[ach.platform_id] }}"
+                                        src="{{ url_for('static', filename=platform_slugs[ach.achievement.platform_id] + '.svg') }}"
+                                        alt="{{ platform_slugs[ach.achievement.platform_id] }}"
                                     />
-                                    {{ ach.game_name }}
+                                    {{ ach.achievement.game_name }}
                                 </a>
-                                {% else %} {{ ach.game_name }} {% endif %}
+                                {% else %} {{ ach.achievement.game_name }} {%
+                                endif %}
                             </div>
                             {% endif %}
                         </div>
-                        {% if ach.gamerscore is not none and ach.gamerscore %}
+                        {% if ach.achievement.gamerscore is not none and
+                        ach.achievement.gamerscore %}
                         <div class="showcase-achievement-score">
-                            {{ ach.gamerscore }}G
+                            {{ ach.achievement.gamerscore }}G
                         </div>
                         {% endif %} {% if is_own_profile %}
                         <form
@@ -485,7 +488,7 @@
                         >
                             <input
                                 type="hidden"
-                                name="showcase_achievement_id"
+                                name="pinned_achievement_id"
                                 value="{{ ach.id }}"
                             />
                             <input

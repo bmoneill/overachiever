@@ -21,8 +21,8 @@ from ..models import db
 from ..models.achievement import Achievement as AchievementModel
 from ..models.title import Title
 from ..models.user_title import UserTitle
-from ..models.showcase_game import ShowcaseGame
-from ..models.showcase_achievement import ShowcaseAchievement
+from ..models.pinned_game import PinnedGame
+from ..models.pinned_achievement import PinnedAchievement
 from ..models.guide import Guide
 from ..api.achievement_api import AchievementAPIError
 from ..api.sync import (
@@ -158,36 +158,44 @@ def game_achievements(username: str, platform: str, title_id: str):
         current_user.is_authenticated and current_user.id == target_user.id
     )
 
-    game_in_showcase = False
-    showcase_game_count = 0
-    showcase_achievement_ids: set[str] = set()
-    showcase_achievement_count = 0
+    game_is_pinned = False
+    pinned_game_count = 0
+    pinned_achievement_ids: set[str] = set()
+    pinned_achievement_count = 0
 
     if is_own_page:
-        showcase_game_count = ShowcaseGame.query.filter_by(
+        pinned_game_count = PinnedGame.query.filter_by(
             user_id=current_user.id,
         ).count()
 
-        game_in_showcase = (
-            ShowcaseGame.query.filter_by(
-                user_id=current_user.id,
-                platform_id=platform_id,
-                title_id=title_id,
-            ).first()
-            is not None
+        if db_title:
+            game_is_pinned = (
+                PinnedGame.query.filter_by(
+                    user_id=current_user.id,
+                    title_id=db_title.id,
+                ).first()
+                is not None
+            )
+
+        pinned_achievement_count = PinnedAchievement.query.filter_by(
+            user_id=current_user.id,
+        ).count()
+
+        pinned_rows = (
+            PinnedAchievement.query
+            .join(
+                AchievementModel,
+                PinnedAchievement.achievement_id == AchievementModel.id,
+            )
+            .filter(
+                PinnedAchievement.user_id == current_user.id,
+                AchievementModel.platform_id == platform_id,
+                AchievementModel.platform_title_id == str(title_id),
+            )
+            .all()
         )
-
-        showcase_achievement_count = ShowcaseAchievement.query.filter_by(
-            user_id=current_user.id,
-        ).count()
-
-        showcased_rows = ShowcaseAchievement.query.filter_by(
-            user_id=current_user.id,
-            platform_id=platform_id,
-            title_id=title_id,
-        ).all()
-        showcase_achievement_ids = {
-            str(row.achievement_id) for row in showcased_rows
+        pinned_achievement_ids = {
+            str(row.achievement.achievement_id) for row in pinned_rows
         }
 
     return render_template(
@@ -202,10 +210,10 @@ def game_achievements(username: str, platform: str, title_id: str):
         media_type=media_type,
         game_image_url=game_image_url,
         is_own_page=is_own_page,
-        game_in_showcase=game_in_showcase,
-        showcase_game_count=showcase_game_count,
-        showcase_achievement_ids=showcase_achievement_ids,
-        showcase_achievement_count=showcase_achievement_count,
+        game_is_pinned=game_is_pinned,
+        pinned_game_count=pinned_game_count,
+        pinned_achievement_ids=pinned_achievement_ids,
+        pinned_achievement_count=pinned_achievement_count,
     )
 
 

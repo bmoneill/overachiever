@@ -180,11 +180,11 @@
 
             {% if is_own_page %}
             <div class="showcase-game-form">
-                {% if game_in_showcase %}
+                {% if game_is_pinned %}
                 <button class="showcase-game-btn added" disabled>
                     ✓ In Showcase
                 </button>
-                {% elif showcase_game_count >= 5 %}
+                {% elif pinned_game_count >= 5 %}
                 <button class="showcase-game-btn added" disabled>
                     Showcase Full (5/5)
                 </button>
@@ -203,26 +203,6 @@
                         type="hidden"
                         name="title_id"
                         value="{{ title_id }}"
-                    />
-                    <input
-                        type="hidden"
-                        name="game_name"
-                        value="{{ game_name }}"
-                    />
-                    <input
-                        type="hidden"
-                        name="image_url"
-                        value="{{ game_image_url }}"
-                    />
-                    <input
-                        type="hidden"
-                        name="current_achievements"
-                        value="{{ unlocked | length }}"
-                    />
-                    <input
-                        type="hidden"
-                        name="total_achievements"
-                        value="{{ (unlocked | length) + (locked | length) }}"
                     />
                     <input
                         type="hidden"
@@ -271,13 +251,13 @@
                         >📖 Guides</a
                     >
                     {% if is_own_page %} {% if a.achievement_id|string in
-                    showcase_achievement_ids %}
+                    pinned_achievement_ids %}
                     <span class="showcase-btn-form">
                         <button class="showcase-btn in-showcase" disabled>
                             ✓ Showcased
                         </button>
                     </span>
-                    {% elif showcase_achievement_count < 5 %}
+                    {% elif pinned_achievement_count < 5 %}
                     <form
                         class="showcase-btn-form"
                         method="POST"
@@ -297,31 +277,6 @@
                             type="hidden"
                             name="achievement_id"
                             value="{{ a.achievement_id }}"
-                        />
-                        <input
-                            type="hidden"
-                            name="game_name"
-                            value="{{ game_name }}"
-                        />
-                        <input
-                            type="hidden"
-                            name="achievement_name"
-                            value="{{ a.name }}"
-                        />
-                        <input
-                            type="hidden"
-                            name="achievement_description"
-                            value="{{ a.description }}"
-                        />
-                        <input
-                            type="hidden"
-                            name="image_url"
-                            value="{{ a.image_url }}"
-                        />
-                        <input
-                            type="hidden"
-                            name="gamerscore"
-                            value="{{ a.gamerscore if a.gamerscore is not none else '' }}"
                         />
                         <input
                             type="hidden"
