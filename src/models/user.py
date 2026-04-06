@@ -1,8 +1,14 @@
+"""
+User model representing a registered user.
+"""
 from flask_login import UserMixin
 from . import db
 
 
 class User(UserMixin, db.Model):
+    """
+    Represents a registered user.
+    """
     __tablename__ = "users"
 
     id = db.Column(db.Integer, primary_key=True)

@@ -6,9 +6,16 @@ API_CACHE = {}
 TIMEOUT = 15
 
 def _build_cache_key(url: str, params: dict | None = None) -> str:
+    """
+    Build a cache key for the given URL and parameters.
+    """
     return f"{url}{params}"
 
 def make_request(url: str, method: str = "GET", headers: dict | None = None, params: dict | None = None) -> requests.Response:
+    """
+    Make a request to the given URL, using the given method and headers.
+    If the response is cached, return the cached response.
+    """
     cache_key = _build_cache_key(url, params)
     if cache_key in API_CACHE:
         if time.time() - API_CACHE[cache_key]["time"] > API_CACHE_EXPIRY:

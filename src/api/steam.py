@@ -1,9 +1,13 @@
+"""
+Provides tools for interacting with the Steam Web API.
+"""
+
 import os
 from datetime import datetime, timezone
 
 import requests
 
-from .achievement import AchievementAPI, AchievementAPIError
+from .achievement_api import AchievementAPI, AchievementAPIError
 from .platform import PLATFORM_STEAM
 from ..models.achievement import Achievement
 from .profile import Profile, ProfileAPI, ProfileAPIError

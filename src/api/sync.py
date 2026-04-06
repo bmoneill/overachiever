@@ -27,7 +27,7 @@ from ..models.title import Title
 from ..models.user_achievement import UserAchievement
 from ..models.user_title import UserTitle
 from ..models.xbox360icon import Xbox360Icon
-from .achievement import AchievementAPIError
+from .achievement_api import AchievementAPIError
 from .platform import PLATFORM_STEAM, PLATFORM_XBOX
 from .xbox import XboxAchievementAPI, xbl_get
 from .steam import SteamAchievementAPI, steam_get

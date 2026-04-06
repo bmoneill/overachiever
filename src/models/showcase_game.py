@@ -1,7 +1,13 @@
+"""
+ShowcaseGame model representing a game showcased by a user.
+"""
 from . import db
 
 
 class ShowcaseGame(db.Model):
+    """
+    Represents a game showcased by a user.
+    """
     __tablename__ = "showcase_games"
 
     id = db.Column(db.Integer, primary_key=True)

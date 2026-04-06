@@ -1,12 +1,16 @@
+"""
+Provides tools for interacting with the Xbox OpenXBL API.
+"""
+
 import os
 
 import requests
 
-from .achievement import AchievementAPI, AchievementAPIError
+from .achievement_api import AchievementAPI, AchievementAPIError
 from .platform import PLATFORM_XBOX
 from ..models.achievement import Achievement
 from .api_request import make_request
-
+from .profile import Profile, ProfileAPI, ProfileAPIError
 
 OPENXBL_API_KEY = os.environ.get("OPENXBL_API_KEY")
 OPENXBL_BASE_URL = "https://api.xbl.io"
@@ -311,10 +315,6 @@ class XboxAchievementAPI(AchievementAPI):
         )
 
 
-from .profile import Profile, ProfileAPI, ProfileAPIError
-from .platform import PLATFORM_XBOX as _PLATFORM_XBOX
-
-
 class XboxProfileAPI(ProfileAPI):
     """Fetch Xbox user profiles from the OpenXBL API."""
 
@@ -350,7 +350,7 @@ class XboxProfileAPI(ProfileAPI):
         avatar_url = settings_map.get("GameDisplayPicRaw", "")
 
         return Profile(
-            platform_id=_PLATFORM_XBOX,
+            platform_id=PLATFORM_XBOX,
             name=gamertag,
             image_url=avatar_url,
         )

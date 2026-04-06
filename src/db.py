@@ -1,3 +1,7 @@
+"""
+Initializes the database.
+"""
+
 import os
 
 from .models import db

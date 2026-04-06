@@ -1,6 +1,10 @@
+"""
+Initialize the OverAchiever application.
+"""
+
 import os
 
-from flask import Flask, url_for
+from flask import Flask
 from flask_login import LoginManager
 from dotenv import load_dotenv
 

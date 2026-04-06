@@ -1,7 +1,14 @@
+"""
+Guide model for the OverAchiever application, representing an achievement guide.
+"""
+
 from . import db
 
 
 class Guide(db.Model):
+    """
+    Guide model for the OverAchiever application, representing an achievement guide.
+    """
     __tablename__ = "guides"
 
     id = db.Column(db.Integer, primary_key=True)
@@ -22,16 +29,30 @@ class Guide(db.Model):
     # Convenience properties so templates can use guide.author, guide.game_name, etc.
     @property
     def author(self):
+        """
+        Returns the username of the guide's author, or None if the guide has no user.
+        """
         return self.user.username if self.user else None
 
     @property
     def game_name(self):
+        """
+        Returns the name of the game the guide is for, or None if the guide has no achievement.
+        """
         return self.achievement.game_name if self.achievement else None
 
     @property
     def achievement_name(self):
+        """
+        Returns the name of the achievement the guide is for, or None if the guide has no
+        achievement.
+        """
         return self.achievement.achievement_name if self.achievement else None
 
     @property
     def achievement_description(self):
+        """
+        Returns the description of the achievement the guide is for, or None if the guide has no
+        achievement.
+        """
         return self.achievement.description if self.achievement else None

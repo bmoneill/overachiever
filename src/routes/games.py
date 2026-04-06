@@ -24,7 +24,7 @@ from ..models.user_title import UserTitle
 from ..models.showcase_game import ShowcaseGame
 from ..models.showcase_achievement import ShowcaseAchievement
 from ..models.guide import Guide
-from ..api.achievement import AchievementAPIError
+from ..api.achievement_api import AchievementAPIError
 from ..api.sync import (
     sync_user_games,
     sync_title_achievements,

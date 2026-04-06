@@ -1,7 +1,14 @@
+"""
+GuideRating model representing a user's rating of a guide.
+"""
+
 from . import db
 
 
 class GuideRating(db.Model):
+    """
+    Represents a user's rating of a guide.
+    """
     __tablename__ = "guide_rating"
 
     id = db.Column(db.Integer, primary_key=True)

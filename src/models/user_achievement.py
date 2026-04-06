@@ -1,7 +1,14 @@
+"""
+Represents a user's achievement progress.
+"""
+
 from . import db
 
 
 class UserAchievement(db.Model):
+    """
+    Represents a user's achievement progress.
+    """
     __tablename__ = "user_achievements"
 
     id = db.Column(db.Integer, primary_key=True)
@@ -12,7 +19,8 @@ class UserAchievement(db.Model):
     time_unlocked = db.Column(db.String, default=None)
 
     user = db.relationship("User", backref=db.backref("user_achievements", lazy="dynamic"))
-    achievement = db.relationship("Achievement", backref=db.backref("user_achievements", lazy="dynamic"))
+    achievement = db.relationship("Achievement",
+        backref=db.backref("user_achievements", lazy="dynamic"))
 
     __table_args__ = (
         db.UniqueConstraint(
