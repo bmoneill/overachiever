@@ -20,7 +20,6 @@
 ## Miscellaneous
 
 - [ ] Unified color scheme
-- [ ] Cache all API responses for an hour
 - [ ] Rate limiting, security look-over
 - [ ] Terms of service, privacy policy
 - [ ] Google Ads with option to disable
