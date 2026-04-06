@@ -111,8 +111,7 @@
             <p class="no-results">
                 No guides have been submitted for this achievement yet.
             </p>
-            {% endif %}
-
+            {% endif %} {% if current_user.is_authenticated %}
             <div class="submit-form">
                 <h2>Submit a Guide</h2>
                 <form
@@ -130,6 +129,7 @@
                     </div>
                 </form>
             </div>
+            {% endif %}
         </div>
     </body>
 </html>
