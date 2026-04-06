@@ -1,8 +1,5 @@
 <div align="center">
-    <h1><b>Overachiever: A multi-platform achievement manager</b></h1>
-    <img width="40%" src="https://oneill.sh/img/overachiever-home.png" alt="Home Page">
-    <img width="40%" src="https://oneill.sh/img/overachiever-game.png" alt="Game page">
-    <img width="40%" src="https://oneill.sh/img/overachiever-guides.png" alt="Guides page">
+    <h1><b>[OverAchiever](https://overachiever.io): A multi-platform achievement manager</b></h1>
 </div>
 
 ## Table of contents
@@ -11,8 +8,6 @@
 - [Features](#features)
 - [Deploying](#deploying)
   - [Docker](#docker)
-  - [Disabling User Registration](#disabling-user-registration)
-- [XBox 360 Achievement Icons](#xbox-360-achievement-icons)
 - [Bugs](#bugs)
 - [License](#license)
 
@@ -63,8 +58,8 @@ To enable registration, change `ALLOW_REGISTRATION` to `true` in your
 ## XBox 360 Achievement Icons
 
 Unfortunately, I have found no easy way to grab XBox 360 achievement icons
-through any third-party API. As a result, icons must be manually added using the
-following steps:
+through any third-party API. As a result, icons may need to be manually added
+using the following steps:
 
 1. Download the icon to `static/`
 2. Run `./helpers/add_360_icon.py <db_path> <title_id> <achievement_id> <url>`
