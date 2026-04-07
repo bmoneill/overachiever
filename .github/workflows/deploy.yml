@@ -23,4 +23,4 @@ jobs:
             cd overachiever
             git stash
             git pull --force origin main
-            reload_overachiever
+            reload-overachiever
