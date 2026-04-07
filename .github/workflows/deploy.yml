@@ -1,0 +1,26 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Updating website.
+        uses: appleboy/ssh-action@master
+        with:
+          host: overachiever.io
+          username: ben
+          key: ${{ secrets.sshkey }}
+          passphrase: ${{ secrets.sshpass }}
+          port: 22
+          script: |
+            cd overachiever
+            git stash
+            git pull --force origin main
+            reload_overachiever
