@@ -52,7 +52,7 @@ def _upsert_title(
     media_type: str | None = None,
     total_achievements: int = 0,
 ) -> Title:
-    """Find or create a :class:`Title` row, updating mutable fields.
+    """Find or create a :class:`Title` row.
 
     Returns the (possibly new) ``Title`` instance.  The caller is
     responsible for committing the session.
@@ -72,16 +72,8 @@ def _upsert_title(
             total_achievements=total_achievements,
         )
         db.session.add(db_title)
-    else:
-        db_title.name = name
-        if image_url:
-            db_title.image_url = image_url
-        if media_type:
-            db_title.media_type = media_type
-        if total_achievements:
-            db_title.total_achievements = total_achievements
+        db.session.flush()
 
-    db.session.flush()
     return db_title
 
 
@@ -274,7 +266,7 @@ def _sync_xbox_games(user: User) -> None:
         db_title = _upsert_title(
             platform=PLATFORM_XBOX,
             platform_title_id=platform_title_id,
-            name=title.get("name", "Unknown Title"),
+            name=title.get("name", "Unknown"),
             image_url=title.get("displayImage", ""),
             media_type=title.get("mediaItemType", ""),
             total_achievements=ach_info.get("totalAchievements", 0),
@@ -451,7 +443,7 @@ def sync_title_achievements(
     db_title = _upsert_title(
         platform=platform_id,
         platform_title_id=platform_title_id,
-        name=game_name or f"Title: {platform_title_id}",
+        name=game_name or "Unknown",
         media_type=media_type or None,
         total_achievements=len(achievements),
     )
