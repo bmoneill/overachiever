@@ -1,11 +1,18 @@
 """
 Image cache helper module.
 """
-import os, requests
+import os, requests, threading
 from flask import request
 from PIL import Image
 
 IMAGE_CACHE_DIR = os.path.join(os.path.dirname(__file__), "..", "static", "img")
+
+def _compress_image(image_path: str) -> None:
+    with Image.open(image_path) as img:
+        rgb_img = img.convert("RGB")
+        ratio = img.width / img.height
+        resized_img = rgb_img.resize((int(128 * ratio), 128))
+        resized_img.save(image_path, "JPEG", optimize=True, quality=70)
 
 def get_image_path(image_url: str) -> str:
     """
@@ -27,11 +34,8 @@ def get_image_path(image_url: str) -> str:
                     if not block:
                         break
                     f.write(block)
-        with Image.open(target_path) as img:
-            rgb_img = img.convert("RGB")
-            ratio = img.width / img.height
-            resized_img = rgb_img.resize((int(128 * ratio), 128))
-            resized_img.save(target_path, "JPEG", optimize=True, quality=70)
 
+        t = threading.Thread(target=_compress_image, args=(target_path))
+        t.start()
 
     return f"{base}/{url_hash}"
