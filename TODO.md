@@ -21,9 +21,9 @@
 
 ## Miscellaneous
 
+- [ ] Tests
 - [ ] Rate limiting, security look-over
 - [ ] Terms of service, privacy policy
 - [ ] Google Ads with option to disable
 - [ ] Donation link
 - [ ] Android, iOS PWAs
-- [ ] Deploy
