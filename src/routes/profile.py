@@ -4,7 +4,7 @@ from flask import flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from .. import app
-from ._helpers import get_user_by_username
+from ._helpers import get_user_or_abort
 from ..helpers.platform import PLATFORM_ID_MAP
 from ..api.sync import resolve_xbox_icon_fallbacks
 from ..models import db
@@ -22,10 +22,7 @@ from ..models.user_follow import UserFollow
 @app.route("/profile/<username>")
 def profile(username: str):
     """Public-facing user profile page."""
-    target_user = get_user_by_username(username)
-    if target_user is None:
-        flash("User not found.", "error")
-        return redirect(url_for("my_games"))
+    target_user = get_user_or_abort(username)
 
     xbox_profile = None
     steam_profile = None
@@ -111,10 +108,7 @@ def profile(username: str):
 @login_required
 def profile_edit(username: str):
     """Allow the authenticated user to edit their own profile."""
-    target_user = get_user_by_username(username)
-    if target_user is None:
-        flash("User not found.", "error")
-        return redirect(url_for("my_games"))
+    target_user = get_user_or_abort(username)
 
     if current_user.id != target_user.id:
         flash("You can only edit your own profile.", "error")
@@ -141,10 +135,7 @@ def profile_edit(username: str):
 @login_required
 def follow_user(username: str):
     """Follow another user."""
-    target_user = get_user_by_username(username)
-    if target_user is None:
-        flash("User not found.", "error")
-        return redirect(url_for("my_games"))
+    target_user = get_user_or_abort(username)
 
     if current_user.id == target_user.id:
         flash("You cannot follow yourself.", "error")
@@ -165,10 +156,7 @@ def follow_user(username: str):
 @login_required
 def unfollow_user(username: str):
     """Unfollow a user."""
-    target_user = get_user_by_username(username)
-    if target_user is None:
-        flash("User not found.", "error")
-        return redirect(url_for("my_games"))
+    target_user = get_user_or_abort(username)
 
     existing = UserFollow.query.filter_by(
         follower_id=current_user.id, followed_id=target_user.id

@@ -16,7 +16,7 @@ from flask import flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from .. import app
-from ._helpers import get_user_by_username
+from ._helpers import get_user_or_abort, get_platform_or_abort
 from ..helpers.platform import PLATFORM_SLUG_MAP
 
 from ..models import db
@@ -87,10 +87,7 @@ def _get_title_or_fallback(
 @app.route("/games/<username>")
 def games(username: str):
     """Show the list of games a player owns across all linked platforms."""
-    target_user = get_user_by_username(username)
-    if target_user is None:
-        flash("User not found.", "error")
-        return redirect(url_for("my_games"))
+    target_user = get_user_or_abort(username)
 
     # 1. Sync from external APIs → DB
     errors = sync_user_games(target_user)
@@ -119,16 +116,8 @@ def games(username: str):
 @app.route("/games/<username>/<platform>/<title_id>")
 def game_achievements(username: str, platform: str, title_id: str):
     """Show unlocked and locked achievements for a specific game."""
-    target_user = get_user_by_username(username)
-    if target_user is None:
-        flash("User not found.", "error")
-        return redirect(url_for("my_games"))
-
-    if platform not in PLATFORM_NAME_MAP:
-        flash("Invalid platform.", "error")
-        return redirect(url_for("games", username=username))
-
-    platform_id = PLATFORM_NAME_MAP.[platform]
+    target_user = get_user_or_abort(username)
+    platform_id = get_platform_or_abort(platform)
     media_type = request.args.get("media_type", "")
 
     # 1. Sync from API → DB (errors are non-fatal; we fall back to cache)
@@ -230,16 +219,8 @@ def game_achievements(username: str, platform: str, title_id: str):
 )
 def game_guides(username: str, platform: str, title_id: str):
     """Show and submit guides for a game (not tied to a specific achievement)."""
-    target_user = get_user_by_username(username)
-    if target_user is None:
-        flash("User not found.", "error")
-        return redirect(url_for("my_games"))
-
-    if platform not in PLATFORM_NAME_MAP:
-        flash("Invalid platform.", "error")
-        return redirect(url_for("games", username=username))
-
-    platform_id = PLATFORM_NAME_MAP[platform]
+    target_user = get_user_or_abort(username)
+    platform_id = get_platform_or_abort(platform)
     media_type = request.args.get("media_type", "")
 
     # Resolve game name from DB, fall back to query param
@@ -308,16 +289,7 @@ def achievement_guides(
     achievement_id: str,
 ):
     """Show and submit guides for a specific achievement."""
-    target_user = get_user_by_username(username)
-    if target_user is None:
-        flash("User not found.", "error")
-        return redirect(url_for("my_games"))
-
-    if platform not in PLATFORM_NAME_MAP:
-        flash("Invalid platform.", "error")
-        return redirect(url_for("games", username=username))
-
-    platform_id = PLATFORM_NAME_MAP[platform]
+    platform_id = get_platform_or_abort(platform)
     media_type = request.args.get("media_type", "")
 
     # Resolve names from DB, falling back to query params

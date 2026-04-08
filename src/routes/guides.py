@@ -5,7 +5,8 @@ from .. import app
 from ..models.achievement import Achievement
 from ..models.guide import Guide
 from ..models.title import Title
-from ..helpers.platform import PLATFORM_ID_MAP
+from ._helpers import get_platform_or_abort
+from ..helpers.platform import PLATFORM_ID_MAP, PLATFORM_NAME_MAP
 
 
 @app.route("/guides")
@@ -42,10 +43,7 @@ def public_guides_index():
 
 @app.route("/guides/<platform>/<title_id>")
 def public_game_guides(platform, title_id):
-    if platform not in PLATFORM_NAME_MAP:
-        abort(404)
-
-    platform_id = PLATFORM_NAME_MAP[platform]
+    platform_id = get_platform_or_abort(platform)
 
     game_guides = (
         Guide.query
