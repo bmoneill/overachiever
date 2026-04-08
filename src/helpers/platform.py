@@ -13,3 +13,8 @@ PLATFORM_NAME_MAP: dict[str, int] = {
     "xbox": PLATFORM_XBOX,
     "steam": PLATFORM_STEAM,
 }
+
+X360_MEDIA_TYPES = {
+    "Xbox360Game",
+    "XboxArcadeGame"
+}

@@ -7,15 +7,13 @@ import os
 import requests
 
 from .achievement_api import AchievementAPI, AchievementAPIError, AchievementData
-from ..helpers.platform import PLATFORM_XBOX
+from ..helpers.platform import PLATFORM_XBOX, X360_MEDIA_TYPES
 from ..helpers.image_cache import get_image_path
 from .api_request import make_request
 from .profile import Profile, ProfileAPI, ProfileAPIError
 
 OPENXBL_API_KEY = os.environ.get("OPENXBL_API_KEY")
 OPENXBL_BASE_URL = "https://api.xbl.io"
-
-X360_MEDIA_TYPES = {"Xbox360Game", "XboxArcadeGame"}
 
 
 def _normalize_x360_achievement(a: dict) -> dict:

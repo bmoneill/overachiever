@@ -29,15 +29,12 @@ from ..models.user_achievement import UserAchievement
 from ..models.user_title import UserTitle
 from ..models.xbox360icon import Xbox360Icon
 from .achievement_api import AchievementAPIError, AchievementData
-from ..helpers.platform import PLATFORM_STEAM, PLATFORM_XBOX
+from ..helpers.platform import PLATFORM_STEAM, PLATFORM_XBOX, X360_MEDIA_TYPES
 from .xbox import XboxAchievementAPI, xbl_get
 from .steam import SteamAchievementAPI, steam_get
 
 if TYPE_CHECKING:
     from ..models.user import User
-
-# Xbox 360 media types that require special handling.
-_X360_MEDIA_TYPES: set[str] = {"Xbox360Game", "XboxArcadeGame"}
 
 
 # ---------------------------------------------------------------------------
@@ -449,7 +446,7 @@ def sync_title_achievements(
     )
 
     is_x360 = (
-        platform_id == PLATFORM_XBOX and media_type in _X360_MEDIA_TYPES
+        platform_id == PLATFORM_XBOX and media_type in X360_MEDIA_TYPES
     )
 
     for ach in achievements:
