@@ -20,7 +20,6 @@ SQLite instance provided by the ``db_session`` fixture in ``conftest.py``.
 
 from __future__ import annotations
 
-from typing import Generator
 from unittest.mock import MagicMock, patch
 
 import pytest

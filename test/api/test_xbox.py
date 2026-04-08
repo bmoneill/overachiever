@@ -11,7 +11,6 @@ All HTTP calls are mocked — no real network traffic is produced.
 
 from __future__ import annotations
 
-from typing import Generator
 from unittest.mock import MagicMock, patch
 
 import pytest

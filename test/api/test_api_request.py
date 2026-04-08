@@ -7,7 +7,6 @@ passthrough, and delegation to ``requests.request``).
 
 from __future__ import annotations
 
-import time
 from typing import Generator
 from unittest.mock import MagicMock, patch
 
