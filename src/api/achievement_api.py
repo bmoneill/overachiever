@@ -5,7 +5,7 @@ lightweight data-transfer object between API modules and the sync layer.
 """
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 
 class AchievementAPIError(Exception):
@@ -118,7 +118,7 @@ class AchievementAPI(ABC):
         )
 
     def get_user_achievement(
-       self, user_id: str, title_id: str, achievement_id: str
+        self, user_id: str, title_id: str, achievement_id: str
     ) -> AchievementData:
         """Return a single user achievement by title and achievement ID.
 
@@ -126,11 +126,11 @@ class AchievementAPI(ABC):
         """
         for a in self.get_user_achievements_for_title(user_id, title_id):
             if str(a.achievement_id) == str(achievement_id):
-               return a
+                return a
         raise AchievementAPIError(
-           f"Achievement {achievement_id} not found for user {user_id} "
-           f"in title {title_id}."
-       )
+            f"Achievement {achievement_id} not found for user {user_id} "
+            f"in title {title_id}."
+        )
 
     def get_unlocked_user_achievements(
         self, user_id: str

@@ -10,33 +10,30 @@ No raw API response dicts are touched inside this module.
 """
 
 import requests
-
 from bs4 import BeautifulSoup
 from flask import flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from .. import app
-from ._helpers import get_user_or_abort, get_platform_or_abort
-from ..helpers.platform import PLATFORM_SLUG_MAP
-
-from ..models import db
-from ..models.achievement import Achievement as AchievementModel
-from ..models.title import Title
-from ..models.user_title import UserTitle
-from ..models.pinned_game import PinnedGame
-from ..models.pinned_achievement import PinnedAchievement
-from ..models.guide import Guide
 from ..api.achievement_api import AchievementAPIError
 from ..api.sync import (
-    sync_user_games,
-    sync_title_achievements,
     load_title_achievements,
+    sync_title_achievements,
+    sync_user_games,
 )
-
+from ..models import db
+from ..models.achievement import Achievement
+from ..models.guide import Guide
+from ..models.pinned_achievement import PinnedAchievement
+from ..models.pinned_game import PinnedGame
+from ..models.title import Title
+from ..models.user_title import UserTitle
+from ._helpers import get_platform_or_abort, get_user_or_abort
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def fetch_url_metadata(url: str) -> tuple[str | None, str | None]:
     """Fetch the title and description from a URL's HTML meta tags."""
@@ -74,15 +71,13 @@ def _get_title_or_fallback(
     platform_title_id: str,
 ) -> Title | None:
     """Look up a :class:`Title` by platform and platform-specific ID."""
-    return Title.query.filter_by(
-        platform=platform_id,
-        platform_title_id=str(platform_title_id),
-    ).first()
+    return Title.find_by_platform(platform_id, platform_title_id)
 
 
 # ---------------------------------------------------------------------------
 # Game list route
 # ---------------------------------------------------------------------------
+
 
 @app.route("/games/<username>")
 def games(username: str):
@@ -96,10 +91,7 @@ def games(username: str):
 
     # 2. Query DB
     user_titles = (
-        UserTitle.query
-        .filter_by(user_id=target_user.id)
-        .join(Title)
-        .all()
+        UserTitle.query.filter_by(user_id=target_user.id).join(Title).all()
     )
 
     return render_template(
@@ -113,6 +105,7 @@ def games(username: str):
 # Achievement routes
 # ---------------------------------------------------------------------------
 
+
 @app.route("/games/<username>/<platform>/<title_id>")
 def game_achievements(username: str, platform: str, title_id: str):
     """Show unlocked and locked achievements for a specific game."""
@@ -123,14 +116,19 @@ def game_achievements(username: str, platform: str, title_id: str):
     # 1. Sync from API → DB (errors are non-fatal; we fall back to cache)
     try:
         sync_title_achievements(
-            target_user, platform_id, title_id, media_type=media_type,
+            target_user,
+            platform_id,
+            title_id,
+            media_type=media_type,
         )
     except AchievementAPIError as exc:
         flash(f"API unavailable ({exc}). Showing cached data.", "error")
 
     # 2. Query DB
     unlocked, locked = load_title_achievements(
-        target_user.id, platform_id, title_id,
+        target_user.id,
+        platform_id,
+        title_id,
     )
 
     db_title = _get_title_or_fallback(platform_id, title_id)
@@ -140,9 +138,8 @@ def game_achievements(username: str, platform: str, title_id: str):
         else request.args.get("game_name", f"Title: {title_id}")
     )
     game_image_url = (
-        (db_title.image_url if db_title else None)
-        or request.args.get("game_image_url", "")
-    )
+        db_title.image_url if db_title else None
+    ) or request.args.get("game_image_url", "")
 
     # Showcase helpers (all DB queries)
     is_own_page = (
@@ -173,12 +170,11 @@ def game_achievements(username: str, platform: str, title_id: str):
         ).count()
 
         pinned_rows = (
-            PinnedAchievement.query
-            .join(
-                AchievementModel,
-                PinnedAchievement.achievement_id == AchievementModel.id,
+            PinnedAchievement.query.join(
+                Achievement,
+                PinnedAchievement.achievement_id == Achievement.id,
             )
-            .join(Title, AchievementModel.title_id == Title.id)
+            .join(Title, Achievement.title_id == Title.id)
             .filter(
                 PinnedAchievement.user_id == current_user.id,
                 Title.platform == platform_id,
@@ -212,6 +208,7 @@ def game_achievements(username: str, platform: str, title_id: str):
 # ---------------------------------------------------------------------------
 # Guide routes
 # ---------------------------------------------------------------------------
+
 
 @app.route(
     "/games/<username>/<platform>/<title_id>/guides",
@@ -261,8 +258,7 @@ def game_guides(username: str, platform: str, title_id: str):
         )
 
     guides = (
-        Guide.query
-        .filter_by(platform_id=platform_id, title_id=title_id)
+        Guide.query.filter_by(platform_id=platform_id, title_id=title_id)
         .filter(Guide.achievement_id.is_(None))
         .all()
     )
@@ -306,20 +302,9 @@ def achievement_guides(
     achievement_description = request.args.get("achievement_description", "")
 
     # Use DB achievement data for better names when available
-    db_ach_existing = (
-        AchievementModel.query
-        .join(Title)
-        .filter(
-            Title.platform == platform_id,
-            Title.platform_title_id == str(title_id),
-            AchievementModel.achievement_id == str(achievement_id),
-        )
-        .first()
-    )
+    db_ach_existing = Achievement.find_by_platform(platform_id, achievement_id)
     if db_ach_existing:
-        achievement_name = (
-            db_ach_existing.achievement_name or achievement_name
-        )
+        achievement_name = db_ach_existing.achievement_name or achievement_name
         achievement_description = (
             db_ach_existing.description or achievement_description
         )
@@ -333,12 +318,11 @@ def achievement_guides(
 
             # Ensure an Achievement record exists
             db_ach = (
-                AchievementModel.query
-                .join(Title)
+                Achievement.query.join(Title)
                 .filter(
                     Title.platform == platform_id,
                     Title.platform_title_id == str(title_id),
-                    AchievementModel.achievement_id == str(achievement_id),
+                    Achievement.achievement_id == str(achievement_id),
                 )
                 .first()
             )
@@ -354,9 +338,9 @@ def achievement_guides(
                     db.session.add(db_title)
                     db.session.flush()
 
-                db_ach = AchievementModel(
+                db_ach = Achievement(
                     achievement_id=str(achievement_id),
-                    title_id=db_title.id,
+                    title_id=int(db_title.id),
                     achievement_name=achievement_name,
                     description=achievement_description or None,
                 )
@@ -404,21 +388,10 @@ def achievement_guides(
         )
 
     # Look up the Achievement record to find linked guides
-    db_ach = (
-        AchievementModel.query
-        .join(Title)
-        .filter(
-            Title.platform == platform_id,
-            Title.platform_title_id == str(title_id),
-            AchievementModel.achievement_id == str(achievement_id),
-        )
-        .first()
-    )
+    db_ach = Achievement.find_by_platform(platform_id, title_id, achievement_id)
 
     guides = (
-        Guide.query.filter_by(achievement_id=db_ach.id).all()
-        if db_ach
-        else []
+        Guide.query.filter_by(achievement_id=db_ach.id).all() if db_ach else []
     )
 
     return render_template(

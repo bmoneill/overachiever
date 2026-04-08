@@ -3,9 +3,9 @@ Provides tools for interacting with external APIs.
 """
 
 from .achievement_api import (
-    AchievementData,
     AchievementAPI,
     AchievementAPIError,
+    AchievementData,
 )
 
 __all__ = [

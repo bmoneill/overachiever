@@ -11,8 +11,7 @@ def user_search():
     results = []
     if q:
         results = (
-            User.query
-            .filter(User.username.ilike(f"%{q}%"))
+            User.query.filter(User.username.ilike(f"%{q}%"))
             .order_by(User.username)
             .limit(20)
             .all()

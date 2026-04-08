@@ -4,19 +4,19 @@ from flask import flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from .. import app
-from ._helpers import get_user_or_abort
-from ..helpers.platform import PLATFORM_ID_MAP
-from ..api.sync import resolve_xbox_icon_fallbacks
-from ..models import db
-from ..models.pinned_game import PinnedGame
-from ..models.pinned_achievement import PinnedAchievement
-from ..models.achievement import Achievement
-from ..models.user_achievement import UserAchievement
-from ..models.user_title import UserTitle
-from ..api.xbox import XboxProfileAPI
-from ..api.steam import SteamProfileAPI
 from ..api.profile import ProfileAPIError
+from ..api.steam import SteamProfileAPI
+from ..api.sync import resolve_xbox_icon_fallbacks
+from ..api.xbox import XboxProfileAPI
+from ..helpers.platform import PLATFORM_ID_MAP
+from ..models import db
+from ..models.achievement import Achievement
+from ..models.pinned_achievement import PinnedAchievement
+from ..models.pinned_game import PinnedGame
+from ..models.user_achievement import UserAchievement
 from ..models.user_follow import UserFollow
+from ..models.user_title import UserTitle
+from ._helpers import get_user_or_abort
 
 
 @app.route("/profile/<username>")
@@ -42,17 +42,27 @@ def profile(username: str):
             except ProfileAPIError:
                 pass
 
-    is_own_profile = current_user.is_authenticated and current_user.id == target_user.id
+    is_own_profile = (
+        current_user.is_authenticated and current_user.id == target_user.id
+    )
 
-    follower_count = UserFollow.query.filter_by(followed_id=target_user.id).count()
-    following_count = UserFollow.query.filter_by(follower_id=target_user.id).count()
+    follower_count = UserFollow.query.filter_by(
+        followed_id=target_user.id
+    ).count()
+    following_count = UserFollow.query.filter_by(
+        follower_id=target_user.id
+    ).count()
     is_following = False
     if current_user.is_authenticated and not is_own_profile:
-        is_following = UserFollow.query.filter_by(follower_id=current_user.id, followed_id=target_user.id).first() is not None
+        is_following = (
+            UserFollow.query.filter_by(
+                follower_id=current_user.id, followed_id=target_user.id
+            ).first()
+            is not None
+        )
 
     pinned_games = (
-        PinnedGame.query
-        .filter_by(user_id=target_user.id)
+        PinnedGame.query.filter_by(user_id=target_user.id)
         .order_by(PinnedGame.id)
         .all()
     )
@@ -67,8 +77,9 @@ def profile(username: str):
         pg.current_achievements = ut.current_achievements if ut else 0
 
     recent_achievements = (
-        UserAchievement.query
-        .join(Achievement, UserAchievement.achievement_id == Achievement.id)
+        UserAchievement.query.join(
+            Achievement, UserAchievement.achievement_id == Achievement.id
+        )
         .filter(UserAchievement.user_id == target_user.id)
         .order_by(UserAchievement.time_unlocked.desc())
         .limit(5)
@@ -79,8 +90,7 @@ def profile(username: str):
     resolve_xbox_icon_fallbacks([ua.achievement for ua in recent_achievements])
 
     pinned_achievements = (
-        PinnedAchievement.query
-        .filter_by(user_id=target_user.id)
+        PinnedAchievement.query.filter_by(user_id=target_user.id)
         .order_by(PinnedAchievement.id)
         .all()
     )
@@ -145,7 +155,9 @@ def follow_user(username: str):
         follower_id=current_user.id, followed_id=target_user.id
     ).first()
     if not existing:
-        follow = UserFollow(follower_id=current_user.id, followed_id=target_user.id)
+        follow = UserFollow(
+            follower_id=current_user.id, followed_id=target_user.id
+        )
         db.session.add(follow)
         db.session.commit()
 

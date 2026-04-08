@@ -1,7 +1,11 @@
+"""Model representing an Xbox 360 achievement icon."""
+
 from . import db
 
 
 class Xbox360Icon(db.Model):
+    """Represents an Xbox 360 achhievement icon."""
+
     __tablename__ = "xbox360icons"
 
     id = db.Column(db.Integer, primary_key=True)

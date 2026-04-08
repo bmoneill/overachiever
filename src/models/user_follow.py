@@ -11,6 +11,7 @@ class UserFollow(db.Model):
     """
     Represents a user following another user.
     """
+
     __tablename__ = "user_follows"
 
     id = db.Column(db.Integer, primary_key=True)

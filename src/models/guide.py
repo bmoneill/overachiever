@@ -9,6 +9,7 @@ class Guide(db.Model):
     """
     Guide model for the OverAchiever application, representing an achievement guide.
     """
+
     __tablename__ = "guides"
 
     id = db.Column(db.Integer, primary_key=True)
@@ -21,9 +22,13 @@ class Guide(db.Model):
         db.Integer, db.ForeignKey("achievements.id"), default=None
     )
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), default=None)
-    created_at = db.Column(db.String, server_default=db.func.current_timestamp())
+    created_at = db.Column(
+        db.String, server_default=db.func.current_timestamp()
+    )
 
-    achievement = db.relationship("Achievement", backref=db.backref("guides", lazy="dynamic"))
+    achievement = db.relationship(
+        "Achievement", backref=db.backref("guides", lazy="dynamic")
+    )
     user = db.relationship("User", backref=db.backref("guides", lazy="dynamic"))
 
     # Convenience properties so templates can use guide.author, guide.game_name, etc.
@@ -40,7 +45,11 @@ class Guide(db.Model):
         Returns the name of the game the guide is for by traversing the achievement's
         associated title, or None if the guide has no achievement or title.
         """
-        return self.achievement.title.name if self.achievement and self.achievement.title else None
+        return (
+            self.achievement.title.name
+            if self.achievement and self.achievement.title
+            else None
+        )
 
     @property
     def achievement_name(self) -> str | None:

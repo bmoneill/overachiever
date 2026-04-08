@@ -1,7 +1,7 @@
 """UserTitle model tracking per-user game title progress."""
 
-from . import db
 from ..helpers.platform import PLATFORM_ID_MAP
+from . import db
 
 
 class UserTitle(db.Model):

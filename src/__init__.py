@@ -4,9 +4,9 @@ Initialize the OverAchiever application.
 
 import os
 
+from dotenv import load_dotenv
 from flask import Flask
 from flask_login import LoginManager
-from dotenv import load_dotenv
 
 load_dotenv()
 
@@ -23,6 +23,6 @@ login_manager.login_message_category = "error"
 # Each module uses `from . import app` / `from . import login_manager`
 # to register route decorators and callbacks on the already-created
 # instances, avoiding circular-import issues.
-from . import db, routes # noqa: E402, F401
+from . import db, routes  # noqa: E402, F401
 
 db.init_app(app)

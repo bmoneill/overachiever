@@ -6,9 +6,13 @@ import os
 
 import requests
 
-from .achievement_api import AchievementAPI, AchievementAPIError, AchievementData
-from ..helpers.platform import PLATFORM_XBOX, X360_MEDIA_TYPES
 from ..helpers.image_cache import get_image_path
+from ..helpers.platform import PLATFORM_XBOX, X360_MEDIA_TYPES
+from .achievement_api import (
+    AchievementAPI,
+    AchievementAPIError,
+    AchievementData,
+)
 from .api_request import make_request
 from .profile import Profile, ProfileAPI, ProfileAPIError
 
@@ -29,8 +33,12 @@ def _normalize_x360_achievement(a: dict) -> dict:
         "description": a.get("description", ""),
         "lockedDescription": a.get("lockedDescription", ""),
         "progressState": "Achieved" if a.get("unlocked") else "NotStarted",
-        "mediaAssets": [{"url": get_image_path(image_url)}] if image_url else [],
-        "rewards": ([{"value": str(gamerscore)}] if gamerscore is not None else []),
+        "mediaAssets": [{"url": get_image_path(image_url)}]
+        if image_url
+        else [],
+        "rewards": (
+            [{"value": str(gamerscore)}] if gamerscore is not None else []
+        ),
         "progression": {},
         "unlocked": a.get("unlocked", False),
         "titleAssociations": a.get("titleAssociations", []),
@@ -61,10 +69,7 @@ def xbl_get(path: str) -> dict:
     }
 
     try:
-        resp = make_request(
-            f"{OPENXBL_BASE_URL}{path}",
-            headers=headers
-        )
+        resp = make_request(f"{OPENXBL_BASE_URL}{path}", headers=headers)
         resp.raise_for_status()
         data = resp.json()
     except requests.exceptions.RequestException as exc:
@@ -121,22 +126,16 @@ class XboxAchievementAPI(AchievementAPI):
     def _fetch_raw_achievements(self, xuid: str, title_id: str) -> list[dict]:
         """Fetch raw achievement dicts from the OpenXBL API."""
         if self.is_x360:
-            content = xbl_get(
-                f"/v2/achievements/x360/{xuid}/title/{title_id}"
-            )
+            content = xbl_get(f"/v2/achievements/x360/{xuid}/title/{title_id}")
             title_content = xbl_get(
                 f"/v2/achievements/player/{xuid}/title/{title_id}"
             )
         else:
-            content = xbl_get(
-                f"/v2/achievements/player/{xuid}/{title_id}"
-            )
+            content = xbl_get(f"/v2/achievements/player/{xuid}/{title_id}")
             title_content = {}
 
         raw = (
-            content.get("achievements", [])
-            if isinstance(content, dict)
-            else []
+            content.get("achievements", []) if isinstance(content, dict) else []
         )
 
         if self.is_x360:
@@ -168,9 +167,7 @@ class XboxAchievementAPI(AchievementAPI):
                 if assocs:
                     self.game_name = assocs[0].get("name")
 
-            achievements.append(
-                self._parse_achievement(raw, int(title_id))
-            )
+            achievements.append(self._parse_achievement(raw, int(title_id)))
 
         # Fix up game_name for achievements parsed before it was discovered.
         if self.game_name:
@@ -191,7 +188,7 @@ class XboxAchievementAPI(AchievementAPI):
         rewards = raw.get("rewards") or []
         try:
             gamerscore = int(rewards[0]["value"]) if rewards else None
-        except (ValueError, KeyError, IndexError):
+        except ValueError, KeyError, IndexError:
             gamerscore = None
 
         rarity = raw.get("rarity")
@@ -285,6 +282,7 @@ class XboxAchievementAPI(AchievementAPI):
         """Return user achievements for *title_id* (including progress)."""
         return self._build_achievements(user_id, title_id)
 
+
 class XboxProfileAPI(ProfileAPI):
     """Fetch Xbox user profiles from the OpenXBL API."""
 
@@ -304,7 +302,6 @@ class XboxProfileAPI(ProfileAPI):
                 f"gamertag, including capitalization."
             )
         return returned_profile["xuid"]
-
 
     def get_user_profile(self, user_id: str) -> Profile:
         """Return the Xbox profile for the given XUID.

@@ -5,12 +5,12 @@ from flask import render_template
 from flask_login import current_user, login_required
 
 from .. import app
-from ..models.user_follow import UserFollow
-from ..models.user_achievement import UserAchievement
+from ..api.sync import resolve_xbox_icon_fallbacks
+from ..helpers.platform import PLATFORM_ID_MAP
 from ..models.achievement import Achievement
 from ..models.user import User
-from ..helpers.platform import PLATFORM_ID_MAP
-from ..api.sync import resolve_xbox_icon_fallbacks
+from ..models.user_achievement import UserAchievement
+from ..models.user_follow import UserFollow
 
 
 @app.route("/timeline")
@@ -31,8 +31,9 @@ def timeline():
 
     # Fetch recent achievements from followed users
     results = (
-        UserAchievement.query
-        .join(Achievement, UserAchievement.achievement_id == Achievement.id)
+        UserAchievement.query.join(
+            Achievement, UserAchievement.achievement_id == Achievement.id
+        )
         .join(User, UserAchievement.user_id == User.id)
         .filter(UserAchievement.user_id.in_(followed_ids))
         .filter(UserAchievement.time_unlocked.isnot(None))
@@ -71,6 +72,6 @@ def _parse_day(time_str):
     try:
         dt = datetime.fromisoformat(time_str.replace("Z", "+00:00"))
         return dt.strftime("%B %d, %Y")
-    except (ValueError, AttributeError):
+    except ValueError, AttributeError:
         # Fall back to raw string truncated to date portion
         return time_str[:10] if len(time_str) >= 10 else time_str

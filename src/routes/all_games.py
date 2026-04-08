@@ -14,12 +14,11 @@ from flask import flash, redirect, render_template, url_for
 from werkzeug.wrappers import Response
 
 from .. import app
-from ..helpers.platform import PLATFORM_XBOX, PLATFORM_ID_MAP
 from ..api.sync import resolve_xbox_icon_fallbacks
+from ..helpers.platform import PLATFORM_ID_MAP, PLATFORM_XBOX
 from ..models.achievement import Achievement
 from ..models.guide import Guide
 from ..models.title import Title
-
 
 # ---------------------------------------------------------------------------
 # GET /games  –  list every title in the database
@@ -47,17 +46,13 @@ def all_games() -> str:
 
     games: list[dict[str, object]] = []
     for title in titles:
-        guide_count: int = (
-            Guide.query
-            .filter_by(platform_id=title.platform, title_id=str(title.platform_title_id))
-            .count()
-        )
+        guide_count: int = Guide.query.filter_by(
+            platform_id=title.platform, title_id=str(title.platform_title_id)
+        ).count()
 
-        achievement_count: int = (
-            Achievement.query
-            .filter_by(title_id=title.id)
-            .count()
-        )
+        achievement_count: int = Achievement.query.filter_by(
+            title_id=title.id
+        ).count()
 
         platform_slug: str = PLATFORM_ID_MAP.get(title.platform, "unknown")
 
@@ -110,11 +105,9 @@ def all_game_achievements(title_id: int) -> Union[str, Response]:
         flash("Game not found.", "error")
         return redirect(url_for("all_games"))
 
-    achievements: list[Achievement] = (
-        Achievement.query
-        .filter_by(title_id=title.id)
-        .all()
-    )
+    achievements: list[Achievement] = Achievement.query.filter_by(
+        title_id=title.id
+    ).all()
 
     # Xbox icon fallback ---------------------------------------------------
     if title.platform == PLATFORM_XBOX:

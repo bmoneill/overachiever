@@ -2,7 +2,6 @@
 __pycache__/
 *.pyc
 *.pyo
-pyproject.toml
 .venv/
 venv/
 env/
@@ -11,7 +10,6 @@ build/
 *.egg-info/
 .eggs/
 *.db
-
 src/__main__.py
 .zed
 src/static/img

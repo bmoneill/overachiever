@@ -12,10 +12,10 @@ from flask_login import current_user, login_required
 
 from .. import app
 from ..models import db
-from ..models.pinned_game import PinnedGame
-from ..models.pinned_achievement import PinnedAchievement
-from ..models.title import Title
 from ..models.achievement import Achievement
+from ..models.pinned_achievement import PinnedAchievement
+from ..models.pinned_game import PinnedGame
+from ..models.title import Title
 
 MAX_PINNED_GAMES = 5
 MAX_PINNED_ACHIEVEMENTS = 5
@@ -99,8 +99,7 @@ def showcase_add_achievement():
         return redirect(redirect_url)
 
     db_achievement = (
-        Achievement.query
-        .join(Title)
+        Achievement.query.join(Title)
         .filter(
             Title.platform == int(platform_id),
             Title.platform_title_id == str(title_id),

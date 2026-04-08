@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 
+
 class Profile:
     """Platform-agnostic representation of an external user profile."""
 

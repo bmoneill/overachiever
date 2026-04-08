@@ -20,7 +20,9 @@ def login():
             return redirect(url_for("login"))
 
         user = get_user_by_username(username)
-        if user is None or not check_password_hash(user.password_hash, password):
+        if user is None or not check_password_hash(
+            user.password_hash, password
+        ):
             flash("Invalid username or password.", "error")
             return redirect(url_for("login"))
 

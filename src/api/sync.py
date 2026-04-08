@@ -22,6 +22,7 @@ from typing import TYPE_CHECKING
 from flask import url_for
 
 from ..helpers.image_cache import get_image_path
+from ..helpers.platform import PLATFORM_STEAM, PLATFORM_XBOX, X360_MEDIA_TYPES
 from ..models import db
 from ..models.achievement import Achievement
 from ..models.title import Title
@@ -29,9 +30,8 @@ from ..models.user_achievement import UserAchievement
 from ..models.user_title import UserTitle
 from ..models.xbox360icon import Xbox360Icon
 from .achievement_api import AchievementAPIError, AchievementData
-from ..helpers.platform import PLATFORM_STEAM, PLATFORM_XBOX, X360_MEDIA_TYPES
-from .xbox import XboxAchievementAPI, xbl_get
 from .steam import SteamAchievementAPI, steam_get
+from .xbox import XboxAchievementAPI, xbl_get
 
 if TYPE_CHECKING:
     from ..models.user import User
@@ -40,6 +40,7 @@ if TYPE_CHECKING:
 # ---------------------------------------------------------------------------
 # Internal upsert helpers
 # ---------------------------------------------------------------------------
+
 
 def _upsert_title(
     platform: int,
@@ -124,8 +125,7 @@ def _sync_single_achievement(
     The caller is responsible for committing the session.
     """
     db_ach: Achievement | None = (
-        Achievement.query
-        .join(Title)
+        Achievement.query.join(Title)
         .filter(
             Title.platform == platform_id,
             Title.platform_title_id == str(ach.platform_title_id),
@@ -139,7 +139,7 @@ def _sync_single_achievement(
     if is_x360:
         try:
             title_id_int = int(ach.platform_title_id)
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             title_id_int = None
         if title_id_int is not None:
             icon = Xbox360Icon.query.filter_by(
@@ -206,6 +206,7 @@ def _sync_single_achievement(
 # Steam achievement-count batch helper (moved from routes)
 # ---------------------------------------------------------------------------
 
+
 def _fetch_steam_achievement_counts(
     steam_id: str,
     appids: list[str],
@@ -218,7 +219,7 @@ def _fetch_steam_achievement_counts(
     counts: dict[str, tuple[int, int]] = {}
     batch_size = 100
     for start in range(0, len(appids), batch_size):
-        batch = appids[start:start + batch_size]
+        batch = appids[start : start + batch_size]
         params: dict[str, str] = {
             "steamid": steam_id,
             "max_achievements": "10000",
@@ -243,6 +244,7 @@ def _fetch_steam_achievement_counts(
 # ---------------------------------------------------------------------------
 # Per-platform game-list sync
 # ---------------------------------------------------------------------------
+
 
 def _sync_xbox_games(user: User) -> None:
     """Fetch Xbox game titles for *user* and upsert Title + UserTitle rows."""
@@ -346,6 +348,7 @@ def _sync_steam_games(user: User) -> None:
 # Public sync API
 # ---------------------------------------------------------------------------
 
+
 def sync_user_games(user: User) -> list[str]:
     """Sync game titles for all linked platforms.
 
@@ -408,18 +411,14 @@ def sync_title_achievements(
     achievements: list[AchievementData]
     if platform_id == PLATFORM_XBOX:
         if not user.xuid:
-            raise AchievementAPIError(
-                "This user has no linked Xbox account."
-            )
+            raise AchievementAPIError("This user has no linked Xbox account.")
         api = XboxAchievementAPI(xuid=user.xuid, media_type=media_type)
         achievements = api.get_user_achievements_for_title(
             user.xuid, platform_title_id
         )
     elif platform_id == PLATFORM_STEAM:
         if not user.steam_id:
-            raise AchievementAPIError(
-                "This user has no linked Steam account."
-            )
+            raise AchievementAPIError("This user has no linked Steam account.")
         api = SteamAchievementAPI(steam_id=user.steam_id)
         achievements = api.get_user_achievements_for_title(
             user.steam_id, platform_title_id
@@ -445,9 +444,7 @@ def sync_title_achievements(
         total_achievements=len(achievements),
     )
 
-    is_x360 = (
-        platform_id == PLATFORM_XBOX and media_type in X360_MEDIA_TYPES
-    )
+    is_x360 = platform_id == PLATFORM_XBOX and media_type in X360_MEDIA_TYPES
 
     for ach in achievements:
         _sync_single_achievement(
@@ -464,6 +461,7 @@ def sync_title_achievements(
 # ---------------------------------------------------------------------------
 # DB loading helpers
 # ---------------------------------------------------------------------------
+
 
 def load_title_achievements(
     user_id: int,
@@ -482,8 +480,7 @@ def load_title_achievements(
     icon-fallback logic applied automatically.
     """
     db_achievements: list[Achievement] = (
-        Achievement.query
-        .join(Title)
+        Achievement.query.join(Title)
         .filter(
             Title.platform == platform_id,
             Title.platform_title_id == str(platform_title_id),
@@ -522,6 +519,7 @@ def load_title_achievements(
 # Xbox icon-fallback utilities  (moved from routes/_helpers.py)
 # ---------------------------------------------------------------------------
 
+
 def _normalize_name(name: str) -> str:
     """Normalize an achievement name for fuzzy matching.
 
@@ -539,8 +537,7 @@ def _build_steam_icon_lookup() -> dict[str, str]:
     since the query is ordered by id).
     """
     steam_achievements = (
-        Achievement.query
-        .join(Title)
+        Achievement.query.join(Title)
         .filter(Title.platform == PLATFORM_STEAM)
         .filter(Achievement.image_url.isnot(None))
         .filter(Achievement.image_url != "")
@@ -578,9 +575,8 @@ def resolve_xbox_icon_fallbacks(achievements: list) -> None:
     lookup = _build_steam_icon_lookup()
 
     for a in needs_icon:
-        raw_name = (
-            getattr(a, "achievement_name", None)
-            or getattr(a, "name", "")
+        raw_name = getattr(a, "achievement_name", None) or getattr(
+            a, "name", ""
         )
         key = _normalize_name(raw_name)
         if key and key in lookup:

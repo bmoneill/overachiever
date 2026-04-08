@@ -2,17 +2,21 @@
 
 import os
 
+from flask import abort, flash, redirect, url_for
+
 from .. import login_manager
+from ..helpers.platform import PLATFORM_NAME_MAP
 from ..models import db
 from ..models.user import User
-from flask import abort, flash, redirect, url_for
-from ..helpers.platform import PLATFORM_NAME_MAP
 
-ALLOW_REGISTRATION = os.environ.get("ALLOW_REGISTRATION", "true").lower() not in (
+ALLOW_REGISTRATION = os.environ.get(
+    "ALLOW_REGISTRATION", "true"
+).lower() not in (
     "false",
     "0",
     "no",
 )
+
 
 def get_platform_or_abort(platform: str, redirect_to: str = "my_games") -> int:
     """Return the platform with the given name, or abort with a 404 if not found."""
@@ -20,6 +24,7 @@ def get_platform_or_abort(platform: str, redirect_to: str = "my_games") -> int:
         flash("Platform not found.", "error")
         abort(redirect(url_for(redirect_to)))
     return PLATFORM_NAME_MAP[platform]
+
 
 def get_user_or_abort(username: str, redirect_to: str = "my_games") -> User:
     """Return the user with the given username, or abort with a 404 if not found."""

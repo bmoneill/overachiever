@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from . import db
 from ..helpers.platform import PLATFORM_ID_MAP
+from . import db
+
 
 class Achievement(db.Model):
     """Canonical achievement definition synced from platform APIs.
@@ -93,3 +94,21 @@ class Achievement(db.Model):
     @rarity_percentage.setter
     def rarity_percentage(self, value: float | None) -> None:
         self.rarity = value
+
+    # ------------------------------------------------------------------
+    # Methods
+    # ------------------------------------------------------------------
+
+    @classmethod
+    def find_by_platform(
+        cls, platform_id: int, title_id: int, achievement_id: str
+    ):
+        return (
+            cls.query.join(Title)
+            .filter(
+                Title.platform_id == platform_id,
+                Title.id == title_id,
+                cls.platform_achievement_id == achievement_id,
+            )
+            .first()
+        )

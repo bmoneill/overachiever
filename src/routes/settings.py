@@ -2,11 +2,11 @@ from flask import flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from .. import app
+from ..api.profile import ProfileAPIError
+from ..api.steam import SteamProfileAPI
+from ..api.xbox import XboxProfileAPI
 from ..models import db
 from ..models.user import User
-from ..api.xbox import XboxProfileAPI
-from ..api.steam import SteamProfileAPI
-from ..api.profile import ProfileAPIError
 
 
 @app.route("/settings")

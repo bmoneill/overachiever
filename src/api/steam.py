@@ -7,12 +7,15 @@ from datetime import datetime, timezone
 
 import requests
 
-from .achievement_api import AchievementAPI, AchievementAPIError, AchievementData
-from ..helpers.platform import PLATFORM_STEAM
-from .profile import Profile, ProfileAPI, ProfileAPIError
-from .api_request import make_request
-
 from ..helpers.image_cache import get_image_path
+from ..helpers.platform import PLATFORM_STEAM
+from .achievement_api import (
+    AchievementAPI,
+    AchievementAPIError,
+    AchievementData,
+)
+from .api_request import make_request
+from .profile import Profile, ProfileAPI, ProfileAPIError
 
 STEAM_API_KEY = os.environ.get("STEAM_API_KEY")
 STEAM_API_BASE_URL = "https://api.steampowered.com"
@@ -37,10 +40,7 @@ def steam_get(path: str, params: dict | None = None) -> dict:
         all_params.update(params)
 
     try:
-        resp = make_request(
-            f"{STEAM_API_BASE_URL}{path}",
-            params=all_params
-        )
+        resp = make_request(f"{STEAM_API_BASE_URL}{path}", params=all_params)
         resp.raise_for_status()
         data = resp.json()
     except requests.exceptions.RequestException as exc:
@@ -136,9 +136,7 @@ class SteamAchievementAPI(AchievementAPI):
                 result[apiname] = ach
         return result
 
-    def _build_title_achievements(
-        self, title_id: str
-    ) -> list[AchievementData]:
+    def _build_title_achievements(self, title_id: str) -> list[AchievementData]:
         """Fetch and cache all achievement definitions for a title.
 
         Every achievement is returned with ``unlocked=False`` since
@@ -279,9 +277,7 @@ class SteamAchievementAPI(AchievementAPI):
 
         return all_achievements
 
-    def get_title_achievements(
-        self, title_id: str
-    ) -> list[AchievementData]:
+    def get_title_achievements(self, title_id: str) -> list[AchievementData]:
         """Return every achievement defined for *title_id*.
 
         No user context is needed — all achievements are returned with
@@ -296,6 +292,7 @@ class SteamAchievementAPI(AchievementAPI):
         unlock progress.
         """
         return self._build_user_achievements_for_title(user_id, title_id)
+
 
 class SteamProfileAPI(ProfileAPI):
     """Fetch Steam user profiles from the Steam Web API."""
@@ -347,9 +344,7 @@ class SteamProfileAPI(ProfileAPI):
 
         players = data.get("players", [])
         if not players:
-            raise ProfileAPIError(
-                f"No Steam player found for ID {user_id}."
-            )
+            raise ProfileAPIError(f"No Steam player found for ID {user_id}.")
 
         player = players[0]
         persona_name = player.get("personaname", "")
