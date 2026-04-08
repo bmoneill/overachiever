@@ -14,8 +14,7 @@ from flask import flash, redirect, render_template, url_for
 from werkzeug.wrappers import Response
 
 from .. import app
-from ._helpers import PLATFORM_ID_TO_SLUG
-from ..helpers.platform import PLATFORM_XBOX
+from ..helpers.platform import PLATFORM_XBOX, PLATFORM_ID_MAP
 from ..api.sync import resolve_xbox_icon_fallbacks
 from ..models.achievement import Achievement
 from ..models.guide import Guide
@@ -60,7 +59,7 @@ def all_games() -> str:
             .count()
         )
 
-        platform_slug: str = PLATFORM_ID_TO_SLUG.get(title.platform, "unknown")
+        platform_slug: str = PLATFORM_ID_MAP.get(title.platform, "unknown")
 
         games.append(
             {
@@ -127,7 +126,7 @@ def all_game_achievements(title_id: int) -> Union[str, Response]:
             Guide.query.filter_by(achievement_id=achievement.id).count()
         )
 
-    platform_slug: str = PLATFORM_ID_TO_SLUG.get(title.platform, "unknown")
+    platform_slug: str = PLATFORM_ID_MAP.get(title.platform, "unknown")
 
     return render_template(
         "all_game_achievements.html",

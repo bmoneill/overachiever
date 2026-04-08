@@ -5,17 +5,6 @@ import os
 from .. import login_manager
 from ..models import db
 from ..models.user import User
-from ..helpers.platform import PLATFORM_XBOX, PLATFORM_STEAM
-
-PLATFORM_ID_TO_SLUG = {
-    PLATFORM_XBOX: "xbox",
-    PLATFORM_STEAM: "steam",
-}
-
-PLATFORM_SLUG_TO_ID = {
-    "xbox": PLATFORM_XBOX,
-    "steam": PLATFORM_STEAM,
-}
 
 ALLOW_REGISTRATION = os.environ.get("ALLOW_REGISTRATION", "true").lower() not in (
     "false",

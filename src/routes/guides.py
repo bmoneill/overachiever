@@ -5,7 +5,7 @@ from .. import app
 from ..models.achievement import Achievement
 from ..models.guide import Guide
 from ..models.title import Title
-from ._helpers import PLATFORM_ID_TO_SLUG, PLATFORM_SLUG_TO_ID
+from ..helpers.platform import PLATFORM_ID_MAP
 
 
 @app.route("/guides")
@@ -36,16 +36,16 @@ def public_guides_index():
     return render_template(
         "public_guides_index.html",
         games=games,
-        platform_slugs=PLATFORM_ID_TO_SLUG,
+        platform_slugs=PLATFORM_ID_MAP,
     )
 
 
 @app.route("/guides/<platform>/<title_id>")
 def public_game_guides(platform, title_id):
-    if platform not in PLATFORM_SLUG_TO_ID:
+    if platform not in PLATFORM_NAME_MAP:
         abort(404)
 
-    platform_id = PLATFORM_SLUG_TO_ID[platform]
+    platform_id = PLATFORM_NAME_MAP[platform]
 
     game_guides = (
         Guide.query

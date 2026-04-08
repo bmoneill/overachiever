@@ -4,7 +4,8 @@ from flask import flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from .. import app
-from ._helpers import get_user_by_username, PLATFORM_ID_TO_SLUG
+from ._helpers import get_user_by_username
+from ..helpers.platform import PLATFORM_ID_MAP
 from ..api.sync import resolve_xbox_icon_fallbacks
 from ..models import db
 from ..models.pinned_game import PinnedGame
@@ -99,7 +100,7 @@ def profile(username: str):
         pinned_achievements=pinned_achievements,
         achievement_count=achievement_count,
         recent_achievements=recent_achievements,
-        platform_slugs=PLATFORM_ID_TO_SLUG,
+        platform_slugs=PLATFORM_ID_MAP,
         follower_count=follower_count,
         following_count=following_count,
         is_following=is_following,

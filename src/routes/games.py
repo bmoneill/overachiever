@@ -16,7 +16,9 @@ from flask import flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from .. import app
-from ._helpers import get_user_by_username, PLATFORM_SLUG_TO_ID
+from ._helpers import get_user_by_username
+from ..helpers.platform import PLATFORM_SLUG_MAP
+
 from ..models import db
 from ..models.achievement import Achievement as AchievementModel
 from ..models.title import Title
@@ -122,11 +124,11 @@ def game_achievements(username: str, platform: str, title_id: str):
         flash("User not found.", "error")
         return redirect(url_for("my_games"))
 
-    if platform not in PLATFORM_SLUG_TO_ID:
+    if platform not in PLATFORM_NAME_MAP:
         flash("Invalid platform.", "error")
         return redirect(url_for("games", username=username))
 
-    platform_id = PLATFORM_SLUG_TO_ID[platform]
+    platform_id = PLATFORM_NAME_MAP.[platform]
     media_type = request.args.get("media_type", "")
 
     # 1. Sync from API → DB (errors are non-fatal; we fall back to cache)
@@ -233,11 +235,11 @@ def game_guides(username: str, platform: str, title_id: str):
         flash("User not found.", "error")
         return redirect(url_for("my_games"))
 
-    if platform not in PLATFORM_SLUG_TO_ID:
+    if platform not in PLATFORM_NAME_MAP:
         flash("Invalid platform.", "error")
         return redirect(url_for("games", username=username))
 
-    platform_id = PLATFORM_SLUG_TO_ID[platform]
+    platform_id = PLATFORM_NAME_MAP[platform]
     media_type = request.args.get("media_type", "")
 
     # Resolve game name from DB, fall back to query param
@@ -311,11 +313,11 @@ def achievement_guides(
         flash("User not found.", "error")
         return redirect(url_for("my_games"))
 
-    if platform not in PLATFORM_SLUG_TO_ID:
+    if platform not in PLATFORM_NAME_MAP:
         flash("Invalid platform.", "error")
         return redirect(url_for("games", username=username))
 
-    platform_id = PLATFORM_SLUG_TO_ID[platform]
+    platform_id = PLATFORM_NAME_MAP[platform]
     media_type = request.args.get("media_type", "")
 
     # Resolve names from DB, falling back to query params

@@ -1,12 +1,7 @@
 """UserTitle model tracking per-user game title progress."""
 
 from . import db
-from ..helpers.platform import PLATFORM_XBOX, PLATFORM_STEAM
-
-_PLATFORM_SLUGS: dict[int, str] = {
-    PLATFORM_XBOX: "xbox",
-    PLATFORM_STEAM: "steam",
-}
+from ..helpers.platform import PLATFORM_ID_MAP
 
 
 class UserTitle(db.Model):
@@ -74,7 +69,7 @@ class UserTitle(db.Model):
     @property
     def platform(self) -> str:
         """Platform slug for URL generation (e.g. ``'xbox'``, ``'steam'``)."""
-        return _PLATFORM_SLUGS.get(self.title.platform, "unknown")
+        return PLATFORM_ID_MAP.get(self.title.platform, "unknown")
 
     @property
     def platform_title_id(self) -> str:

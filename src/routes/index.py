@@ -4,7 +4,7 @@ from flask_login import current_user
 from .. import app
 from ..models.guide import Guide
 from ..models.user import User
-from ._helpers import PLATFORM_ID_TO_SLUG
+from ..helpers.platform import PLATFORM_ID_MAP
 
 
 @app.route("/")
@@ -30,6 +30,6 @@ def index():
     return render_template(
         "index.html",
         recent_guides=recent_guides,
-        platform_slugs=PLATFORM_ID_TO_SLUG,
+        platform_slugs=PLATFORM_ID_MAP,
         top_achievers=top_achievers,
     )

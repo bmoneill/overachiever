@@ -9,7 +9,7 @@ from ..models.user_follow import UserFollow
 from ..models.user_achievement import UserAchievement
 from ..models.achievement import Achievement
 from ..models.user import User
-from ._helpers import PLATFORM_ID_TO_SLUG
+from ..helpers.platform import PLATFORM_ID_MAP
 from ..api.sync import resolve_xbox_icon_fallbacks
 
 
@@ -26,7 +26,7 @@ def timeline():
         return render_template(
             "timeline.html",
             grouped_timeline=[],
-            platform_slugs=PLATFORM_ID_TO_SLUG,
+            platform_slugs=PLATFORM_ID_MAP,
         )
 
     # Fetch recent achievements from followed users
@@ -60,7 +60,7 @@ def timeline():
     return render_template(
         "timeline.html",
         grouped_timeline=list(grouped.values()),
-        platform_slugs=PLATFORM_ID_TO_SLUG,
+        platform_slugs=PLATFORM_ID_MAP,
     )
 
 

@@ -3,13 +3,7 @@
 from __future__ import annotations
 
 from . import db
-from ..helpers.platform import PLATFORM_STEAM, PLATFORM_XBOX
-
-_PLATFORM_SLUG_MAP: dict[int, str] = {
-    PLATFORM_XBOX: "xbox",
-    PLATFORM_STEAM: "steam",
-}
-
+from ..helpers.platform import PLATFORM_ID_MAP
 
 class Achievement(db.Model):
     """Canonical achievement definition synced from platform APIs.
@@ -76,7 +70,7 @@ class Achievement(db.Model):
         pid = self.platform_id
         if pid is None:
             return "unknown"
-        return _PLATFORM_SLUG_MAP.get(pid, "unknown")
+        return PLATFORM_ID_MAP.get(pid, "unknown")
 
     # ------------------------------------------------------------------
     # Template-friendly aliases
