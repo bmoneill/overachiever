@@ -1,3 +1,5 @@
+"""Login route."""
+
 from flask import flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_user
 from werkzeug.security import check_password_hash
@@ -8,6 +10,8 @@ from ._helpers import ALLOW_REGISTRATION, get_user_by_username
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
+    """Render the login page and handle login form submission."""
+
     if current_user.is_authenticated:
         return redirect(url_for("my_games"))
 

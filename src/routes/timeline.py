@@ -1,3 +1,5 @@
+"""Timeline route."""
+
 from collections import OrderedDict
 from datetime import datetime
 
@@ -72,6 +74,6 @@ def _parse_day(time_str):
     try:
         dt = datetime.fromisoformat(time_str.replace("Z", "+00:00"))
         return dt.strftime("%B %d, %Y")
-    except (ValueError, AttributeError):
+    except ValueError, AttributeError:
         # Fall back to raw string truncated to date portion
         return time_str[:10] if len(time_str) >= 10 else time_str

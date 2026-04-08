@@ -6,8 +6,6 @@ authenticated users, and handling valid / invalid POST submissions.
 
 from __future__ import annotations
 
-import pytest
-from flask import Flask
 from werkzeug.security import generate_password_hash
 
 # ===================================================================

@@ -1,3 +1,5 @@
+"""Routes package."""
+
 # Import all route sub-modules to register their @app.route decorators.
 from . import (  # noqa: F401
     _helpers,

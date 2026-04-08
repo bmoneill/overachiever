@@ -287,6 +287,7 @@ class XboxProfileAPI(ProfileAPI):
     """Fetch Xbox user profiles from the OpenXBL API."""
 
     def get_xuid_from_gamertag(self, gamertag: str) -> str:
+        """Return the XUID for the given gamertag."""
         gamertag = gamertag.strip()
         try:
             content = xbl_get(f"/v2/search/{gamertag}")

@@ -1,3 +1,5 @@
+"""Profile API."""
+
 from abc import ABC, abstractmethod
 
 

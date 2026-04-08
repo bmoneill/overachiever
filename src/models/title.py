@@ -47,6 +47,7 @@ class Title(db.Model):
 
     @classmethod
     def find_by_platform(cls, platform_id: int, platform_title_id: int):
+        """Find a title by its platform and platform title ID."""
         return cls.query.filter_by(
             platform=platform_id, platform_title_id=platform_title_id
         ).first()

@@ -1,3 +1,5 @@
+"""Register route."""
+
 from flask import flash, redirect, render_template, request, url_for
 from flask_login import current_user
 from werkzeug.security import generate_password_hash
@@ -10,6 +12,7 @@ from ._helpers import ALLOW_REGISTRATION
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
+    """Render the register page and handle registration form submission."""
     if not ALLOW_REGISTRATION:
         flash("Registration is currently disabled.", "error")
         return redirect(url_for("login"))

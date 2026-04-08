@@ -1,8 +1,10 @@
-from flask import abort, render_template
+"""Guides route."""
+
+from flask import render_template
 from sqlalchemy import func
 
 from .. import app
-from ..helpers.platform import PLATFORM_ID_MAP, PLATFORM_NAME_MAP
+from ..helpers.platform import PLATFORM_ID_MAP
 from ..models.achievement import Achievement
 from ..models.guide import Guide
 from ..models.title import Title
@@ -11,10 +13,11 @@ from ._helpers import get_platform_or_abort
 
 @app.route("/guides")
 def public_guides_index():
+    """Public guides index."""
     # Get guide counts grouped by (platform_id, title_id)
     guide_groups = (
         Guide.query.with_entities(
-            Guide.platform_id, Guide.title_id, func.count().label("guide_count")
+            Guide.platform_id, Guide.title_id, func.count.label("guide_count")
         )
         .group_by(Guide.platform_id, Guide.title_id)
         .all()
@@ -43,6 +46,7 @@ def public_guides_index():
 
 @app.route("/guides/<platform>/<title_id>")
 def public_game_guides(platform, title_id):
+    """Public game guides."""
     platform_id = get_platform_or_abort(platform)
 
     game_guides = (

@@ -103,6 +103,7 @@ class Achievement(db.Model):
     def find_by_platform(
         cls, platform_id: int, platform_title_id: str, achievement_id: str
     ):
+        """Find an achievement by its platform, platform title ID, and achievement ID."""
         from . import Title
 
         return (

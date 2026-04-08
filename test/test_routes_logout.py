@@ -7,8 +7,6 @@ unauthenticated requests are bounced by ``login_required``.
 
 from __future__ import annotations
 
-import pytest
-from flask import Flask
 from flask.testing import FlaskClient
 
 
