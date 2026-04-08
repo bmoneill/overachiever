@@ -1,5 +1,17 @@
 <div align="center">
     <h1><b><a href="https://overachiever.io">OverAchiever</a>: A multi-platform achievement manager</b></h1>
+    <a href="https://github.com/bmoneill/overachiever/actions/workflows/bandit.yml">
+        <img alt="Bandit Status" src="https://github.com/bmoneill/overachiever/actions/workflows/bandit.yml/badge.svg?branch=main" />
+    </a>
+    <a href="https://github.com/bmoneill/overachiever/actions/workflows/pylint.yml">
+    <img alt="Pylint status" src="https://github.com/bmoneill/overachiever/actions/workflows/pylint.yml/badge.svg?branch=main" />
+    </a>
+    <a href="https://github.com/bmoneill/overachiever/actions/workflows/deploy.yml">
+    <img alt="Deploy status" src="https://github.com/bmoneill/overachiever/actions/workflows/deploy.yml/badge.svg?branch=main" />
+    </a>
+    <a href="https://github.com/bmoneill/overachiever/actions/workflows/deploy.yml">
+    <img alt="Deploy status" src="https://github.com/bmoneill/overachiever/actions/workflows/deploy.yml/badge.svg?branch=main" />
+    </a>
 </div>
 
 ## Table of contents
@@ -44,13 +56,7 @@ You need API keys for the following external APIs:
 
 - [Steam Web API](https://steamcommunity.com/dev)
 - [OpenXBL](https://xbl.io)
-- [MailTrap](https://mailtrap.io)
-
-### Docker
-
-```shell
-docker compose up --build
-```
+- [MailTrap](https://mailtrap.io) (if registration is enabled)
 
 ### Disabling User Registration
 
