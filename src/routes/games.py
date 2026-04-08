@@ -66,14 +66,6 @@ def fetch_url_metadata(url: str) -> tuple[str | None, str | None]:
     return title, description
 
 
-def _get_title_or_fallback(
-    platform_id: int,
-    platform_title_id: str,
-) -> Title | None:
-    """Look up a :class:`Title` by platform and platform-specific ID."""
-    return Title.find_by_platform(platform_id, platform_title_id)
-
-
 # ---------------------------------------------------------------------------
 # Game list route
 # ---------------------------------------------------------------------------
@@ -131,7 +123,7 @@ def game_achievements(username: str, platform: str, title_id: str):
         title_id,
     )
 
-    db_title = _get_title_or_fallback(platform_id, title_id)
+    db_title = Title.find_by_platform(platform_id, title_id)
     game_name = (
         db_title.name
         if db_title
@@ -220,7 +212,7 @@ def game_guides(username: str, platform: str, title_id: str):
     media_type = request.args.get("media_type", "")
 
     # Resolve game name from DB, fall back to query param
-    db_title = _get_title_or_fallback(platform_id, title_id)
+    db_title = Title.find_by_platform(platform_id, title_id)
     game_name = (
         db_title.name
         if db_title
@@ -291,7 +283,7 @@ def achievement_guides(
     media_type = request.args.get("media_type", "")
 
     # Resolve names from DB, falling back to query params
-    db_title = _get_title_or_fallback(platform_id, title_id)
+    db_title = Title.find_by_platform(platform_id, title_id)
     game_name = (
         db_title.name
         if db_title

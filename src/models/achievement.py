@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from ..helpers.platform import PLATFORM_ID_MAP
-from . import db
+from . import Title, db
 
 
 class Achievement(db.Model):

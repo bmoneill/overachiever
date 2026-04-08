@@ -33,10 +33,10 @@ def showcase_add_game():
         flash("Missing game information.", "error")
         return redirect(redirect_url)
 
-    db_title = Title.query.filter_by(
-        platform=int(platform_id),
-        platform_title_id=str(title_id),
-    ).first()
+    db_title = Title.find_by_platform(
+        int(platform_id),
+        str(title_id),
+    )
 
     if db_title is None:
         flash("Game not found in the database.", "error")
@@ -98,14 +98,10 @@ def showcase_add_achievement():
         flash("Missing achievement information.", "error")
         return redirect(redirect_url)
 
-    db_achievement = (
-        Achievement.query.join(Title)
-        .filter(
-            Title.platform == int(platform_id),
-            Title.platform_title_id == str(title_id),
-            Achievement.achievement_id == str(achievement_id),
-        )
-        .first()
+    db_achievement = Achievement.find_by_platform(
+        int(platform_id),
+        int(title_id),
+        str(achievement_id),
     )
 
     if db_achievement is None:

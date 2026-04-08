@@ -124,14 +124,10 @@ def _sync_single_achievement(
 
     The caller is responsible for committing the session.
     """
-    db_ach: Achievement | None = (
-        Achievement.query.join(Title)
-        .filter(
-            Title.platform == platform_id,
-            Title.platform_title_id == str(ach.platform_title_id),
-            Achievement.achievement_id == str(ach.achievement_id),
-        )
-        .first()
+    db_ach: Achievement | None = Achievement.find_by_platform(
+        platform_id,
+        ach.platform_title_id,
+        str(ach.achievement_id),
     )
 
     # Determine image URL (prefer local Xbox 360 icon override).
@@ -400,10 +396,7 @@ def sync_title_achievements(
     """
     # If media_type wasn't supplied, try to read it from an existing Title.
     if not media_type:
-        existing = Title.query.filter_by(
-            platform=platform_id,
-            platform_title_id=str(platform_title_id),
-        ).first()
+        existing = Title.find_by_platform(platform_id, platform_title_id)
         if existing and existing.media_type:
             media_type = existing.media_type
 
@@ -479,14 +472,9 @@ def load_title_achievements(
     Xbox achievements that are missing an icon will have the Steam
     icon-fallback logic applied automatically.
     """
-    db_achievements: list[Achievement] = (
-        Achievement.query.join(Title)
-        .filter(
-            Title.platform == platform_id,
-            Title.platform_title_id == str(platform_title_id),
-        )
-        .all()
-    )
+    db_achievements = Title.find_by_platform(
+        platform_id, platform_title_id
+    ).achievements
 
     unlocked: list[Achievement] = []
     locked: list[Achievement] = []
