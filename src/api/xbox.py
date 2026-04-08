@@ -298,8 +298,8 @@ class XboxProfileAPI(ProfileAPI):
         returned_profile = content["people"][0]
         if returned_profile["gamertag"] != gamertag:
             raise ProfileAPIError(
-                f"Exact match not found. Make sure you entered the correct "
-                f"gamertag, including capitalization."
+                "Exact match not found. Make sure you entered the correct "
+                "gamertag, including capitalization."
             )
         return returned_profile["xuid"]
 

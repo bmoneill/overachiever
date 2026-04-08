@@ -124,10 +124,11 @@ def _sync_single_achievement(
 
     The caller is responsible for committing the session.
     """
+
     db_ach: Achievement | None = Achievement.find_by_platform(
         platform_id,
         ach.platform_title_id,
-        str(ach.achievement_id),
+        ach.achievement_id,
     )
 
     # Determine image URL (prefer local Xbox 360 icon override).
