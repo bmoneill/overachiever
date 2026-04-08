@@ -43,17 +43,19 @@ def settings():
 @login_required
 def xbox_link():
     """Link an Xbox account by manually entering a XUID."""
-    xuid = request.form.get("xuid", "").strip()
-    if not xuid:
-        flash("Please enter a valid XUID.", "error")
+    gamertag = request.form.get("gamertag", "").strip()
+    if not gamertag:
+        flash("Please enter a valid gamertag.", "error")
         return redirect(url_for("settings"))
 
     if current_user.xuid:
         flash("Your Xbox account is already linked.", "error")
         return redirect(url_for("settings"))
 
-    if not xuid.isdigit():
-        flash("XUID must be a numeric value.", "error")
+    xuid = XboxProfileAPI.get_xuid_from_gamertag(gamertag)
+
+    if not xuid:
+        flash("Invalid gamertag.", "error")
         return redirect(url_for("settings"))
 
     existing = User.query.filter(

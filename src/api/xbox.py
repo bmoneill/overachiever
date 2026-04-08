@@ -286,7 +286,7 @@ class XboxAchievementAPI(AchievementAPI):
 class XboxProfileAPI(ProfileAPI):
     """Fetch Xbox user profiles from the OpenXBL API."""
 
-    def get_xuid_from_gamertag(self, gamertag: str) -> str:
+    def get_xuid_from_gamertag(gamertag: str) -> str:
         """Return the XUID for the given gamertag."""
         gamertag = gamertag.strip()
         try:
