@@ -7,7 +7,7 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY src/* .
+COPY src/ ./src/
 
 RUN mkdir -p /app/data && chown app:app /app/data
 
@@ -15,7 +15,7 @@ USER app
 
 EXPOSE 5000
 
-ENV FLASK_APP=__main__.py
+ENV FLASK_APP=/app/__main__.py
 ENV DATABASE=/app/data/overachiever.db
 
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "2", "--threads", "4", "--worker-class", "gthread", "app:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "2", "--threads", "4", "--worker-class", "gthread", "src:app"]
