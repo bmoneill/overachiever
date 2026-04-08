@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from ..helpers.platform import PLATFORM_ID_MAP
-from . import Title, db
+from . import db
 
 
 class Achievement(db.Model):
@@ -101,14 +101,16 @@ class Achievement(db.Model):
 
     @classmethod
     def find_by_platform(
-        cls, platform_id: int, title_id: int, achievement_id: str
+        cls, platform_id: int, platform_title_id: str, achievement_id: str
     ):
+        from . import Title
+
         return (
             cls.query.join(Title)
             .filter(
-                Title.platform_id == platform_id,
-                Title.id == title_id,
-                cls.platform_achievement_id == achievement_id,
+                Title.platform == platform_id,
+                Title.platform_title_id == str(platform_title_id),
+                cls.achievement_id == str(achievement_id),
             )
             .first()
         )
