@@ -17,7 +17,7 @@ def public_guides_index():
     # Get guide counts grouped by (platform_id, title_id)
     guide_groups = (
         Guide.query.with_entities(
-            Guide.platform_id, Guide.title_id, func.count.label("guide_count")
+            Guide.platform_id, Guide.title_id, func.count().label("guide_count")
         )
         .group_by(Guide.platform_id, Guide.title_id)
         .all()
