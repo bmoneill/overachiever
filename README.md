@@ -1,16 +1,16 @@
 <div align="center">
     <h1><b><a href="https://overachiever.io">OverAchiever</a>: A multi-platform achievement manager</b></h1>
+    <a href="https://github.com/bmoneill/overachiever/actions/workflows/deploy.yml">
+    <img alt="Deploy status" src="https://github.com/bmoneill/overachiever/actions/workflows/deploy.yml/badge.svg?branch=main" />
+    </a>
     <a href="https://github.com/bmoneill/overachiever/actions/workflows/bandit.yml">
         <img alt="Bandit Status" src="https://github.com/bmoneill/overachiever/actions/workflows/bandit.yml/badge.svg?branch=main" />
     </a>
     <a href="https://github.com/bmoneill/overachiever/actions/workflows/pylint.yml">
     <img alt="Pylint status" src="https://github.com/bmoneill/overachiever/actions/workflows/pylint.yml/badge.svg?branch=main" />
     </a>
-    <a href="https://github.com/bmoneill/overachiever/actions/workflows/deploy.yml">
-    <img alt="Deploy status" src="https://github.com/bmoneill/overachiever/actions/workflows/deploy.yml/badge.svg?branch=main" />
-    </a>
-    <a href="https://github.com/bmoneill/overachiever/actions/workflows/deploy.yml">
-    <img alt="Deploy status" src="https://github.com/bmoneill/overachiever/actions/workflows/deploy.yml/badge.svg?branch=main" />
+    <a href="https://github.com/bmoneill/overachiever/actions/workflows/pytest.yml">
+    <img alt="Pytest Status" src="https://github.com/bmoneill/overachiever/actions/workflows/pytest.yml/badge.svg?branch=main" />
     </a>
 </div>
 
@@ -50,13 +50,19 @@ for locked achievements.
 - [ ] Achievement guide ranking
 - [ ] SSO support
 
-## Deploying
+## Building / Deploying
 
 You need API keys for the following external APIs:
 
 - [Steam Web API](https://steamcommunity.com/dev)
 - [OpenXBL](https://xbl.io)
 - [MailTrap](https://mailtrap.io) (if registration is enabled)
+
+````shell
+cp .env.example .env
+# Configure, add API keys to .env
+docker compose up --build
+```
 
 ### Disabling User Registration
 
@@ -79,7 +85,7 @@ query:
 ```shell
 curl 'https://api.xbl.io/v2/achievements/x360/{target_user.xuid}/title/{title_id}' \
     --header 'X-Authorization: YOUR_API_KEY'
-```
+````
 
 Overachiever will attempt to use the Steam achievement icons for Xbox 360 achievements
 where possible.
