@@ -106,6 +106,10 @@ class AchievementAPI(ABC):
     def get_achievement(
         self, title_id: str, achievement_id: str
     ) -> AchievementData:
+        """Return a single achievement definition by title and achievement ID.
+
+        Raises :class:`AchievementAPIError` if not found.
+        """
         for a in self.get_title_achievements(title_id):
             if str(a.achievement_id) == str(achievement_id):
                 return a
@@ -116,10 +120,14 @@ class AchievementAPI(ABC):
     def get_user_achievement(
        self, user_id: str, title_id: str, achievement_id: str
     ) -> AchievementData:
-       for a in self.get_user_achievements_for_title(user_id, title_id):
-           if str(a.achievement_id) == str(achievement_id):
+        """Return a single user achievement by title and achievement ID.
+
+        Raises :class:`AchievementAPIError` if not found.
+        """
+        for a in self.get_user_achievements_for_title(user_id, title_id):
+            if str(a.achievement_id) == str(achievement_id):
                return a
-       raise AchievementAPIError(
+        raise AchievementAPIError(
            f"Achievement {achievement_id} not found for user {user_id} "
            f"in title {title_id}."
        )
