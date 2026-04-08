@@ -17,6 +17,7 @@ def get_image_path(image_url: str) -> str:
     """
 
     base = f"{request.host_url}/static/img"
+    print("GET")
 
     if not os.path.exists(IMAGE_CACHE_DIR):
         os.makedirs(IMAGE_CACHE_DIR)
@@ -33,8 +34,8 @@ def get_image_path(image_url: str) -> str:
                 f.write(block)
 
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect(("localhost", 9801))
-        s.sendall(target_path.encode())
+        s.connect(("localhost", 9800))
+        s.sendall(bytes(target_path, "utf-8") + b"\n")
         s.close()
 
     return f"{base}/{url_hash}"
