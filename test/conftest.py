@@ -9,11 +9,13 @@ network or filesystem I/O occurs during tests.
 
 from __future__ import annotations
 
+import os
 from typing import Generator
 from unittest.mock import patch
 
 import pytest
 from flask import Flask
+from werkzeug.security import generate_password_hash
 
 from src.models import db as _db
 from src.models.achievement import Achievement
@@ -699,3 +701,89 @@ def make_xbox360icon(db_session):
         return icon
 
     return _factory
+
+
+# ------------------------------------------------------------------
+# Route-testing fixtures
+# ------------------------------------------------------------------
+
+_SRC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "src")
+
+
+@pytest.fixture(scope="session")
+def route_app(app) -> Flask:
+    """Extend the session-scoped test app with all route handlers.
+
+    Copies every URL rule registered on ``src.app`` into the test app,
+    configures Flask-Login, and points the Jinja2 template loader at
+    ``src/templates`` so that ``render_template`` calls succeed.
+    """
+    from flask_login import LoginManager
+
+    from src import app as src_app
+
+    # Templates & static files live under src/
+    app.template_folder = os.path.join(_SRC_DIR, "templates")
+    app.static_folder = os.path.join(_SRC_DIR, "static")
+
+    # Flask-Login
+    lm = LoginManager()
+    lm.init_app(app)
+    lm.login_view = "login"
+    lm.login_message = "Please log in to access this page."
+    lm.login_message_category = "error"
+    lm.session_protection = None  # disable for test convenience
+
+    @lm.user_loader
+    def _load_user(user_id: int):
+        return _db.session.get(User, int(user_id))
+
+    # Copy view functions from the real app to the test app.
+    for rule in src_app.url_map.iter_rules():
+        ep = rule.endpoint
+        vf = src_app.view_functions.get(ep)
+        if vf is None or ep == "static":
+            continue
+        methods = rule.methods - {"OPTIONS", "HEAD"}
+        try:
+            app.add_url_rule(
+                rule.rule,
+                endpoint=ep,
+                view_func=vf,
+                methods=methods or None,
+            )
+        except (AssertionError, ValueError):
+            pass  # already registered
+
+    return app
+
+
+@pytest.fixture()
+def client(route_app: Flask, db_session):
+    """Flask test client backed by an in-memory DB with routes."""
+    with route_app.test_client() as c:
+        yield c
+
+
+@pytest.fixture()
+def auth_user(db_session, make_user) -> User:
+    """A pre-created user with a known password (``testpass``)."""
+    user = make_user(
+        username="testuser",
+        email="testuser@example.com",
+        password_hash=generate_password_hash("testpass"),
+    )
+    db_session.commit()
+    return user
+
+
+@pytest.fixture()
+def auth_client(route_app: Flask, db_session, auth_user):
+    """Flask test client whose session belongs to :func:`auth_user`."""
+    with route_app.test_client() as c:
+        with c.session_transaction() as sess:
+            sess["_user_id"] = str(auth_user.id)
+            sess["_fresh"] = True
+        # Stash the user for convenient access in tests.
+        c._user = auth_user  # type: ignore[attr-defined]
+        yield c
