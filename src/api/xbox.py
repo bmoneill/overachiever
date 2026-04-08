@@ -320,6 +320,24 @@ class XboxAchievementAPI(AchievementAPI):
 class XboxProfileAPI(ProfileAPI):
     """Fetch Xbox user profiles from the OpenXBL API."""
 
+    def get_xuid_from_gamertag(self, gamertag: str) -> str:
+        gamertag = gamertag.strip()
+        try:
+            content = xbl_get(f"/v2/search/{gamertag}")
+        except AchievementAPIError as exc:
+            raise ProfileAPIError(
+                f"Failed to fetch Xbox profile for gamertag {gamertag}: {exc}"
+            ) from exc
+
+        returned_profile = content["people"][0]
+        if returned_profile["gamertag"] != gamertag:
+            raise ProfileAPIError(
+                f"Exact match not found. Make sure you entered the correct "
+                f"gamertag, including capitalization."
+            )
+        return returned_profile["xuid"]
+
+
     def get_user_profile(self, user_id: str) -> Profile:
         """Return the Xbox profile for the given XUID.
 
