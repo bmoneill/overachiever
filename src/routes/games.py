@@ -296,7 +296,9 @@ def achievement_guides(
     achievement_description = request.args.get("achievement_description", "")
 
     # Use DB achievement data for better names when available
-    db_ach_existing = Achievement.find_by_platform(platform_id, achievement_id)
+    db_ach_existing = Achievement.find_by_platform(
+        platform_id, title_id, achievement_id
+    )
     if db_ach_existing:
         achievement_name = db_ach_existing.achievement_name or achievement_name
         achievement_description = (
