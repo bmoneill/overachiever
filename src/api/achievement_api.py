@@ -103,20 +103,26 @@ class AchievementAPI(ABC):
         progress)."""
         ...
 
-    @abstractmethod
     def get_achievement(
         self, title_id: str, achievement_id: str
     ) -> AchievementData:
-        """Return the achievement for the given title and achievement ID."""
-        ...
+        for a in self.get_title_achievements(title_id):
+            if str(a.achievement_id) == str(achievement_id):
+                return a
+        raise AchievementAPIError(
+            f"Achievement {achievement_id} not found in title {title_id}."
+        )
 
-    @abstractmethod
     def get_user_achievement(
-        self, user_id: str, title_id: str, achievement_id: str
+       self, user_id: str, title_id: str, achievement_id: str
     ) -> AchievementData:
-        """Return the user's achievement for the given title and achievement
-        ID (including progress)."""
-        ...
+       for a in self.get_user_achievements_for_title(user_id, title_id):
+           if str(a.achievement_id) == str(achievement_id):
+               return a
+       raise AchievementAPIError(
+           f"Achievement {achievement_id} not found for user {user_id} "
+           f"in title {title_id}."
+       )
 
     def get_unlocked_user_achievements(
         self, user_id: str
