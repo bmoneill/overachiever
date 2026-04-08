@@ -12,7 +12,7 @@ No raw API response dicts are touched inside this module.
 import requests
 from bs4 import BeautifulSoup
 from flask import flash, redirect, render_template, request, url_for
-from flask_login import current_user, login_required
+from flask_login import current_user
 
 from .. import app
 from ..api.achievement_api import AchievementAPIError
@@ -216,7 +216,6 @@ def game_achievements(username: str, platform: str, title_id: str):
 )
 def game_guides(username: str, platform: str, title_id: str):
     """Show and submit guides for a game (not tied to a specific achievement)."""
-    target_user = get_user_or_abort(username)
     platform_id = get_platform_or_abort(platform)
     media_type = request.args.get("media_type", "")
 
@@ -229,6 +228,9 @@ def game_guides(username: str, platform: str, title_id: str):
     )
 
     if request.method == "POST":
+        if not current_user.is_authenticated:
+            flash("You must be logged in to submit a guide.", "error")
+            return redirect(url_for("login"))
         url = request.form.get("url", "").strip()
         if not url:
             flash("Please provide a URL.", "error")
