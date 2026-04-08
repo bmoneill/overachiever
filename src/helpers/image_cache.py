@@ -27,7 +27,7 @@ def get_image_path(image_url: str) -> str:
 
     if not os.path.exists(target_path):
         with open(target_path, "wb") as f:
-            response = requests.get(image_url, stream=True)
+            response = requests.get(image_url, stream=True, timeout=10)
             for block in response.iter_content(1024):
                 if not block:
                     break
