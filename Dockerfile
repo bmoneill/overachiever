@@ -9,6 +9,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY src/ ./src/
 COPY .env .
+COPY scripts/ ./scripts/
+COPY start.sh .
 
 RUN mkdir -p /app/data && chown app:app /app/data
 
@@ -19,4 +21,4 @@ EXPOSE 5000
 ENV FLASK_APP=/app/__main__.py
 ENV DATABASE=/app/data/overachiever.db
 
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "2", "--threads", "4", "--worker-class", "gthread", "src:app"]
+CMD ["bash", "start.sh"]
