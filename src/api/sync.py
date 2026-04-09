@@ -136,7 +136,7 @@ def _sync_single_achievement(
     if is_x360:
         try:
             title_id_int = int(ach.platform_title_id)
-        except ValueError, TypeError:
+        except (ValueError, TypeError) as e:
             title_id_int = None
         if title_id_int is not None:
             icon = Xbox360Icon.query.filter_by(
