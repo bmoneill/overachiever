@@ -76,7 +76,7 @@
 function OAPagination(opts) {
     "use strict";
 
-    var PAGE_SIZE = opts.pageSize || 20;
+    var PAGE_SIZE = opts.pageSize || 10;
 
     var container = document.getElementById(opts.containerId);
     if (!container) {
