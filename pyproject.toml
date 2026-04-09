@@ -1,3 +1,6 @@
+[tool.bandit]
+exclude_dirs = ["test"]
+
 [tool.ruff]
 exclude = [
     ".git",
