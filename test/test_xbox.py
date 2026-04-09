@@ -834,9 +834,8 @@ class TestXboxProfileAPIGamertag:
         mock_get.return_value = {
             "people": [{"gamertag": "CoolGamer", "xuid": "2535428000000000"}]
         }
-        api = XboxProfileAPI()
 
-        result = api.get_xuid_from_gamertag("CoolGamer")
+        result = XboxProfileAPI.get_xuid_from_gamertag("CoolGamer")
         assert result == "2535428000000000"
 
     @patch("src.api.xbox.xbl_get")
@@ -845,9 +844,7 @@ class TestXboxProfileAPIGamertag:
         mock_get.return_value = {
             "people": [{"gamertag": "CoolGamer", "xuid": "2535428000000000"}]
         }
-        api = XboxProfileAPI()
-
-        result = api.get_xuid_from_gamertag("  CoolGamer  ")
+        result = XboxProfileAPI.get_xuid_from_gamertag("  CoolGamer  ")
         assert result == "2535428000000000"
 
     @patch("src.api.xbox.xbl_get")
@@ -857,10 +854,9 @@ class TestXboxProfileAPIGamertag:
         mock_get.return_value = {
             "people": [{"gamertag": "coolgamer", "xuid": "2535428000000000"}]
         }
-        api = XboxProfileAPI()
 
         with pytest.raises(ProfileAPIError, match="Exact match not found"):
-            api.get_xuid_from_gamertag("CoolGamer")
+            XboxProfileAPI.get_xuid_from_gamertag("CoolGamer")
 
     @patch("src.api.xbox.xbl_get")
     def test_api_error_wraps_into_profile_error(
@@ -869,10 +865,9 @@ class TestXboxProfileAPIGamertag:
         """``AchievementAPIError`` from ``xbl_get`` should become
         ``ProfileAPIError``."""
         mock_get.side_effect = AchievementAPIError("network issue")
-        api = XboxProfileAPI()
 
         with pytest.raises(ProfileAPIError, match="Failed to fetch"):
-            api.get_xuid_from_gamertag("whoever")
+            XboxProfileAPI.get_xuid_from_gamertag("whoever")
 
 
 # ===================================================================

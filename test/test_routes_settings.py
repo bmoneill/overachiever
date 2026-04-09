@@ -8,6 +8,8 @@ Steam linking / unlinking (``POST /settings/steam/link``,
 
 from __future__ import annotations
 
+from unittest.mock import MagicMock, patch
+
 from flask.testing import FlaskClient
 
 from src.models.user import User
@@ -37,21 +39,11 @@ class TestSettingsPage:
 class TestXboxLink:
     """Tests for the ``POST /settings/xbox/link`` endpoint."""
 
-    def test_xbox_link_empty_xuid(self, auth_client: FlaskClient) -> None:
-        """Submitting an empty XUID should redirect back to /settings."""
+    def test_xbox_link_empty_gamertag(self, auth_client: FlaskClient) -> None:
+        """Submitting an empty gamertag should redirect back to /settings."""
         response = auth_client.post(
             "/settings/xbox/link",
-            data={"xuid": ""},
-        )
-
-        assert response.status_code == 302
-        assert "/settings" in response.headers["Location"]
-
-    def test_xbox_link_non_numeric_xuid(self, auth_client: FlaskClient) -> None:
-        """Submitting a non-numeric XUID (e.g. 'abc') should redirect back."""
-        response = auth_client.post(
-            "/settings/xbox/link",
-            data={"xuid": "abc"},
+            data={"gamertag": ""},
         )
 
         assert response.status_code == 302
@@ -66,7 +58,7 @@ class TestXboxLink:
 
         response = auth_client.post(
             "/settings/xbox/link",
-            data={"xuid": "2222222222"},
+            data={"gamertag": "blablabla"},
         )
 
         assert response.status_code == 302
@@ -75,14 +67,41 @@ class TestXboxLink:
         db_session.refresh(auth_user)
         assert auth_user.xuid == "1111111111"
 
+    @patch("src.routes.settings.XboxProfileAPI.get_xuid_from_gamertag")
+    def test_xbox_link_gamertag_not_found(
+        self,
+        mock_get_xuid: MagicMock,
+        auth_client: FlaskClient,
+        auth_user: User,
+        db_session,
+    ) -> None:
+        """If the API returns no XUID the user should be redirected back."""
+        mock_get_xuid.return_value = None
+
+        response = auth_client.post(
+            "/settings/xbox/link",
+            data={"gamertag": "NonExistentTag"},
+        )
+
+        assert response.status_code == 302
+        assert "/settings" in response.headers["Location"]
+
+        mock_get_xuid.assert_called_once_with("NonExistentTag")
+        db_session.refresh(auth_user)
+        assert auth_user.xuid is None
+
+    @patch("src.routes.settings.XboxProfileAPI.get_xuid_from_gamertag")
     def test_xbox_link_taken_by_other_user(
         self,
+        mock_get_xuid: MagicMock,
         auth_client: FlaskClient,
         auth_user: User,
         make_user,
         db_session,
     ) -> None:
         """Linking an XUID that belongs to another user should be rejected."""
+        mock_get_xuid.return_value = "9999999999"
+
         other = make_user(
             username="otheruser",
             email="other@example.com",
@@ -93,27 +112,36 @@ class TestXboxLink:
 
         response = auth_client.post(
             "/settings/xbox/link",
-            data={"xuid": "9999999999"},
+            data={"gamertag": "OtherGamer"},
         )
 
         assert response.status_code == 302
         assert "/settings" in response.headers["Location"]
 
+        mock_get_xuid.assert_called_once_with("OtherGamer")
         db_session.refresh(auth_user)
         assert auth_user.xuid is None
 
+    @patch("src.routes.settings.XboxProfileAPI.get_xuid_from_gamertag")
     def test_xbox_link_success(
-        self, auth_client: FlaskClient, auth_user: User, db_session
+        self,
+        mock_get_xuid: MagicMock,
+        auth_client: FlaskClient,
+        auth_user: User,
+        db_session,
     ) -> None:
         """A valid, unclaimed XUID should be linked to the user."""
+        mock_get_xuid.return_value = "1234567890"
+
         response = auth_client.post(
             "/settings/xbox/link",
-            data={"xuid": "1234567890"},
+            data={"gamertag": "CoolGamer"},
         )
 
         assert response.status_code == 302
         assert "/settings" in response.headers["Location"]
 
+        mock_get_xuid.assert_called_once_with("CoolGamer")
         db_session.refresh(auth_user)
         assert auth_user.xuid == "1234567890"
 
