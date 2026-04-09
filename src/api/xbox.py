@@ -188,7 +188,7 @@ class XboxAchievementAPI(AchievementAPI):
         rewards = raw.get("rewards") or []
         try:
             gamerscore = int(rewards[0]["value"]) if rewards else None
-        except ValueError, KeyError, IndexError:
+        except (ValueError, KeyError, IndexError) as e:
             gamerscore = None
 
         rarity = raw.get("rarity")
