@@ -56,6 +56,52 @@
             .submit-form button:hover {
                 background: var(--oa-primary-hover);
             }
+            .platform-checklist {
+                margin-top: 2rem;
+                padding: 1.25rem 1.5rem;
+                background: var(--oa-surface);
+                border: 1px solid var(--oa-border);
+                border-radius: 10px;
+            }
+            .platform-checklist h3 {
+                font-size: 1rem;
+                font-weight: 600;
+                color: var(--oa-fg);
+                margin-bottom: 0.4rem;
+            }
+            .platform-checklist > p {
+                font-size: 0.9rem;
+                color: var(--oa-fg-muted);
+                margin-bottom: 0.85rem;
+            }
+            .platform-checklist ul {
+                list-style: none;
+                padding: 0;
+                margin: 0;
+                display: flex;
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .platform-checklist li label {
+                display: flex;
+                align-items: center;
+                gap: 0.6rem;
+                font-size: 0.95rem;
+                cursor: pointer;
+            }
+            .platform-checklist li label input[type="checkbox"] {
+                accent-color: var(--oa-primary);
+                width: 1rem;
+                height: 1rem;
+                flex-shrink: 0;
+            }
+            .platform-checklist li label a {
+                color: var(--oa-primary);
+                text-decoration: none;
+            }
+            .platform-checklist li label a:hover {
+                text-decoration: underline;
+            }
         </style>
     </head>
     <body>
@@ -102,6 +148,35 @@
             <p class="no-results">
                 No guides have been submitted for this game yet.
             </p>
+            {% endif %} {% if current_user.is_authenticated and
+            other_platform_titles %}
+            <div class="platform-checklist">
+                <h3>📋 Cross-platform checklist</h3>
+                <p>
+                    <strong>{{ game_name }}</strong> exists on other platforms.
+                    Before submitting, consider adding this guide there too:
+                </p>
+                <ul>
+                    {% for entry in other_platform_titles %}
+                    <li>
+                        <label>
+                            <input type="checkbox" />
+                            <a
+                                href="{{ url_for('game_guides', username=username, platform=entry.platform_slug, title_id=entry.title.platform_title_id, game_name=entry.title.name, media_type=entry.title.media_type or '') }}"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                {{ entry.title.name }}
+                                <span style="opacity: 0.6"
+                                    >({{ entry.platform_slug | capitalize
+                                    }})</span
+                                >
+                            </a>
+                        </label>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
             {% endif %} {% if current_user.is_authenticated %}
             <div class="submit-section">
                 <h2>Submit a Guide</h2>

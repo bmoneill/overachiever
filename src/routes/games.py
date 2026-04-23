@@ -21,6 +21,7 @@ from ..api.sync import (
     sync_title_achievements,
     sync_user_games,
 )
+from ..helpers.platform import PLATFORM_ID_MAP
 from ..models import db
 from ..models.achievement import Achievement
 from ..models.guide import Guide
@@ -33,6 +34,77 @@ from ._helpers import get_platform_or_abort, get_user_or_abort
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
+
+def find_other_platform_titles(
+    game_name: str,
+    exclude_platform_id: int,
+) -> list[dict]:
+    """Find Title records for the same game on other platforms.
+
+    Searches by exact game name (case-insensitive) and excludes the
+    given platform so the caller's current platform is not included.
+
+    Args:
+        game_name: Display name of the game to search for.
+        exclude_platform_id: Platform integer to exclude from results.
+
+    Returns:
+        A list of dicts, each with ``"title"``
+        (:class:`~src.models.title.Title`) and ``"platform_slug"`` (str).
+    """
+    titles = Title.query.filter(
+        Title.name.ilike(game_name),
+        Title.platform != exclude_platform_id,
+    ).all()
+    return [
+        {
+            "title": t,
+            "platform_slug": PLATFORM_ID_MAP.get(t.platform, "unknown"),
+        }
+        for t in titles
+    ]
+
+
+def find_other_platform_achievement_entries(
+    game_name: str,
+    achievement_name: str,
+    exclude_platform_id: int,
+) -> list[dict]:
+    """Find other-platform (title, achievement) pairs by game and achievement name.
+
+    For each other-platform title that matches ``game_name``, attempts to
+    locate an achievement whose name matches ``achievement_name``.
+
+    Args:
+        game_name: Display name of the game.
+        achievement_name: Name of the achievement to search for.
+        exclude_platform_id: Platform integer to exclude from results.
+
+    Returns:
+        A list of dicts with ``"title"``, ``"platform_slug"``, and
+        ``"achievement"`` (may be ``None`` if no matching achievement was
+        found on that platform).
+    """
+    titles = Title.query.filter(
+        Title.name.ilike(game_name),
+        Title.platform != exclude_platform_id,
+    ).all()
+
+    entries = []
+    for t in titles:
+        ach = Achievement.query.filter(
+            Achievement.title_id == t.id,
+            Achievement.achievement_name.ilike(achievement_name),
+        ).first()
+        entries.append(
+            {
+                "title": t,
+                "platform_slug": PLATFORM_ID_MAP.get(t.platform, "unknown"),
+                "achievement": ach,
+            }
+        )
+    return entries
 
 
 def fetch_url_metadata(url: str) -> tuple[str | None, str | None]:
@@ -257,6 +329,8 @@ def game_guides(username: str, platform: str, title_id: str):
         .all()
     )
 
+    other_platform_titles = find_other_platform_titles(game_name, platform_id)
+
     return render_template(
         "game_guides.html",
         guides=guides,
@@ -265,6 +339,7 @@ def game_guides(username: str, platform: str, title_id: str):
         title_id=title_id,
         platform=platform,
         media_type=media_type,
+        other_platform_titles=other_platform_titles,
     )
 
 
@@ -390,6 +465,10 @@ def achievement_guides(
         Guide.query.filter_by(achievement_id=db_ach.id).all() if db_ach else []
     )
 
+    other_platform_entries = find_other_platform_achievement_entries(
+        game_name, achievement_name, platform_id
+    )
+
     return render_template(
         "achievement_guides.html",
         guides=guides,
@@ -400,4 +479,5 @@ def achievement_guides(
         achievement_id=achievement_id,
         platform=platform,
         media_type=media_type,
+        other_platform_entries=other_platform_entries,
     )
