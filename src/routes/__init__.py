@@ -6,6 +6,7 @@ from . import (  # noqa: F401
     all_games,
     favicon,
     games,
+    guide_rating_routes,
     guides,
     index,
     login,

@@ -34,6 +34,50 @@
             .footer-back:hover {
                 text-decoration: underline;
             }
+
+            /* --- Rating bar --- */
+            .guide-rating-bar {
+                display: flex;
+                gap: 0.5rem;
+                align-items: center;
+                margin-top: 0.55rem;
+            }
+            .rating-btn {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.25rem;
+                padding: 0.2rem 0.55rem;
+                border: 1px solid var(--oa-border);
+                border-radius: 5px;
+                background: var(--oa-surface);
+                color: var(--oa-fg-dim);
+                font-size: 0.85rem;
+                cursor: pointer;
+                transition:
+                    border-color 0.15s,
+                    background 0.15s,
+                    color 0.15s;
+                line-height: 1.3;
+            }
+            .rating-btn:hover:not(:disabled) {
+                border-color: var(--oa-primary);
+                color: var(--oa-fg);
+                background: var(--oa-surface-hover);
+            }
+            .rating-btn:disabled {
+                cursor: default;
+                opacity: 0.6;
+            }
+            .rating-btn.active-up {
+                border-color: #4caf50;
+                color: #4caf50;
+                background: var(--oa-surface);
+            }
+            .rating-btn.active-down {
+                border-color: #f44336;
+                color: #f44336;
+                background: var(--oa-surface);
+            }
         </style>
     </head>
     <body>
@@ -51,7 +95,9 @@
                     📖 Game Guides
                     <span class="count">({{ game_guides | length }})</span>
                 </h2>
-                {% if game_guides %} {% for guide in game_guides %}
+                {% if game_guides %} {% for guide in game_guides %} {% set r =
+                guide_ratings.get(guide.id, {"up": 0, "down": 0, "user_vote":
+                none}) %}
                 <div class="guide-card">
                     <a
                         class="guide-title"
@@ -73,6 +119,41 @@
                     <div class="guide-author">
                         Submitted by {{ guide.author }}
                     </div>
+                    <div
+                        class="guide-rating-bar"
+                        data-guide-id="{{ guide.id }}"
+                    >
+                        <button
+                            class="rating-btn{% if r.user_vote == true %} active-up{% endif %}"
+                            data-value="true"
+                            {%
+                            if
+                            not
+                            is_authenticated
+                            %}disabled
+                            title="Log in to rate guides"
+                            {%
+                            endif
+                            %}
+                        >
+                            👍 <span class="up-count">{{ r.up }}</span>
+                        </button>
+                        <button
+                            class="rating-btn{% if r.user_vote == false %} active-down{% endif %}"
+                            data-value="false"
+                            {%
+                            if
+                            not
+                            is_authenticated
+                            %}disabled
+                            title="Log in to rate guides"
+                            {%
+                            endif
+                            %}
+                        >
+                            👎 <span class="down-count">{{ r.down }}</span>
+                        </button>
+                    </div>
                 </div>
                 {% endfor %} {% else %}
                 <p class="no-results">No game-level guides yet.</p>
@@ -91,7 +172,9 @@
                 <p class="achievement-description-text">
                     {{ group.achievement_description }}
                 </p>
-                {% endif %} {% for guide in group.guides %}
+                {% endif %} {% for guide in group.guides %} {% set r =
+                guide_ratings.get(guide.id, {"up": 0, "down": 0, "user_vote":
+                none}) %}
                 <div class="guide-card">
                     <a
                         class="guide-title"
@@ -118,6 +201,41 @@
                         >
                         {% endif %}
                     </div>
+                    <div
+                        class="guide-rating-bar"
+                        data-guide-id="{{ guide.id }}"
+                    >
+                        <button
+                            class="rating-btn{% if r.user_vote == true %} active-up{% endif %}"
+                            data-value="true"
+                            {%
+                            if
+                            not
+                            is_authenticated
+                            %}disabled
+                            title="Log in to rate guides"
+                            {%
+                            endif
+                            %}
+                        >
+                            👍 <span class="up-count">{{ r.up }}</span>
+                        </button>
+                        <button
+                            class="rating-btn{% if r.user_vote == false %} active-down{% endif %}"
+                            data-value="false"
+                            {%
+                            if
+                            not
+                            is_authenticated
+                            %}disabled
+                            title="Log in to rate guides"
+                            {%
+                            endif
+                            %}
+                        >
+                            👎 <span class="down-count">{{ r.down }}</span>
+                        </button>
+                    </div>
                 </div>
                 {% endfor %} {% endfor %} {% else %}
                 <p class="no-results">No achievement-specific guides yet.</p>
@@ -128,5 +246,59 @@
                 >&larr; Back to all guides</a
             >
         </div>
+
+        {% if is_authenticated %}
+        <script>
+            /**
+             * Guide rating: wire up thumbs-up / thumbs-down buttons.
+             * Sends a POST to /api/guides/<id>/rate with {"rating": true/false}.
+             * Updates counts and active state in place without a page reload.
+             */
+            document.querySelectorAll(".guide-rating-bar").forEach((bar) => {
+                const guideId = bar.dataset.guideId;
+                bar.querySelectorAll(".rating-btn").forEach((btn) => {
+                    btn.addEventListener("click", async () => {
+                        const value = btn.dataset.value === "true";
+                        try {
+                            const resp = await fetch(
+                                `/api/guides/${guideId}/rate`,
+                                {
+                                    method: "POST",
+                                    headers: {
+                                        "Content-Type": "application/json",
+                                    },
+                                    body: JSON.stringify({ rating: value }),
+                                },
+                            );
+                            if (!resp.ok) return;
+                            const data = await resp.json();
+
+                            // Update counts.
+                            bar.querySelector(".up-count").textContent =
+                                data.up;
+                            bar.querySelector(".down-count").textContent =
+                                data.down;
+
+                            // Update active styles.
+                            bar.querySelectorAll(".rating-btn").forEach((b) => {
+                                b.classList.remove("active-up", "active-down");
+                            });
+                            if (data.user_vote === true) {
+                                bar.querySelector(
+                                    '[data-value="true"]',
+                                ).classList.add("active-up");
+                            } else if (data.user_vote === false) {
+                                bar.querySelector(
+                                    '[data-value="false"]',
+                                ).classList.add("active-down");
+                            }
+                        } catch (e) {
+                            console.error("Rating failed:", e);
+                        }
+                    });
+                });
+            });
+        </script>
+        {% endif %}
     </body>
 </html>
