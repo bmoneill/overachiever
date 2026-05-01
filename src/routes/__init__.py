@@ -19,4 +19,5 @@ from . import (  # noqa: F401
     showcase,
     static,
     timeline,
+    verify_email,
 )

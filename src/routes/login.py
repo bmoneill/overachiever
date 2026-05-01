@@ -1,6 +1,6 @@
 """Login route."""
 
-from flask import flash, redirect, render_template, request, url_for
+from flask import flash, redirect, render_template, request, session, url_for
 from flask_login import current_user, login_user
 from werkzeug.security import check_password_hash
 
@@ -10,8 +10,12 @@ from ._helpers import ALLOW_REGISTRATION, get_user_by_username
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    """Render the login page and handle login form submission."""
+    """
+    Render the login page and handle login form submission.
 
+    Blocks login for accounts whose email address has not yet been verified
+    and offers a link to resend the verification email.
+    """
     if current_user.is_authenticated:
         return redirect(url_for("my_games"))
 
@@ -29,6 +33,16 @@ def login():
         ):
             flash("Invalid username or password.", "error")
             return redirect(url_for("login"))
+
+        if not user.email_verified:
+            # Store the user in the session so the resend page can pick it up.
+            session["pending_verification_user_id"] = user.id
+            flash(
+                "Please verify your email address before logging in. "
+                "Check your inbox or request a new verification email.",
+                "error",
+            )
+            return redirect(url_for("verify_email_sent"))
 
         login_user(user)
         next_page = request.args.get("next")

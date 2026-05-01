@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Verify Your Email – Overachiever</title>
+        <link
+            rel="stylesheet"
+            href="{{ url_for('static', filename='base.css') }}"
+        />
+        <style>
+            .container {
+                text-align: center;
+                max-width: 520px;
+            }
+            .email-icon {
+                font-size: 3rem;
+                margin-bottom: 0.5rem;
+            }
+            .email-address {
+                font-weight: bold;
+                color: var(--oa-primary);
+            }
+            .resend-form {
+                margin-top: 1.5rem;
+            }
+            .resend-form button {
+                background: none;
+                border: 1px solid var(--oa-border);
+                color: var(--oa-primary);
+                padding: 0.45rem 1rem;
+                border-radius: 5px;
+                cursor: pointer;
+                font-size: 0.9rem;
+                transition: border-color 0.2s, background 0.2s;
+            }
+            .resend-form button:hover {
+                border-color: var(--oa-primary);
+                background: var(--oa-surface-hover);
+            }
+        </style>
+    </head>
+    <body class="auth-page">
+        <div class="container">
+            <div class="email-icon">📬</div>
+            <h1>Check your inbox</h1>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+            <div class="{{ category }}">{{ message }}</div>
+            {% endfor %}
+            {% endwith %}
+
+            <p>
+                We've sent a verification link to<br />
+                <span class="email-address">{{ email }}</span>
+            </p>
+            <p class="subtitle">
+                Click the link in that email to activate your account.<br />
+                The link expires in 24 hours.
+            </p>
+
+            <form
+                class="resend-form"
+                method="POST"
+                action="{{ url_for('resend_verification') }}"
+            >
+                <p>Didn't receive it?</p>
+                <button type="submit">Resend verification email</button>
+            </form>
+
+            <p class="alt-link" style="margin-top: 1.5rem;">
+                <a href="{{ url_for('login') }}">Back to log in</a>
+            </p>
+        </div>
+    </body>
+</html>

@@ -24,3 +24,4 @@ class User(UserMixin, db.Model):
     psn_id = db.Column(db.String, default=None)
     display_gamertags = db.Column(db.Boolean, default=False)
     achievement_count = db.Column(db.Integer, default=0)
+    email_verified = db.Column(db.Boolean, nullable=False, default=False)

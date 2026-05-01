@@ -8,6 +8,7 @@ db = SQLAlchemy()
 
 
 from .achievement import Achievement  # noqa: E402, F401
+from .email_verification_token import EmailVerificationToken  # noqa: E402, F401
 from .guide import Guide  # noqa: E402, F401
 from .guide_rating import GuideRating  # noqa: E402, F401
 from .pinned_achievement import PinnedAchievement  # noqa: E402, F401
