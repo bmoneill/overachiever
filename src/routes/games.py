@@ -9,6 +9,8 @@ Every route follows a **sync-then-query** pattern:
 No raw API response dicts are touched inside this module.
 """
 
+from typing import Any
+
 import requests
 from bs4 import BeautifulSoup
 from flask import flash, redirect, render_template, request, url_for
@@ -25,6 +27,7 @@ from ..helpers.platform import PLATFORM_ID_MAP
 from ..models import db
 from ..models.achievement import Achievement
 from ..models.guide import Guide
+from ..models.guide_rating import GuideRating
 from ..models.pinned_achievement import PinnedAchievement
 from ..models.pinned_game import PinnedGame
 from ..models.title import Title
@@ -34,6 +37,42 @@ from ._helpers import get_platform_or_abort, get_user_or_abort
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
+
+def _build_guide_ratings(
+    guides: list[Any], user_id: int | None
+) -> dict[int, dict[str, Any]]:
+    """Build a mapping of guide_id to rating counts and the current user's vote.
+
+    Args:
+        guides: List of Guide objects to compute ratings for.
+        user_id: ID of the currently authenticated user, or None.
+
+    Returns:
+        Dict mapping guide_id to {"up": int, "down": int, "user_vote": bool | None}.
+    """
+    if not guides:
+        return {}
+
+    guide_ids = [g.id for g in guides]
+
+    # Fetch all ratings for the relevant guides in a single query.
+    all_ratings = GuideRating.query.filter(
+        GuideRating.guide_id.in_(guide_ids)
+    ).all()
+
+    counts: dict[int, dict[str, Any]] = {
+        gid: {"up": 0, "down": 0, "user_vote": None} for gid in guide_ids
+    }
+    for r in all_ratings:
+        if r.rating:
+            counts[r.guide_id]["up"] += 1
+        else:
+            counts[r.guide_id]["down"] += 1
+        if user_id is not None and r.user_id == user_id:
+            counts[r.guide_id]["user_vote"] = r.rating
+
+    return counts
 
 
 def find_other_platform_titles(
@@ -331,6 +370,10 @@ def game_guides(username: str, platform: str, title_id: str):
 
     other_platform_titles = find_other_platform_titles(game_name, platform_id)
 
+    # Compute rating counts and current user's vote for every guide on the page.
+    user_id = current_user.id if current_user.is_authenticated else None
+    guide_ratings = _build_guide_ratings(guides, user_id)
+
     return render_template(
         "game_guides.html",
         guides=guides,
@@ -340,6 +383,8 @@ def game_guides(username: str, platform: str, title_id: str):
         platform=platform,
         media_type=media_type,
         other_platform_titles=other_platform_titles,
+        guide_ratings=guide_ratings,
+        is_authenticated=current_user.is_authenticated,
     )
 
 
@@ -469,6 +514,10 @@ def achievement_guides(
         game_name, achievement_name, platform_id
     )
 
+    # Compute rating counts and current user's vote for every guide on the page.
+    user_id = current_user.id if current_user.is_authenticated else None
+    guide_ratings = _build_guide_ratings(guides, user_id)
+
     return render_template(
         "achievement_guides.html",
         guides=guides,
@@ -480,4 +529,6 @@ def achievement_guides(
         platform=platform,
         media_type=media_type,
         other_platform_entries=other_platform_entries,
+        guide_ratings=guide_ratings,
+        is_authenticated=current_user.is_authenticated,
     )
