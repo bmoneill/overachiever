@@ -114,7 +114,7 @@ class TestRegisterPostSuccess:
         client: FlaskClient,
         db_session,
     ) -> None:
-        """POST with valid, unique data should create a user and redirect to /login."""
+        """POST with valid, unique data should create a user and redirect to the verification page."""
         response = client.post(
             "/register",
             data={
@@ -125,13 +125,16 @@ class TestRegisterPostSuccess:
         )
 
         assert response.status_code == 302
-        assert response.headers["Location"].endswith("/login")
+        assert response.headers["Location"].endswith("/verify-email-sent")
 
         created: User | None = User.query.filter_by(username="newuser").first()
         assert created is not None
         assert created.email == "newuser@example.com"
         # Password should be hashed, not stored in plain text.
         assert created.password_hash != "strongpass"
+        # Mark email as verified to allow subsequent operations.
+        created.email_verified = True
+        db_session.commit()
 
 
 class TestRegisterDisabled:
