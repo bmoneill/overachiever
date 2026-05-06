@@ -173,7 +173,9 @@ def fetch_url_metadata(url: str) -> tuple[str | None, str | None]:
             if meta_desc and meta_desc.get("content"):
                 description = meta_desc["content"].strip()
     except Exception:
-        pass
+        logger = app.logger
+        logger.exception("Error fetching URL metadata for %s", url)
+
     return title, description
 
 
