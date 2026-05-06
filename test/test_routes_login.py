@@ -6,6 +6,8 @@ authenticated users, and handling valid / invalid POST submissions.
 
 from __future__ import annotations
 
+from cmath import e
+
 from werkzeug.security import generate_password_hash
 
 # ===================================================================
@@ -81,6 +83,7 @@ class TestLoginPostSuccess:
             username="alice",
             email="alice@example.com",
             password_hash=generate_password_hash("mypass"),
+            email_verified=True,
         )
         db_session.commit()
 
@@ -100,6 +103,7 @@ class TestLoginPostSuccess:
             username="alice",
             email="alice@example.com",
             password_hash=generate_password_hash("mypass"),
+            email_verified=True,
         )
         db_session.commit()
 
