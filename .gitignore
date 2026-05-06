@@ -14,3 +14,5 @@ build/
 src/__main__.py
 .zed
 src/static/img
+pyrightconfig.json
+scripts/migrate*
