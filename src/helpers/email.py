@@ -11,7 +11,7 @@ MAILTRAP_API_KEY
 Optional
 --------
 MAILTRAP_SENDER_EMAIL
-    The ``From`` address (default: ``noreply@overachiever.app``).
+    The ``From`` address (default: ``noreply@overachiever.io``).
 MAILTRAP_SENDER_NAME
     The ``From`` display name (default: ``OverAchiever``).
 MAILTRAP_USE_SANDBOX
@@ -29,7 +29,7 @@ import os
 import mailtrap as mt
 
 _SENDER_EMAIL: str = os.environ.get(
-    "MAILTRAP_SENDER_EMAIL", "noreply@overachiever.app"
+    "MAILTRAP_SENDER_EMAIL", "noreply@overachiever.io"
 )
 _SENDER_NAME: str = os.environ.get("MAILTRAP_SENDER_NAME", "OverAchiever")
 
@@ -104,6 +104,8 @@ def send_verification_email(
     </p>
   </body>
 </html>"""
+
+    print(f"Sending mail to {to_address}")
 
     mail = mt.Mail(
         sender=mt.Address(email=_SENDER_EMAIL, name=_SENDER_NAME),
