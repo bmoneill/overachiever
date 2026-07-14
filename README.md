@@ -58,7 +58,7 @@ You need API keys for the following external APIs:
 - [OpenXBL](https://xbl.io)
 - [MailTrap](https://mailtrap.io) (if registration is enabled)
 
-````shell
+```shell
 cp .env.example .env
 # Configure, add API keys to .env
 docker compose up --build
@@ -85,7 +85,7 @@ query:
 ```shell
 curl 'https://api.xbl.io/v2/achievements/x360/{target_user.xuid}/title/{title_id}' \
     --header 'X-Authorization: YOUR_API_KEY'
-````
+```
 
 Overachiever will attempt to use the Steam achievement icons for Xbox 360 achievements
 where possible.
