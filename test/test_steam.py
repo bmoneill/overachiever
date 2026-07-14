@@ -263,7 +263,7 @@ class TestSteamAchievementAPITitleAchievements:
         result = api.get_title_achievements("440")
 
         # The mock_image_cache fixture replaces get_image_path with a
-        # deterministic fake that returns /static/img/{hash(url)}.
+        # deterministic fake that returns /static/img/{sha256(url)}.
         for ach in result:
             assert ach.image_url is not None
             assert "/static/img/" in ach.image_url

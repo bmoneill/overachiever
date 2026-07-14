@@ -9,6 +9,7 @@ network or filesystem I/O occurs during tests.
 
 from __future__ import annotations
 
+import hashlib
 import os
 from typing import Generator
 from unittest.mock import patch
@@ -74,7 +75,7 @@ def db_session(app: Flask) -> Generator:
 
 def _fake_get_image_path(url: str) -> str:
     """Return a deterministic fake image path for any URL."""
-    return f"/static/img/{hash(url)}"
+    return f"/static/img/{hashlib.sha256(url.encode()).hexdigest()}"
 
 
 @pytest.fixture(autouse=True)
@@ -752,7 +753,7 @@ def route_app(app) -> Flask:
                 view_func=vf,
                 methods=methods or None,
             )
-        except (AssertionError, ValueError):
+        except AssertionError, ValueError:
             pass  # already registered
 
     return app
