@@ -2,15 +2,15 @@
 
 ## Features
 
-- [ ] When adding a guide, prompt to add it to game for other platforms as well
-- [ ] Verify email when signing up
+- [x] When adding a guide, prompt to add it to game for other platforms as well
+- [x] Verify email when signing up
 - [ ] Login with Google, Discord
 - [ ] "Wrapped" image generation
-- [ ] Rank achievement guides via thumbs-up, thumbs-down
+- [x] Rank achievement guides via thumbs-up, thumbs-down
 - [ ] User stats
-- [ ] Steam: Detect if vanity URL is just username or entire profile URL and act
--     accordingly
-- [ ] Linking accounts: error message if failed
+- [x] Steam: Detect if vanity URL is just username or entire profile URL and act
+      accordingly
+- [x] Linking accounts: error message if failed
 - [ ] Square icon view for games, achievements
 - [ ] Remove emojis
 
@@ -21,9 +21,8 @@
 
 ## Miscellaneous
 
-- [ ] Tests
-- [ ] Rate limiting, security look-over
+- [x] Tests
+- [x] Rate limiting, security look-over
 - [ ] Terms of service, privacy policy
 - [ ] Google Ads with option to disable
 - [ ] Donation link
-- [ ] Android, iOS PWAs
