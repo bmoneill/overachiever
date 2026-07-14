@@ -16,3 +16,4 @@ src/__main__.py
 src/static/img
 pyrightconfig.json
 scripts/migrate*
+.DS_Store
