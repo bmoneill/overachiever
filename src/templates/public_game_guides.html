@@ -71,6 +71,8 @@
                     >
                     {% if guide.description %}
                     <div class="guide-description">{{ guide.description }}</div>
+                    {% endif %} {% if guide.note %}
+                    <div class="guide-note">Note: {{ guide.note }}</div>
                     {% endif %}
                     <div class="guide-author">
                         Submitted by {{ guide.author }}
@@ -148,6 +150,8 @@
                     >
                     {% if guide.description %}
                     <div class="guide-description">{{ guide.description }}</div>
+                    {% endif %} {% if guide.note %}
+                    <div class="guide-note">Note: {{ guide.note }}</div>
                     {% endif %}
                     <div class="guide-author">
                         Submitted by {{ guide.author }} {% if guide.created_at

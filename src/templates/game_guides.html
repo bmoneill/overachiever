@@ -138,6 +138,8 @@
                     >
                     {% if guide.description %}
                     <div class="guide-description">{{ guide.description }}</div>
+                    {% endif %} {% if guide.note %}
+                    <div class="guide-note">Note: {{ guide.note }}</div>
                     {% endif %}
                     <div class="guide-author">
                         Submitted by {{ guide.author }}
@@ -227,6 +229,12 @@
                         name="url"
                         placeholder="https://example.com/guide"
                         required
+                    />
+                    <input
+                        type="text"
+                        name="note"
+                        placeholder="Optional: Add a one-line note (max 100 chars)"
+                        maxlength="100"
                     />
                     <button type="submit">Submit</button>
                 </form>

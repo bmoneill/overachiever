@@ -403,6 +403,13 @@ a:visited {
     margin-top: 0.35rem;
 }
 
+.guide-note {
+    font-size: 0.85rem;
+    color: var(--oa-primary-light);
+    margin-top: 0.35rem;
+    font-style: italic;
+}
+
 .guide-date {
     margin-left: 0.5rem;
     color: var(--oa-fg-faint);

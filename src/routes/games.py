@@ -357,6 +357,7 @@ def game_guides(username: str, platform: str, title_id: str):
             flash("You must be logged in to submit a guide.", "error")
             return redirect(url_for("login"))
         url = request.form.get("url", "").strip()
+        note = request.form.get("note", "").strip()
         if not url:
             flash("Please provide a URL.", "error")
         else:
@@ -365,6 +366,7 @@ def game_guides(username: str, platform: str, title_id: str):
                 url=url,
                 title=title,
                 description=description,
+                note=note or None,
                 platform_id=platform_id,
                 title_id=title_id,
                 achievement_id=None,
@@ -449,6 +451,7 @@ def achievement_guides(
 
     if request.method == "POST":
         url = request.form.get("url", "").strip()
+        note = request.form.get("note", "").strip()
         if not url:
             flash("Please provide a URL.", "error")
         else:
@@ -502,6 +505,7 @@ def achievement_guides(
                     url=url,
                     title=title,
                     description=description,
+                    note=note or None,
                     platform_id=platform_id,
                     title_id=title_id,
                     achievement_id=ach_pk,

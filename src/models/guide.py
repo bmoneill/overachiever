@@ -16,6 +16,7 @@ class Guide(db.Model):
     url = db.Column(db.String, nullable=False)
     title = db.Column(db.String, default=None)
     description = db.Column(db.Text, default=None)
+    note = db.Column(db.String, default=None)
     platform_id = db.Column(db.Integer, nullable=False)
     title_id = db.Column(db.String, nullable=False)
     achievement_id = db.Column(
