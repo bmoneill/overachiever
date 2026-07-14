@@ -9,6 +9,7 @@ Every route follows a **sync-then-query** pattern:
 No raw API response dicts are touched inside this module.
 """
 
+from html import unescape
 from typing import Any
 
 import requests
@@ -147,7 +148,17 @@ def find_other_platform_achievement_entries(
 
 
 def fetch_url_metadata(url: str) -> tuple[str | None, str | None]:
-    """Fetch the title and description from a URL's HTML meta tags."""
+    """Fetch the title and description from a URL's HTML meta tags.
+
+    Extracts metadata from Open Graph tags with fallbacks to standard HTML
+    meta tags. HTML entities are decoded and whitespace is normalized.
+
+    Args:
+        url: The URL to fetch metadata from.
+
+    Returns:
+        A tuple of (title, description), where each may be None if not found.
+    """
     title = None
     description = None
     try:
@@ -172,6 +183,15 @@ def fetch_url_metadata(url: str) -> tuple[str | None, str | None]:
             meta_desc = soup.find("meta", attrs={"name": "description"})
             if meta_desc and meta_desc.get("content"):
                 description = meta_desc["content"].strip()
+
+        # Decode HTML entities and normalize whitespace
+        if title:
+            title = unescape(title)
+        if description:
+            # Decode HTML entities and normalize whitespace
+            description = unescape(description)
+            # Replace multiple whitespace with single space
+            description = " ".join(description.split())
     except Exception:
         logger = app.logger
         logger.exception("Error fetching URL metadata for %s", url)
