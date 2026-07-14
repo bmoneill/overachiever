@@ -47,7 +47,7 @@ for locked achievements.
 - [x] User showcase
 - [x] User stats
 - [ ] PlayStation support
-- [ ] Achievement guide ranking
+- [x] Achievement guide ranking
 - [ ] SSO support
 
 ## Building / Deploying
