@@ -22,7 +22,7 @@ MarkupSafe==3.0.3
 mccabe==0.7.0
 nodejs-wheel-binaries==24.14.1
 packaging==26.0
-pillow==12.2.0
+pillow==12.3.0
 platformdirs==4.9.4
 pluggy==1.6.0
 pydantic==2.12.5
