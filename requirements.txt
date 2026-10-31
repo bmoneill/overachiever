@@ -3,7 +3,7 @@ astroid==4.0.4
 basedpyright==1.39.0
 beautifulsoup4==4.13.4
 blinker==1.9.0
-certifi==2026.2.25
+certifi==2026.10.18
 charset-normalizer==3.4.6
 click==8.3.1
 dill==0.4.1
